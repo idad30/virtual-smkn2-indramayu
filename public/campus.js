@@ -1,425 +1,211 @@
-
 import * as THREE from "https://esm.sh/three@0.160.0";
 import { OrbitControls } from "https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js";
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getAuth,
-  signInAnonymously,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import {
-  getFirestore,
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
-// ==========================================
-// 1. FIREBASE DAN DATA SISWA
-// ==========================================
+// Akses kampus tetap memakai akun anonim Firebase dan status approved.
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-const firebaseApp = initializeApp(firebaseConfig);
-const auth = getAuth(firebaseApp);
-const db = getFirestore(firebaseApp);
-
-let playerData = null;
-
-function getCurrentUser() {
+function currentUser() {
   return new Promise((resolve, reject) => {
-    let unsubscribe = () => {};
-
-    unsubscribe = onAuthStateChanged(
-      auth,
-      user => {
-        unsubscribe();
-        resolve(user);
-      },
-      error => {
-        unsubscribe();
-        reject(error);
-      }
-    );
+    const stop = onAuthStateChanged(auth, user => { stop(); resolve(user); }, error => { stop(); reject(error); });
   });
 }
 
 async function checkStudentAccess() {
-  let user = await getCurrentUser();
-
-  if (!user) {
-    const result = await signInAnonymously(auth);
-    user = result.user;
-  }
-
-  const playerRef = doc(db, "players", user.uid);
-  const playerSnap = await getDoc(playerRef);
-
-  if (!playerSnap.exists()) {
-    throw new Error("Data pendaftaran tidak ditemukan.");
-  }
-
-  playerData = playerSnap.data();
-
-  if (playerData.status !== "approved") {
-    throw new Error("Akun belum disetujui admin.");
-  }
-
-  return playerData;
+  let user = await currentUser();
+  if (!user) user = (await signInAnonymously(auth)).user;
+  const snap = await getDoc(doc(db, "players", user.uid));
+  if (!snap.exists()) throw new Error("Data pendaftaran tidak ditemukan. Silakan daftar terlebih dahulu.");
+  const data = snap.data();
+  if (data.status !== "approved") throw new Error("Akun belum disetujui admin.");
+  return data;
 }
 
-// ==========================================
-// 2. IDENTITAS SISWA - KANAN ATAS
-// ==========================================
-
-function createStudentCard(data) {
-  const card = document.createElement("div");
-
-  card.style.cssText = `
-    position: fixed;
-    top: 85px;
-    right: 18px;
-    left: auto;
-    z-index: 1000;
-    width: 220px;
-    max-width: calc(100vw - 36px);
-    box-sizing: border-box;
-    padding: 13px;
-    border: 1px solid #d4af37;
-    border-radius: 13px;
-    background: rgba(12, 35, 55, 0.94);
-    color: #ffffff;
-    font-family: Arial, sans-serif;
-    box-shadow: 0 5px 22px rgba(0,0,0,.3);
-    backdrop-filter: blur(8px);
-  `;
-
-  const heading = document.createElement("div");
-  heading.textContent = "IDENTITAS SISWA";
-  heading.style.cssText = `
-    color: #e4b84f;
-    font-size: 12px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    margin-bottom: 9px;
-  `;
-
-  const name = document.createElement("div");
-  name.textContent = data.fullName || "Nama siswa";
-  name.style.cssText = `
-    font-size: 15px;
-    font-weight: bold;
-    margin-bottom: 9px;
-    overflow-wrap: anywhere;
-  `;
-
-  const details = document.createElement("div");
-  details.style.cssText = `
-    font-size: 12px;
-    line-height: 1.8;
-    color: #e4edf5;
-  `;
-
-  const rows = [
-    ["Jurusan", data.major],
-    ["Tingkat", data.grade],
-    ["Kelas", data.classNumber ?? data.className]
-  ];
-
-  rows.forEach(([label, value]) => {
-    const row = document.createElement("div");
-    const strong = document.createElement("strong");
-
-    strong.textContent = label + ": ";
-    row.append(strong, document.createTextNode(value ?? "-"));
-    details.appendChild(row);
-  });
-
-  card.append(heading, name, details);
-  document.body.appendChild(card);
+function studentCard(data) {
+  const el = document.createElement("aside");
+  el.className = "student-card";
+  const title = document.createElement("b");
+  title.textContent = "IDENTITAS SISWA";
+  const name = document.createElement("strong");
+  name.textContent = data.fullName || "Siswa";
+  const info = document.createElement("span");
+  info.textContent = `${data.major || "-"} · ${data.grade || "-"} · Kelas ${data.classNumber ?? data.className ?? "-"}`;
+  el.append(title, name, info);
+  document.body.appendChild(el);
 }
 
-// ==========================================
-// 3. PENGATURAN THREE.JS
-// ==========================================
-
-const gameContainer = document.querySelector("#game");
-
-if (!gameContainer) {
-  throw new Error("Elemen #game tidak ditemukan di campus.html.");
-}
-
+const root = document.querySelector("#game");
 const scene = new THREE.Scene();
-
 scene.background = new THREE.Color(0x9bc8dc);
-scene.fog = new THREE.Fog(0x9bc8dc, 75, 150);
-
-const camera = new THREE.PerspectiveCamera(
-  52,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  250
-);
-
-camera.position.set(38, 42, 55);
-
-const renderer = new THREE.WebGLRenderer({
-  antialias: true
-});
-
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+scene.fog = new THREE.Fog(0x9bc8dc, 80, 165);
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 260);
+camera.position.set(0, 13, 19);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+root.appendChild(renderer.domElement);
 
-gameContainer.appendChild(renderer.domElement);
+const orbit = new OrbitControls(camera, renderer.domElement);
+orbit.enableDamping = true;
+orbit.dampingFactor = 0.07;
+orbit.minDistance = 7;
+orbit.maxDistance = 36;
+orbit.maxPolarAngle = Math.PI * 0.48;
+orbit.target.set(0, 1, 22);
 
-const controls = new OrbitControls(camera, renderer.domElement);
-
-controls.target.set(0, 0, 0);
-controls.enableDamping = true;
-controls.maxPolarAngle = Math.PI * 0.48;
-
-// ==========================================
-// 4. PENCAHAYAAN
-// ==========================================
-
-scene.add(
-  new THREE.HemisphereLight(
-    0xeaf7ff,
-    0x61764d,
-    2
-  )
-);
-
-const sun = new THREE.DirectionalLight(0xfff0d1, 2);
-
-sun.position.set(-30, 60, 30);
+scene.add(new THREE.HemisphereLight(0xeaf7ff, 0x61764d, 2.1));
+const sun = new THREE.DirectionalLight(0xfff0d1, 2.2);
+sun.position.set(-35, 65, 35);
 sun.castShadow = true;
-
+sun.shadow.mapSize.set(2048, 2048);
 scene.add(sun);
 
-// ==========================================
-// 5. MATERIAL DAN PEMBUAT GEDUNG
-// ==========================================
-
-function material(color) {
-  return new THREE.MeshStandardMaterial({ color });
+const mat = color => new THREE.MeshStandardMaterial({ color, roughness: 0.82 });
+function block(x,y,z,w,h,d,color) {
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat(color));
+  mesh.position.set(x,y+h/2,z); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
+  return mesh;
+}
+function signLabel(text,x,z) {
+  const canvas=document.createElement("canvas"); canvas.width=512; canvas.height=100;
+  const c=canvas.getContext("2d"); c.fillStyle="#102b43"; c.fillRect(0,0,512,100);
+  c.fillStyle="#f5d27a"; c.font="bold 36px Arial"; c.textAlign="center"; c.fillText(text,256,65);
+  const texture=new THREE.CanvasTexture(canvas); texture.colorSpace=THREE.SRGBColorSpace;
+  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture}));
+  sprite.position.set(x,4.8,z); sprite.scale.set(9,1.8,1); scene.add(sprite);
+}
+function building(name,x,z,w,d,color=0xf1eee5) {
+  block(x,0,z,w,.5,d,0xb9b9ad); block(x,.5,z,w,3,d,color); block(x,3.5,z,w,.35,d,0x985444);
+  for(let xx=x-w/2+1;xx<x+w/2;xx+=2.5) block(xx,1.35,z-d/2-.08,1,1,.12,0x8cc5d5);
+  block(x,1.0,z+d/2+.08,1.5,2,.15,0x8b6548);
+  signLabel(name,x,z);
 }
 
-function block(x, y, z, width, height, depth, color) {
-  const object = new THREE.Mesh(
-    new THREE.BoxGeometry(width, height, depth),
-    material(color)
-  );
+// Lingkungan sekolah demo (posisi bangunan masih ilustratif).
+block(0,-.5,0,120,1,100,0x76a96b);
+block(0,.02,35,120,.08,10,0x555e65);
+block(0,.03,12,7,.1,70,0xb9b9ad);
+building("GEDUNG UTAMA",-17,-5,24,12);
+building("KANTIN",18,-5,13,9,0xe8d9b7);
+building("BARAK ESKUL",-30,-24,13,9);
+building("UKS",-12,-25,9,7);
+[
+ ["LAB NKPI",-39,0],["LAB APHPI",-39,15],["LAB TKJ",-21,17],["LAB RPL",-3,17],
+ ["LAB TAB",15,-25],["LAB KULINER",33,-18],["LAB APAPL",36,1],["LAB TP",17,17]
+].forEach(([n,x,z])=>building(n,x,z,13,8,0xe6e9e5));
+block(0,0,31,19,2.4,1.2,0x173b5a);
+block(0,2.1,31,15,.25,1.35,0xe4b84f);
 
-  object.position.set(x, y + height / 2, z);
-  object.castShadow = true;
-  object.receiveShadow = true;
-
-  scene.add(object);
-  return object;
+// Pohon sederhana agar area terasa hidup.
+function tree(x,z) {
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.25,1.5,7),mat(0x765033));
+  trunk.position.set(x,.75,z); trunk.castShadow=true; scene.add(trunk);
+  const crown=new THREE.Mesh(new THREE.SphereGeometry(1.15,8,7),mat(0x397b45));
+  crown.position.set(x,2,z); crown.castShadow=true; scene.add(crown);
 }
+[[-48,-35],[-43,28],[47,-32],[47,25],[-5,-38],[8,-38],[48,8]].forEach(p=>tree(...p));
 
-function building(name, x, z, width, depth, color = 0xf1eee5) {
-  block(x, 0, z, width, 0.5, depth, 0xb9b9ad);
-  block(x, 0.5, z, width, 3, depth, color);
-  block(x, 3.5, z, width, 0.35, depth, 0x985444);
-
-  // Jendela gedung
-  for (
-    let xx = x - width / 2 + 1;
-    xx < x + width / 2;
-    xx += 2.5
-  ) {
-    block(
-      xx, 1.4, z - depth / 2 - 0.08,
-      1, 1, 0.12, 0x8cc5d5
-    );
-  }
-
-  // Papan nama gedung
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 100;
-
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#102b43";
-  ctx.font = "bold 36px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText(name, 256, 65);
-
-  const texture = new THREE.CanvasTexture(canvas);
-
-  const sign = new THREE.Sprite(
-    new THREE.SpriteMaterial({ map: texture })
-  );
-
-  sign.position.set(x, 5, z);
-  sign.scale.set(10, 2, 1);
-
-  scene.add(sign);
+// Karakter blocky bergaya game voxel/Roblox, seluruh bagian dianimasikan.
+const player = new THREE.Group(); scene.add(player);
+const avatar = new THREE.Group(); player.add(avatar);
+function part(parent,w,h,d,color,x,y,z) {
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));
+  m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; parent.add(m); return m;
 }
+const skin=0xd9a47b, shirt=0x1c4c78, pants=0x263746, shoe=0x20252a;
+part(avatar,.82,.92,.42,shirt,0,1.35,0); // torso
+part(avatar,.58,.58,.58,skin,0,2.12,0); // head
+// rambut
+part(avatar,.62,.16,.62,0x20252a,0,2.47,0);
+part(avatar,.12,.1,.04,0xffffff,-.14,2.17,-.3);
+part(avatar,.12,.1,.04,0xffffff,.14,2.17,-.3);
+part(avatar,.045,.07,.025,0x202020,-.14,2.17,-.325);
+part(avatar,.045,.07,.025,0x202020,.14,2.17,-.325);
+part(avatar,.14,.035,.035,0x9b5b48,0,2.00,-.31);
+const leftArm=new THREE.Group(); leftArm.position.set(-.52,1.75,0); avatar.add(leftArm);
+part(leftArm,.28,.78,.3,shirt,0,-.35,0); part(leftArm,.25,.22,.26,skin,0,-.82,0);
+const rightArm=new THREE.Group(); rightArm.position.set(.52,1.75,0); avatar.add(rightArm);
+part(rightArm,.28,.78,.3,shirt,0,-.35,0); part(rightArm,.25,.22,.26,skin,0,-.82,0);
+const leftLeg=new THREE.Group(); leftLeg.position.set(-.22,.9,0); avatar.add(leftLeg);
+part(leftLeg,.32,.78,.34,pants,0,-.36,0); part(leftLeg,.34,.2,.5,shoe,0,-.82,-.07);
+const rightLeg=new THREE.Group(); rightLeg.position.set(.22,.9,0); avatar.add(rightLeg);
+part(rightLeg,.32,.78,.34,pants,0,-.36,0); part(rightLeg,.34,.2,.5,shoe,0,-.82,-.07);
+player.position.set(0,0,25);
 
-// ==========================================
-// 6. AREA KAMPUS
-// ==========================================
+// Input keyboard + tombol layar sentuh.
+const keys = Object.create(null);
+addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true; if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase())) e.preventDefault();},{passive:false});
+addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+const joystick=document.querySelector("#joystick");
+const stick=document.querySelector("#stick");
+const mobile={x:0,z:0};
+let joyPointer=null;
+function setStick(e) {
+  const r=joystick.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
+  const dx=e.clientX-cx, dy=e.clientY-cy, max=r.width*.34, len=Math.hypot(dx,dy)||1, scale=Math.min(1,max/len);
+  const x=dx*scale,y=dy*scale;
+  stick.style.transform=`translate(${x}px,${y}px)`;
+  mobile.x=x/max; mobile.z=y/max;
+}
+joystick.addEventListener("pointerdown",e=>{joyPointer=e.pointerId;joystick.setPointerCapture(joyPointer);setStick(e);});
+joystick.addEventListener("pointermove",e=>{if(e.pointerId===joyPointer)setStick(e);});
+function releaseJoy(){joyPointer=null;mobile.x=0;mobile.z=0;stick.style.transform="translate(0,0)";}
+joystick.addEventListener("pointerup",releaseJoy); joystick.addEventListener("pointercancel",releaseJoy);
+let running=false, jumpUntil=0;
+document.querySelector("#run").addEventListener("click",()=>{running=!running;document.querySelector("#run").textContent=running?"LARI: ON":"LARI";document.querySelector("#run").classList.toggle("active",running);});
+document.querySelector("#jump").addEventListener("click",()=>{jumpUntil=performance.now()+420;});
 
-block(0, -0.5, 0, 120, 1, 100, 0x76a96b);
-block(0, 0.02, 35, 120, 0.08, 10, 0x555e65);
-block(0, 0.03, 12, 7, 0.1, 70, 0xb9b9ad);
-
-// ==========================================
-// 7. GEDUNG SEKOLAH
-// ==========================================
-
-building("GEDUNG UTAMA", -17, -5, 24, 12);
-building("KANTIN", 18, -5, 13, 9, 0xe8d9b7);
-building("BARAK ESKUL", -30, -24, 13, 9);
-building("UKS", -12, -25, 9, 7);
-
-// ==========================================
-// 8. LABORATORIUM 8 JURUSAN
-// ==========================================
-
-const laboratories = [
-  ["LAB NKPI", -39, 0],
-  ["LAB APHPI", -39, 15],
-  ["LAB TKJ", -21, 17],
-  ["LAB RPL", -3, 17],
-  ["LAB TAB", 15, -25],
-  ["LAB KULINER", 33, -18],
-  ["LAB APAPL", 36, 1],
-  ["LAB TP", 17, 17]
-];
-
-laboratories.forEach(([name, x, z]) => {
-  building(name, x, z, 13, 8, 0xe6e9e5);
-});
-
-// ==========================================
-// 9. GERBANG SEKOLAH
-// ==========================================
-
-block(0, 0, 31, 19, 2.4, 1.2, 0x173b5a);
-block(0, 2.1, 31, 15, 0.25, 1.35, 0xe4b84f);
-
-// ==========================================
-// 10. KARAKTER PEMAIN
-// ==========================================
-
-const player = new THREE.Group();
-
-scene.add(player);
-
-const body = new THREE.Mesh(
-  new THREE.CapsuleGeometry(0.42, 0.9, 4, 8),
-  material(0x1c4c78)
-);
-
-body.position.y = 1.1;
-player.add(body);
-
-const head = new THREE.Mesh(
-  new THREE.SphereGeometry(0.32, 12, 10),
-  material(0xd9a47b)
-);
-
-head.position.y = 1.95;
-player.add(head);
-
-player.position.set(0, 0, 25);
-
-// ==========================================
-// 11. KONTROL PEMAIN
-// ==========================================
-
-const keys = {};
-
-window.addEventListener("keydown", event => {
-  keys[event.key.toLowerCase()] = true;
-});
-
-window.addEventListener("keyup", event => {
-  keys[event.key.toLowerCase()] = false;
-});
-
-// ==========================================
-// 12. ANIMASI DAN PERGERAKAN
-// ==========================================
-
-let lastTime = 0;
-
-function animate(time) {
+// Follow-camera smoothing without removing mouse orbit.
+let last=0, walkPhase=0;
+function animate(now) {
   requestAnimationFrame(animate);
-
-  const delta = Math.min((time - lastTime) / 1000, 0.04);
-  lastTime = time;
-
-  let moveX = 0;
-  let moveZ = 0;
-
-  if (keys.w || keys.arrowup) moveZ--;
-  if (keys.s || keys.arrowdown) moveZ++;
-  if (keys.a || keys.arrowleft) moveX--;
-  if (keys.d || keys.arrowright) moveX++;
-
-  const length = Math.hypot(moveX, moveZ) || 1;
-
-  player.position.x += (moveX / length) * 9 * delta;
-  player.position.z += (moveZ / length) * 9 * delta;
-
-  player.position.x = THREE.MathUtils.clamp(
-    player.position.x, -48, 48
-  );
-
-  player.position.z = THREE.MathUtils.clamp(
-    player.position.z, -40, 42
-  );
-
-  if (moveX !== 0 || moveZ !== 0) {
-    player.rotation.y = Math.atan2(moveX, moveZ);
+  const dt=Math.min((now-last)/1000,.05); last=now;
+  let x=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+mobile.x;
+  let z=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+mobile.z;
+  const mag=Math.hypot(x,z);
+  const moving=mag>.08;
+  if(moving){
+    x/=Math.max(1,mag); z/=Math.max(1,mag);
+    const speed=running?13:7.5;
+    player.position.x+=x*speed*dt; player.position.z+=z*speed*dt;
+    player.rotation.y=Math.atan2(x,z);
+    walkPhase+=dt*(running?13:9);
+    const swing=Math.sin(walkPhase)*.62;
+    leftArm.rotation.x=swing; rightArm.rotation.x=-swing;
+    leftLeg.rotation.x=-swing; rightLeg.rotation.x=swing;
+  } else {
+    leftArm.rotation.x=THREE.MathUtils.damp(leftArm.rotation.x,0,9,dt);
+    rightArm.rotation.x=THREE.MathUtils.damp(rightArm.rotation.x,0,9,dt);
+    leftLeg.rotation.x=THREE.MathUtils.damp(leftLeg.rotation.x,0,9,dt);
+    rightLeg.rotation.x=THREE.MathUtils.damp(rightLeg.rotation.x,0,9,dt);
   }
-
-  controls.target.lerp(player.position, 0.025);
-
-  controls.update();
-  renderer.render(scene, camera);
+  player.position.x=THREE.MathUtils.clamp(player.position.x,-50,50);
+  player.position.z=THREE.MathUtils.clamp(player.position.z,-42,43);
+  avatar.position.y=now<jumpUntil?Math.sin((jumpUntil-now)/420*Math.PI)*1.15:(moving?Math.abs(Math.sin(walkPhase*2))*.06:0);
+  const target=new THREE.Vector3(player.position.x,1.2,player.position.z);
+  orbit.target.lerp(target,.075);
+  orbit.update();
+  renderer.render(scene,camera);
 }
+addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 
-// ==========================================
-// 13. RESPONSIVE LAYAR
-// ==========================================
-
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(
-    window.innerWidth,
-    window.innerHeight
-  );
-});
-
-// ==========================================
-// 14. MULAI KAMPUS
-// ==========================================
-
-async function startCampus() {
+async function start() {
   try {
-    const student = await checkStudentAccess();
-
-    createStudentCard(student);
-
+    const data=await checkStudentAccess();
+    studentCard(data);
     requestAnimationFrame(animate);
-
-  } catch (error) {
-    console.error("Campus error:", error);
-
+  } catch(error) {
+    console.error("Campus error:",error);
     alert(error.message || "Tidak dapat membuka kampus.");
-
-    window.location.href = "index.html";
+    location.href="index.html";
   }
 }
-
-startCampus();
+start();
