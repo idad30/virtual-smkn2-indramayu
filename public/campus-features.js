@@ -1,7 +1,8 @@
-import { getDatabase, ref, onValue, onDisconnect, set, remove, onValue as listenValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, onDisconnect, set, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { firebaseConfig } from "./firebase-config.js";
 
 export function initCampusFeatures({ app, uid, profile, player, scene, THREE, places }) {
-  const rtdb = getDatabase(app);
+  const rtdb = getDatabase(app, firebaseConfig.databaseURL);
   const presenceRoot = ref(rtdb, "campusPlayers");
   const myPresence = ref(rtdb, "campusPlayers/" + uid);
   const otherAvatars = new Map();
@@ -206,7 +207,7 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
   let lastSent = 0;
   const sendPosition = () => {
     const now = performance.now();
-    if (now - lastSent < 250) return;
+    if (now - lastSent < 500) return;
     lastSent = now;
     set(myPresence, {
       name: profile.fullName || "Pemain",
