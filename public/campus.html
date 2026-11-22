@@ -21,6 +21,11 @@
     .actions button{min-width:76px;padding:13px 12px;border:1px solid #fff8;border-radius:13px;background:#102b43df;color:#fff;font-weight:bold;box-shadow:0 4px 12px #0004;touch-action:manipulation}
     .actions button.active{background:#b27d1b}
     @media(max-width:700px){.mobile-controls{display:flex}.top-panel{top:10px;left:10px;padding:10px 12px;font-size:10px;max-width:190px}.top-panel b{font-size:11px}.student-card{top:10px;right:10px;width:min(175px,calc(100vw - 210px));padding:9px;font-size:10px}.student-card strong{font-size:12px}}
+    .datetime-panel{position:fixed;left:14px;bottom:14px;z-index:7;padding:9px 13px;border:1px solid #d4af37;border-radius:11px;background:rgba(9,27,42,.92);color:#fff;font:11px/1.55 Arial,sans-serif;box-shadow:0 5px 18px #0003;backdrop-filter:blur(8px)}
+    .datetime-panel strong{display:block;color:#e8bd58;font-size:12px;letter-spacing:.4px}
+    .creator-link{color:#9edcf5;text-decoration:none;font-weight:bold}
+    .creator-link:hover{text-decoration:underline}
+    @media(max-width:700px){.datetime-panel{left:10px;bottom:10px;padding:7px 9px;font-size:9px}.datetime-panel strong{font-size:10px}}
   </style>
 </head>
 <body>
@@ -31,10 +36,29 @@
     <br><a href="index.html">← Kembali ke halaman utama</a>
     <br><span>Double klik area permainan untuk menyembunyikan kursor. Tekan ESC untuk melepasnya.</span><br><span>Dekati gedung lalu tekan E untuk informasi.</span><br><span>Denah 3D masih berupa ilustrasi.</span>
   </div>
+  <aside class="datetime-panel" aria-live="off"><strong id="campus-day">Memuat hari...</strong><span id="campus-date">Memuat tanggal...</span><br><span id="campus-time">Memuat waktu...</span><br><span>Support Creator: <a class="creator-link" href="https://www.instagram.com/hjrcoo/" target="_blank" rel="noopener">@hjrcoo</a></span></aside>
   <div class="mobile-controls">
     <div id="joystick" aria-label="Joystick gerak"><div id="stick"></div></div>
     <div class="actions"><button id="jump" type="button">LOMPAT</button><button id="run" type="button">LARI</button></div>
   </div>
+  <script>
+    (() => {
+      const day = document.getElementById("campus-day");
+      const date = document.getElementById("campus-date");
+      const time = document.getElementById("campus-time");
+      const formatter = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", weekday: "long", day: "numeric", month: "long", year: "numeric" });
+      const clock = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+      function refreshClock() {
+        const now = new Date();
+        const parts = formatter.formatToParts(now);
+        day.textContent = parts.find(part => part.type === "weekday")?.value || "";
+        date.textContent = formatter.format(now);
+        time.textContent = "WIB · " + clock.format(now);
+      }
+      refreshClock();
+      setInterval(refreshClock, 1000);
+    })();
+  </script>
   <script type="module" src="campus.js"></script>
 </body>
 </html>
