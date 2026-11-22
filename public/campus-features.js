@@ -1,7 +1,9 @@
 import { getDatabase, ref, onValue, onDisconnect, set, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp as firestoreTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 export function initCampusFeatures({ app, uid, profile, player, scene, THREE, places }) {
+  const db = getFirestore(app);
   let rtdb = null;
   try { rtdb = getDatabase(app, firebaseConfig.databaseURL); }
   catch (error) { console.warn("Realtime Database belum dikonfigurasi:", error); }
@@ -32,6 +34,7 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
   const tabs = [
     ["info", "INFO"],
     ["missions", "MISI"],
+    ["attendance", "ABSEN"],
     ["multiplayer", "CARI PLAYER"]
   ];
   const buttons = new Map();
@@ -93,6 +96,50 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
         item.append(title, detail);
         windowPanel.appendChild(item);
       });
+    } else if (activeTab === "attendance") {
+      heading.textContent = "Absensi Siswa";
+      const dateText = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      const dateLabel = document.createElement("p");
+      dateLabel.className = "muted";
+      dateLabel.textContent = "Tanggal: " + new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "full" }).format(new Date());
+      const status = document.createElement("p");
+      status.className = "muted";
+      status.textContent = "Tekan tombol di bawah untuk mencatat kehadiran hari ini.";
+      const attend = document.createElement("button");
+      attend.type = "button";
+      attend.textContent = "HADIR";
+      attend.style.cssText = "width:100%;padding:12px;border:0;border-radius:9px;background:#d4af37;color:#102b43;font-weight:bold;cursor:pointer";
+      attend.addEventListener("click", async () => {
+        attend.disabled = true;
+        attend.textContent = "MENYIMPAN...";
+        try {
+          const attendanceRef = doc(db, "attendance", dateText + "_" + uid);
+          const existing = await getDoc(attendanceRef);
+          if (existing.exists()) {
+            status.textContent = "Kehadiran kamu hari ini sudah tercatat.";
+            attend.textContent = "SUDAH HADIR";
+            return;
+          }
+          await setDoc(attendanceRef, {
+            uid,
+            fullName: profile.fullName || "Siswa",
+            major: profile.major || "",
+            grade: profile.grade || "",
+            classNumber: profile.classNumber ?? null,
+            date: dateText,
+            status: "hadir",
+            createdAt: firestoreTimestamp()
+          });
+          status.textContent = "Berhasil! Kehadiran kamu sudah tersimpan.";
+          attend.textContent = "SUDAH HADIR";
+        } catch (error) {
+          console.error("Gagal menyimpan absensi:", error);
+          status.textContent = "Absensi gagal disimpan. Periksa koneksi dan Firebase Rules.";
+          attend.disabled = false;
+          attend.textContent = "COBA LAGI";
+        }
+      });
+      windowPanel.append(dateLabel, status, attend);
     } else {
       heading.textContent = "Cari Player Instagram";
       const hint = document.createElement("p");

@@ -60,6 +60,22 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /attendance/{attendanceId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'uid','fullName','major','grade','classNumber','date','status','createdAt'
+        ])
+        && request.resource.data.fullName is string
+        && request.resource.data.major is string
+        && request.resource.data.grade in ['X','XI','XII']
+        && request.resource.data.date is string
+        && request.resource.data.status == 'hadir'
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
     match /classCounts/{id} {
       allow read, write: if false;
     }
