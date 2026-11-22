@@ -1,5 +1,4 @@
 import * as THREE from "https://esm.sh/three@0.160.0";
-import { OrbitControls } from "https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -53,13 +52,34 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 root.appendChild(renderer.domElement);
 
-const orbit = new OrbitControls(camera, renderer.domElement);
-orbit.enableDamping = true;
-orbit.dampingFactor = 0.07;
-orbit.minDistance = 7;
-orbit.maxDistance = 36;
-orbit.maxPolarAngle = Math.PI * 0.48;
-orbit.target.set(0, 1, 22);
+// Kamera third-person: selalu mengikuti posisi dan arah hadap karakter.
+let cameraYaw = 0;
+let cameraPitch = 0.22;
+let cameraDistance = 10;
+const cameraTarget = new THREE.Vector3();
+const cameraOffset = new THREE.Vector3();
+const CAMERA_SENSITIVITY = 0.0025;
+
+// Double-click pada area permainan untuk mengunci pointer dan menggerakkan kamera
+// dengan mouse. Tekan ESC untuk melepas pointer kembali.
+renderer.domElement.addEventListener("dblclick", async () => {
+  if (document.pointerLockElement !== renderer.domElement) {
+    try { await renderer.domElement.requestPointerLock(); }
+    catch (error) { console.warn("Pointer lock tidak tersedia:", error); }
+  }
+});
+document.addEventListener("mousemove", event => {
+  if (document.pointerLockElement !== renderer.domElement) return;
+  cameraYaw -= event.movementX * CAMERA_SENSITIVITY;
+  cameraPitch = THREE.MathUtils.clamp(
+    cameraPitch + event.movementY * CAMERA_SENSITIVITY,
+    -0.18,
+    0.78
+  );
+});
+renderer.domElement.addEventListener("wheel", event => {
+  cameraDistance = THREE.MathUtils.clamp(cameraDistance + event.deltaY * 0.01, 6, 19);
+}, { passive: true });
 
 scene.add(new THREE.HemisphereLight(0xeaf7ff, 0x61764d, 2.1));
 const sun = new THREE.DirectionalLight(0xfff0d1, 2.2);
@@ -270,12 +290,15 @@ let last=0, walkPhase=0;
 function animate(now) {
   requestAnimationFrame(animate);
   const dt=Math.min((now-last)/1000,.05); last=now;
-  let x=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+mobile.x;
-  let z=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+mobile.z;
-  const mag=Math.hypot(x,z);
+  // Input relatif terhadap arah kamera: W selalu maju ke arah pandangan.
+  const inputX=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+mobile.x;
+  const inputZ=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-mobile.z;
+  const mag=Math.hypot(inputX,inputZ);
   const moving=mag>.08;
   if(moving){
-    x/=Math.max(1,mag); z/=Math.max(1,mag);
+    const nx=inputX/Math.max(1,mag), nz=inputZ/Math.max(1,mag);
+    const x=nx*Math.cos(cameraYaw)+nz*Math.sin(cameraYaw);
+    const z=-nx*Math.sin(cameraYaw)+nz*Math.cos(cameraYaw);
     const speed=running?13:7.5;
     player.position.x+=x*speed*dt; player.position.z+=z*speed*dt;
     player.rotation.y=Math.atan2(x,z);
@@ -292,9 +315,16 @@ function animate(now) {
   player.position.x=THREE.MathUtils.clamp(player.position.x,-50,50);
   player.position.z=THREE.MathUtils.clamp(player.position.z,-42,43);
   avatar.position.y=now<jumpUntil?Math.sin((jumpUntil-now)/420*Math.PI)*1.15:(moving?Math.abs(Math.sin(walkPhase*2))*.06:0);
-  const target=new THREE.Vector3(player.position.x,1.2,player.position.z);
-  orbit.target.lerp(target,.075);
-  orbit.update();
+  cameraTarget.set(player.position.x,1.25,player.position.z);
+  const horizontal=Math.cos(cameraPitch)*cameraDistance;
+  cameraOffset.set(
+    -Math.sin(cameraYaw)*horizontal,
+    Math.sin(cameraPitch)*cameraDistance+2.1,
+    -Math.cos(cameraYaw)*horizontal
+  );
+  const desiredCamera=cameraTarget.clone().add(cameraOffset);
+  camera.position.lerp(desiredCamera,1-Math.exp(-7*dt));
+  camera.lookAt(cameraTarget);
   renderer.render(scene,camera);
 }
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
