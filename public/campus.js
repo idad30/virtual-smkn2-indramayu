@@ -1,7 +1,7 @@
 import * as THREE from "https://esm.sh/three@0.160.0";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 // Akses kampus tetap memakai akun anonim Firebase dan status approved.
@@ -23,6 +23,45 @@ async function checkStudentAccess() {
   const data = snap.data();
   if (data.status !== "approved") throw new Error("Akun belum disetujui admin.");
   return data;
+}
+
+function watchPromotion(uid) {
+  let previous = null;
+  const notice = document.createElement("div");
+  notice.id = "promotion-notice";
+  notice.style.cssText = "display:none;position:fixed;top:22px;left:50%;transform:translateX(-50%);z-index:30;width:min(420px,calc(100vw - 28px));padding:16px 18px;border:1px solid #e4bd58;border-radius:14px;background:rgba(12,31,48,.97);color:#fff;text-align:center;font:14px/1.5 Arial,sans-serif;box-shadow:0 8px 30px #0007";
+  document.body.appendChild(notice);
+  onSnapshot(doc(db,"players",uid), snap => {
+    if (!snap.exists()) return;
+    const current = snap.data();
+    if (previous) {
+      const oldPosition = previous.position || "Anggota";
+      const newPosition = current.position || "Anggota";
+      const oldStatus = previous.schoolStatus || (previous.gender === "P" ? "Taruni" : "Taruna");
+      const newStatus = current.schoolStatus || (current.gender === "P" ? "Taruni" : "Taruna");
+      if (oldPosition !== newPosition || oldStatus !== newStatus) {
+        notice.replaceChildren();
+        const heading = document.createElement("strong");
+        heading.textContent = "SELAMAT! JABATAN DIPERBARUI";
+        heading.style.cssText = "display:block;color:#f2cf72;font-size:16px;margin-bottom:6px";
+        const message = document.createElement("div");
+        message.textContent = oldPosition !== newPosition
+          ? "Jabatan kamu berubah dari " + oldPosition + " menjadi " + newPosition + "."
+          : "Status kamu diperbarui menjadi " + newStatus + ".";
+        const close = document.createElement("button");
+        close.textContent = "Tutup";
+        close.style.cssText = "margin-top:12px;padding:8px 18px;border:0;border-radius:8px;background:#e4bd58;color:#172b3a;font-weight:bold;cursor:pointer";
+        close.addEventListener("click", () => { notice.style.display = "none"; });
+        notice.append(heading,message,close);
+        notice.style.display = "block";
+      }
+    }
+    previous = {
+      position: current.position || "Anggota",
+      schoolStatus: current.schoolStatus,
+      gender: current.gender
+    };
+  }, error => console.error("Gagal memantau perubahan jabatan:", error));
 }
 
 function studentCard(data) {
@@ -434,6 +473,7 @@ async function start() {
   try {
     const data=await checkStudentAccess();
     studentCard(data);
+    watchPromotion(auth.currentUser.uid);
     requestAnimationFrame(animate);
   } catch(error) {
     console.error("Campus error:",error);
