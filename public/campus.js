@@ -107,7 +107,27 @@ function studentCard(data) {
     });
     el.appendChild(picker);
   });
-  el.append(title,portrait,name,info,change); document.body.appendChild(el);
+  const download=document.createElement("button"); download.type="button"; download.textContent="UNDUH ID CARD";
+  download.style.cssText="margin-top:3px;padding:10px;border:1px solid #e4bd58;border-radius:8px;background:#f4d27d;color:#102b43;font-weight:bold;cursor:pointer";
+  download.addEventListener("click",()=>{
+    const card=document.createElement("canvas"); card.width=1200; card.height=760;
+    const c=card.getContext("2d");
+    const gradient=c.createLinearGradient(0,0,1200,760); gradient.addColorStop(0,"#102b43"); gradient.addColorStop(1,"#1d4c68");
+    c.fillStyle=gradient; c.fillRect(0,0,1200,760);
+    c.strokeStyle="#d4af37"; c.lineWidth=12; c.strokeRect(24,24,1152,712);
+    c.fillStyle="#f2cf72"; c.font="bold 38px Arial"; c.fillText("VIRTUAL SMKN 2 INDRAMAYU",70,105);
+    c.fillStyle="#ffffff"; c.font="bold 27px Arial"; c.fillText("KARTU IDENTITAS SISWA",70,155);
+    c.drawImage(photo,75,210,390,390);
+    c.fillStyle="#ffffff"; c.font="bold 43px Arial";
+    const fullName=data.fullName||"Siswa"; c.fillText(fullName.length>25?fullName.slice(0,24)+"…":fullName,520,285);
+    c.fillStyle="#e8bd58"; c.font="bold 25px Arial"; c.fillText(data.schoolStatus||(data.gender==="P"?"Taruni":"Taruna"),520,345);
+    c.fillStyle="#ffffff"; c.font="26px Arial";
+    const rows=[["Jabatan",data.position||"Anggota"],["Program Keahlian",data.major||"-"],["Tingkat",data.grade||"-"],["Kelas",String(data.classNumber??data.className??"-")]];
+    rows.forEach((row,i)=>{const y=420+i*62;c.fillStyle="#a9c2d2";c.fillText(row[0],520,y);c.fillStyle="#ffffff";c.fillText(": "+row[1],760,y);});
+    c.fillStyle="#f2cf72";c.font="bold 20px Arial";c.fillText("IDENTITAS DIGITAL SISWA",70,680);
+    const link=document.createElement("a"); link.download="ID-Card-"+(fullName.replace(/[^a-z0-9]+/gi,"-")||"siswa")+".png"; link.href=card.toDataURL("image/png"); link.click();
+  });
+  el.append(title,portrait,name,info,change,download); document.body.appendChild(el);
 }
 
 const root = document.querySelector("#game");
