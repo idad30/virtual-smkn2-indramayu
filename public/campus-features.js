@@ -13,7 +13,7 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
     #campus-menu{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:20;display:flex;flex-direction:row;gap:7px;max-width:calc(100vw - 350px)}
     #campus-menu button{border:1px solid #d4af37;border-radius:10px;padding:10px 13px;background:#102b43ed;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 4px 14px #0004}
     #campus-menu button.active{background:#d4af37;color:#102b43}
-    #campus-window{display:none;position:fixed;right:14px;top:205px;z-index:20;width:min(330px,calc(100vw - 28px));max-height:42vh;overflow:auto;padding:16px;border:1px solid #d4af37;border-radius:14px;background:#0b2030f2;color:#fff;font:13px/1.55 Arial,sans-serif;box-shadow:0 8px 28px #0006}
+    #campus-window{display:none;position:fixed;left:50%;transform:translateX(-50%);top:66px;z-index:20;width:min(360px,calc(100vw - 28px));max-height:42vh;overflow:auto;padding:16px;border:1px solid #d4af37;border-radius:14px;background:#0b2030f2;color:#fff;font:13px/1.55 Arial,sans-serif;box-shadow:0 8px 28px #0006}
     #campus-window h3{margin:0 0 10px;color:#f0c96b;font-size:16px}
     #campus-window .mission{padding:9px;margin:8px 0;border:1px solid #ffffff24;border-radius:9px;background:#ffffff09}
     #campus-window .done{color:#8ce0a8}
@@ -185,7 +185,8 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
         otherAvatars.set(otherUid, entry);
       }
       entry.name = value.name || "Pemain";
-      entry.major = value.major || "";\n      entry.instagram = value.instagram || "";
+      entry.major = value.major || "";
+      entry.instagram = value.instagram || "";
       if (value.x != null && value.z != null) entry.avatar.position.set(value.x,0,value.z);
     }
     for (const [otherUid, entry] of otherAvatars) {
