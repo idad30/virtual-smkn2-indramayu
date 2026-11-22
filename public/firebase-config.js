@@ -1,10 +1,15 @@
 // Ganti nilai di bawah dengan konfigurasi Firebase milik proyek sekolah.
 // Firebase Console > Project settings > Your apps > SDK setup and configuration.
-export const firebaseConfig = {
-  apiKey: "ISI_API_KEY",
-  authDomain: "ISI_PROJECT_ID.firebaseapp.com",
-  projectId: "ISI_PROJECT_ID",
-  storageBucket: "ISI_PROJECT_ID.appspot.com",
-  messagingSenderId: "ISI_MESSAGING_SENDER_ID",
-  appId: "ISI_APP_ID"
+// Import the functions you need from the SDKs you need
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDwlyw6Mz75baiLSGJH8Yjx7CelI91LLkU",
+  authDomain: "virtual-smkn-2-indramayu.firebaseapp.com",
+  projectId: "virtual-smkn-2-indramayu",
+  storageBucket: "virtual-smkn-2-indramayu.firebasestorage.app",
+  messagingSenderId: "950864636688",
+  appId: "1:950864636688:web:55546ff4b68be129d99395",
+  measurementId: "G-4GCYN0V59F"
 };
+
+firebase.initializeApp(firebaseConfig);
