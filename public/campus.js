@@ -86,26 +86,19 @@ function studentCard(data) {
   const name=document.createElement("strong"); name.textContent=data.fullName||"Siswa";
   const info=document.createElement("span");
   info.textContent=`${data.schoolStatus||(data.gender==="P"?"Taruni":"Taruna")} · ${data.position||"Anggota"} · ${data.major||"-"} · ${data.grade||"-"} · Kelas ${data.classNumber??data.className??"-"}`;
-  const change=document.createElement("button"); change.type="button"; change.textContent="GANTI KARAKTER";
-  change.style.cssText="margin-top:5px;padding:9px;border:0;border-radius:8px;background:#e4bd58;color:#102b43;font-weight:bold;cursor:pointer";
-  change.addEventListener("click",()=> {
-    let picker=el.querySelector(".avatar-picker");
-    if(picker){picker.remove();return;}
-    picker=document.createElement("div");picker.className="avatar-picker";
-    picker.style.cssText="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px";
-    Object.entries(avatarOptions).forEach(([id,cfg])=>{
-      const option=document.createElement("button");option.type="button";option.textContent=cfg.label;
-      option.style.cssText="padding:8px 5px;border:1px solid #d4af37;border-radius:7px;background:#183b54;color:white;font-size:11px";
-      option.addEventListener("click",async()=>{
-        try {
-          await updateDoc(doc(db,"players",auth.currentUser.uid),{avatarId:id});
-          buildAvatar(id);drawPortrait(id);data.avatarId=id;
-          picker.remove();
-        } catch(error){console.error(error);alert("Gagal menyimpan karakter. Periksa Firestore Rules.");}
-      });
-      picker.appendChild(option);
+  const avatarButtons=document.createElement("div"); avatarButtons.className="avatar-buttons";
+  avatarButtons.style.cssText="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:5px";
+  Object.entries(avatarOptions).forEach(([id,cfg])=>{
+    const option=document.createElement("button"); option.type="button"; option.textContent=cfg.label.replace("Taruna ","").replace("Taruni ","");
+    option.title=cfg.label; option.style.cssText="min-width:0;padding:8px 3px;border:1px solid #d4af37;border-radius:7px;background:"+(id===(data.avatarId||"taruna")?"#e4bd58":"#183b54")+";color:"+(id===(data.avatarId||"taruna")?"#102b43":"white")+";font-size:10px;font-weight:bold;cursor:pointer";
+    option.addEventListener("click",async()=>{
+      try {
+        await updateDoc(doc(db,"players",auth.currentUser.uid),{avatarId:id});
+        buildAvatar(id);drawPortrait(id);data.avatarId=id;
+        [...avatarButtons.children].forEach((button,index)=>{const selected=Object.keys(avatarOptions)[index]===id;button.style.background=selected?"#e4bd58":"#183b54";button.style.color=selected?"#102b43":"white";});
+      } catch(error){console.error(error);alert("Gagal menyimpan karakter. Periksa Firestore Rules.");}
     });
-    el.appendChild(picker);
+    avatarButtons.appendChild(option);
   });
   const download=document.createElement("button"); download.type="button"; download.textContent="UNDUH ID CARD";
   download.style.cssText="margin-top:3px;padding:10px;border:1px solid #e4bd58;border-radius:8px;background:#f4d27d;color:#102b43;font-weight:bold;cursor:pointer";
@@ -127,7 +120,7 @@ function studentCard(data) {
     c.fillStyle="#f2cf72";c.font="bold 20px Arial";c.fillText("IDENTITAS DIGITAL SISWA",70,680);
     const link=document.createElement("a"); link.download="ID-Card-"+(fullName.replace(/[^a-z0-9]+/gi,"-")||"siswa")+".png"; link.href=card.toDataURL("image/png"); link.click();
   });
-  el.append(title,portrait,name,info,change,download); document.body.appendChild(el);
+  el.append(title,portrait,name,info,avatarButtons,download); document.body.appendChild(el);
 }
 
 const root = document.querySelector("#game");
