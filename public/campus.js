@@ -235,6 +235,76 @@ for(let i=0;i<8;i++) {
 // Pepohonan tambahan membingkai area lapangan.
 [[-52,-28],[-52,-12],[-52,8],[-52,25],[52,-28],[52,-12],[52,8],[52,25],[-35,42],[35,42]].forEach(p=>tree(...p));
 
+// Area interaksi dan penghalang gedung (ukuran mengikuti denah ilustratif).
+const campusPlaces = [
+  {name:"Gedung Utama",x:-17,z:-5,w:24,d:12,info:"Gedung utama sekolah. Area administrasi dan kegiatan belajar."},
+  {name:"Kantin",x:18,z:-5,w:13,d:9,info:"Tempat siswa beristirahat dan membeli makanan."},
+  {name:"Barak Eskul",x:-30,z:-24,w:13,d:9,info:"Area kegiatan dan pembinaan ekstrakurikuler."},
+  {name:"UKS",x:-12,z:-25,w:9,d:7,info:"Unit Kesehatan Sekolah."},
+  {name:"Lab NKPI",x:-39,z:0,w:13,d:8,info:"Laboratorium program keahlian NKPI."},
+  {name:"Lab APHPI",x:-39,z:15,w:13,d:8,info:"Laboratorium program keahlian APHPI."},
+  {name:"Lab TKJ",x:-21,z:17,w:13,d:8,info:"Laboratorium Teknik Komputer dan Jaringan."},
+  {name:"Lab RPL",x:-3,z:17,w:13,d:8,info:"Laboratorium Rekayasa Perangkat Lunak."},
+  {name:"Lab TAB",x:15,z:-25,w:13,d:8,info:"Laboratorium program keahlian TAB."},
+  {name:"Lab Kuliner",x:33,z:-18,w:13,d:8,info:"Laboratorium praktik Kuliner."},
+  {name:"Lab APAPL",x:36,z:1,w:13,d:8,info:"Laboratorium program keahlian APAPL."},
+  {name:"Lab TP",x:17,z:17,w:13,d:8,info:"Laboratorium program keahlian TP."}
+];
+const interactionPanel=document.createElement("div");
+interactionPanel.id="interaction-panel";
+interactionPanel.style.cssText="display:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9;width:min(360px,calc(100vw - 32px));padding:14px 16px;border:1px solid #d4af37;border-radius:14px;background:rgba(9,27,42,.95);color:#fff;font:13px/1.5 Arial,sans-serif;box-shadow:0 6px 24px #0005;text-align:center;pointer-events:none";
+document.body.appendChild(interactionPanel);
+let nearbyPlace=null;
+function updateNearbyPlace(){
+  nearbyPlace=null;
+  let best=5.2;
+  for(const place of campusPlaces){
+    const dx=player.position.x-place.x, dz=player.position.z-place.z;
+    const edgeX=Math.max(0,Math.abs(dx)-place.w/2);
+    const edgeZ=Math.max(0,Math.abs(dz)-place.d/2);
+    const distance=Math.hypot(edgeX,edgeZ);
+    if(distance<best){best=distance;nearbyPlace=place;}
+  }
+  if(nearbyPlace){
+    interactionPanel.style.display="block";
+    interactionPanel.innerHTML="";
+    const heading=document.createElement("strong");
+    heading.textContent=nearbyPlace.name;
+    heading.style.color="#e8bd58";
+    const detail=document.createElement("div");
+    detail.textContent="Tekan E untuk melihat informasi";
+    interactionPanel.append(heading,detail);
+  } else {
+    interactionPanel.style.display="none";
+  }
+}
+function blockedAt(x,z){
+  const radius=.75;
+  return campusPlaces.some(place =>
+    Math.abs(x-place.x)<place.w/2+radius &&
+    Math.abs(z-place.z)<place.d/2+radius
+  );
+}
+function moveWithCollision(dx,dz){
+  const nextX=THREE.MathUtils.clamp(player.position.x+dx,-50,50);
+  const nextZ=THREE.MathUtils.clamp(player.position.z+dz,-42,43);
+  if(!blockedAt(nextX,player.position.z)) player.position.x=nextX;
+  if(!blockedAt(player.position.x,nextZ)) player.position.z=nextZ;
+}
+function showPlaceInfo(place){
+  interactionPanel.style.pointerEvents="auto";
+  interactionPanel.innerHTML="";
+  const heading=document.createElement("strong");
+  heading.textContent=place.name;
+  heading.style.cssText="display:block;color:#e8bd58;font-size:15px;margin-bottom:5px";
+  const detail=document.createElement("div");
+  detail.textContent=place.info;
+  const close=document.createElement("button");
+  close.type="button"; close.textContent="TUTUP";
+  close.style.cssText="margin-top:10px;padding:7px 16px;border:0;border-radius:8px;background:#d4af37;color:#102b43;font-weight:bold";
+  close.addEventListener("click",()=>{interactionPanel.style.pointerEvents="none";updateNearbyPlace();});
+  interactionPanel.append(heading,detail,close);
+}
 // Karakter blocky bergaya game voxel/Roblox, seluruh bagian dianimasikan.
 const player = new THREE.Group(); scene.add(player);
 const avatar = new THREE.Group(); player.add(avatar);
@@ -266,6 +336,11 @@ player.position.set(0,0,25);
 const keys = Object.create(null);
 addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true; if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase())) e.preventDefault();},{passive:false});
 addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+addEventListener("keydown",e=>{
+  if(e.key.toLowerCase()==="e" && nearbyPlace && !e.repeat){
+    showPlaceInfo(nearbyPlace);
+  }
+});
 const joystick=document.querySelector("#joystick");
 const stick=document.querySelector("#stick");
 const mobile={x:0,z:0};
@@ -300,7 +375,7 @@ function animate(now) {
     const x=nx*Math.cos(cameraYaw)+nz*Math.sin(cameraYaw);
     const z=-nx*Math.sin(cameraYaw)+nz*Math.cos(cameraYaw);
     const speed=running?13:7.5;
-    player.position.x+=x*speed*dt; player.position.z+=z*speed*dt;
+    moveWithCollision(x*speed*dt,z*speed*dt);
     player.rotation.y=Math.atan2(x,z);
     walkPhase+=dt*(running?13:9);
     const swing=Math.sin(walkPhase)*.62;
@@ -314,6 +389,7 @@ function animate(now) {
   }
   player.position.x=THREE.MathUtils.clamp(player.position.x,-50,50);
   player.position.z=THREE.MathUtils.clamp(player.position.z,-42,43);
+  updateNearbyPlace();
   avatar.position.y=now<jumpUntil?Math.sin((jumpUntil-now)/420*Math.PI)*1.15:(moving?Math.abs(Math.sin(walkPhase*2))*.06:0);
   cameraTarget.set(player.position.x,1.25,player.position.z);
   const horizontal=Math.cos(cameraPitch)*cameraDistance;
