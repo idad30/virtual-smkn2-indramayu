@@ -176,7 +176,7 @@ building("MASJID",25,17,15,12,0xe6e2d6);
 [
  ["LAB NKPI",-43,8],["LAB APHPI",-43,25],
  ["LAB TKJ",-24,34],["LAB RPL",-6,34],
- ["LAB TAB",7,-29],["LAB KULINER",43,-29],
+ ["LAB TAB",-43,-29],["LAB KULINER",43,-29],
  ["LAB APAPL",43,8],["LAB TP",7,17]
 ].forEach(([n,x,z])=>building(n,x,z,13,8,0xe6e9e5));
 
@@ -324,7 +324,7 @@ const campusPlaces = [
   {name:"Lab APHPI",x:-43,z:25,w:13,d:8,info:"Laboratorium program keahlian APHPI."},
   {name:"Lab TKJ",x:-24,z:34,w:13,d:8,info:"Laboratorium Teknik Jaringan Komputer dan Telekomunikasi."},
   {name:"Lab RPL",x:-6,z:34,w:13,d:8,info:"Laboratorium Pengembangan Perangkat Lunak dan Gim."},
-  {name:"Lab TAB",x:7,z:-29,w:13,d:8,info:"Laboratorium program keahlian teknik alat berat."},
+  {name:"Lab TAB",x:-43,z:-29,w:13,d:8,info:"Laboratorium program keahlian teknik alat berat."},
   {name:"Lab Kuliner",x:43,z:-29,w:13,d:8,info:"Laboratorium praktik Kuliner."},
   {name:"Lab APAPL",x:43,z:8,w:13,d:8,info:"Laboratorium program keahlian APAPL."},
   {name:"Lab TP",x:7,z:17,w:13,d:8,info:"Area praktik program keahlian TP."},
