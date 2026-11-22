@@ -113,6 +113,108 @@ function tree(x,z) {
 }
 [[-48,-35],[-43,28],[47,-32],[47,25],[-5,-38],[8,-38],[48,8]].forEach(p=>tree(...p));
 
+// ==========================================
+// DETAIL LINGKUNGAN SEKOLAH - TAHAP 2
+// ==========================================
+
+// Jalur pedestrian dan marka penyeberangan di dekat gerbang.
+block(0,0.045,28,13,.06,2.2,0xd8d4c8);
+for(let i=0;i<7;i++) block(-5.4+i*1.8,.09,28,1,.025,.16,0xf8f3df);
+
+// Papan nama besar di depan sekolah.
+block(0,0,37,16,.35,.55,0x173b5a);
+block(0,.35,37,13,2.4,.25,0x173b5a);
+signLabel("SMKN 2 INDRAMAYU",0,36.7);
+
+// Tiang bendera dan bendera merah putih.
+function flagPole(x,z) {
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.09,7,8),mat(0xd6d9dc));
+  pole.position.set(x,3.5,z); pole.castShadow=true; scene.add(pole);
+  block(x+.85,6.15,z,1.7,.55,.06,0xe43b3b);
+  block(x+.85,5.6,z,1.7,.55,.06,0xffffff);
+}
+flagPole(-3,24);
+
+// Lampu taman.
+function lamp(x,z) {
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(.07,.11,3.4,8),mat(0x263746));
+  post.position.set(x,1.7,z); post.castShadow=true; scene.add(post);
+  const head=new THREE.Mesh(new THREE.BoxGeometry(.65,.22,.45),mat(0xf5d27a));
+  head.position.set(x,3.45,z); scene.add(head);
+  const glow=new THREE.PointLight(0xffe5a1,.35,7);
+  glow.position.set(x,3.3,z); scene.add(glow);
+}
+[[-8,25],[8,25],[-45,32],[45,32],[-46,-8],[46,-8],[-8,-35],[8,-35]].forEach(p=>lamp(...p));
+
+// Bangku taman di beberapa titik halaman.
+function bench(x,z,rotation=0) {
+  const group=new THREE.Group(); group.position.set(x,0,z); group.rotation.y=rotation; scene.add(group);
+  const wood=mat(0x9a633d), metal=mat(0x34495e);
+  const seat=new THREE.Mesh(new THREE.BoxGeometry(2.4,.16,.65),wood);
+  seat.position.y=.65; seat.castShadow=true; group.add(seat);
+  for(const dx of [-.9,.9]) {
+    const leg=new THREE.Mesh(new THREE.BoxGeometry(.13,.65,.5),metal);
+    leg.position.set(dx,.33,0); group.add(leg);
+    const back=new THREE.Mesh(new THREE.BoxGeometry(.13,1,.12),metal);
+    back.position.set(dx,1.05,.25); group.add(back);
+  }
+  const backrest=new THREE.Mesh(new THREE.BoxGeometry(2.4,.16,.14),wood);
+  backrest.position.set(0,1.12,.25); group.add(backrest);
+}
+bench(-7,21,0); bench(8,21,0); bench(24,8,Math.PI/2); bench(-45,7,Math.PI/2);
+
+// Pot tanaman dan petak bunga.
+function flowerBed(x,z) {
+  block(x,0,z,3.2,.38,1.5,0x98704d);
+  block(x,.38,z,2.9,.12,1.2,0x493d2d);
+  const colors=[0xe85d75,0xf5c84c,0xffffff,0x9c7be8];
+  for(let i=0;i<8;i++) {
+    const px=x-1.15+(i%4)*.76, pz=z-.32+Math.floor(i/4)*.64;
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(.025,.035,.35,5),mat(0x367a43));
+    stem.position.set(px,.68,pz); scene.add(stem);
+    const bloom=new THREE.Mesh(new THREE.SphereGeometry(.16,7,6),mat(colors[i%colors.length]));
+    bloom.position.set(px,.88,pz); scene.add(bloom);
+  }
+}
+[[-8,27],[8,27],[-45,20],[45,20],[-8,-35],[8,-35]].forEach(p=>flowerBed(...p));
+
+// Meja kantin luar ruangan.
+function outdoorTable(x,z) {
+  const top=new THREE.Mesh(new THREE.BoxGeometry(2,.16,1.25),mat(0xe0b86d));
+  top.position.set(x,.9,z); top.castShadow=true; scene.add(top);
+  for(const dx of [-.75,.75]) for(const dz of [-.4,.4]) {
+    const leg=new THREE.Mesh(new THREE.BoxGeometry(.12,.9,.12),mat(0x52616b));
+    leg.position.set(x+dx,.45,z+dz); scene.add(leg);
+  }
+  for(const side of [-1,1]) {
+    const seat=new THREE.Mesh(new THREE.BoxGeometry(1.8,.14,.35),mat(0x9a633d));
+    seat.position.set(x,.55,z+side*.95); scene.add(seat);
+  }
+}
+outdoorTable(25,-9); outdoorTable(25,-14);
+
+// Pembatas halaman sederhana di tepi area, dengan jarak untuk akses masuk.
+for(let x=-56;x<=56;x+=4) {
+  if(Math.abs(x)>10) {
+    block(x,0,-46,.18,1.15,.18,0xe7e2d6);
+    block(x,1.05,-46,4,.12,.12,0x173b5a);
+  }
+}
+for(let z=-42;z<=42;z+=4) {
+  if(z<25 || z>39) {
+    block(-58,0,z,.18,1.15,.18,0xe7e2d6);
+    block(58,0,z,.18,1.15,.18,0xe7e2d6);
+  }
+}
+
+// Marka jalur kendaraan dan area parkir motor.
+for(let i=0;i<8;i++) {
+  block(18+i*2.2,.09,30,.12,.025,4,0xf5f0d8);
+}
+
+// Pepohonan tambahan membingkai area lapangan.
+[[-52,-28],[-52,-12],[-52,8],[-52,25],[52,-28],[52,-12],[52,8],[52,25],[-35,42],[35,42]].forEach(p=>tree(...p));
+
 // Karakter blocky bergaya game voxel/Roblox, seluruh bagian dianimasikan.
 const player = new THREE.Group(); scene.add(player);
 const avatar = new THREE.Group(); player.add(avatar);
