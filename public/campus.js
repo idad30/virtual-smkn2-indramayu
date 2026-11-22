@@ -125,8 +125,21 @@ function studentCard(data) {
 
 const root = document.querySelector("#game");
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x9bc8dc);
-scene.fog = new THREE.Fog(0x9bc8dc, 80, 165);
+// Langit dan suasana otomatis mengikuti waktu Indonesia (WIB).
+const skyColors = {
+  morning: new THREE.Color(0xf3b77e),
+  day: new THREE.Color(0x87c8ed),
+  night: new THREE.Color(0x101a36)
+};
+const fogColors = {
+  morning: new THREE.Color(0xd9ad91),
+  day: new THREE.Color(0x9bc8dc),
+  night: new THREE.Color(0x202b46)
+};
+scene.background = skyColors.day.clone();
+scene.fog = new THREE.Fog(fogColors.day.clone(), 80, 165);
+let hemisphereLight;
+let currentSkyPeriod = "";
 const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 260);
 camera.position.set(0, 13, 19);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -166,12 +179,42 @@ renderer.domElement.addEventListener("wheel", event => {
   cameraDistance = THREE.MathUtils.clamp(cameraDistance + event.deltaY * 0.01, 6, 19);
 }, { passive: true });
 
-scene.add(new THREE.HemisphereLight(0xeaf7ff, 0x61764d, 2.1));
+hemisphereLight = new THREE.HemisphereLight(0xeaf7ff, 0x61764d, 2.1);
+scene.add(hemisphereLight);
 const sun = new THREE.DirectionalLight(0xfff0d1, 2.2);
 sun.position.set(-35, 65, 35);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 scene.add(sun);
+
+function updateSkyByTime() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+  }).formatToParts(new Date());
+  const hour = Number(parts.find(part => part.type === "hour")?.value ?? 12);
+  const period = hour >= 5 && hour < 10 ? "morning" : hour >= 10 && hour < 17 ? "day" : "night";
+  if (period === currentSkyPeriod) return;
+  currentSkyPeriod = period;
+
+  scene.background.copy(skyColors[period]);
+  scene.fog.color.copy(fogColors[period]);
+  if (period === "morning") {
+    hemisphereLight.intensity = 1.35;
+    sun.intensity = 1.25;
+    sun.color.set(0xffd2a1);
+    sun.position.set(-45, 30, 25);
+  } else if (period === "day") {
+    hemisphereLight.intensity = 2.1;
+    sun.intensity = 2.2;
+    sun.color.set(0xfff0d1);
+    sun.position.set(-35, 65, 35);
+  } else {
+    hemisphereLight.intensity = 0.48;
+    sun.intensity = 0.12;
+    sun.color.set(0x8ca9e8);
+    sun.position.set(20, 18, -25);
+  }
+}
 
 const mat = color => new THREE.MeshStandardMaterial({ color, roughness: 0.82 });
 function block(x,y,z,w,h,d,color) {
@@ -482,6 +525,7 @@ const moveVelocity=new THREE.Vector3();
 const desiredVelocity=new THREE.Vector3();
 function animate(now) {
   requestAnimationFrame(animate);
+  updateSkyByTime();
   const dt=Math.min((now-last)/1000,.05); last=now;
 
   const inputX=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+mobile.x;
