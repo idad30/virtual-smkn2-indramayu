@@ -2,7 +2,9 @@ import { getDatabase, ref, onValue, onDisconnect, set, remove, serverTimestamp }
 import { firebaseConfig } from "./firebase-config.js";
 
 export function initCampusFeatures({ app, uid, profile, player, scene, THREE, places }) {
-  const rtdb = getDatabase(app, firebaseConfig.databaseURL);
+  let rtdb = null;
+  try { rtdb = getDatabase(app, firebaseConfig.databaseURL); }
+  catch (error) { console.warn("Realtime Database belum dikonfigurasi:", error); }
   const presenceRoot = ref(rtdb, "campusPlayers");
   const myPresence = ref(rtdb, "campusPlayers/" + uid);
   const otherAvatars = new Map();
@@ -97,7 +99,7 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
       heading.textContent = "Pemain Online";
       const hint = document.createElement("p");
       hint.className = "muted";
-      hint.textContent = "Pemain lain yang sedang berada di kampus akan muncul di sini dan di area 3D.";
+      hint.textContent = rtdb ? "Pemain lain yang sedang berada di kampus akan muncul di sini dan di area 3D." : "Multiplayer belum aktif. Admin perlu membuat Realtime Database dan mengisi databaseURL di firebase-config.js.";
       windowPanel.appendChild(hint);
       const list = document.createElement("div");
       const entries = [...otherAvatars.values()];
@@ -158,6 +160,10 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
     label.position.y=3.1; label.scale.set(4.5,.85,1); group.add(label);
     scene.add(group);
     return group;
+  }
+
+  if (!rtdb) {
+    return { update: updateMissionProgress, destroy() {} };
   }
 
   onValue(presenceRoot, snapshot => {
