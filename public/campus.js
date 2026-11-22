@@ -3,6 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
+import { initCampusFeatures } from "./campus-features.js";
 
 // Akses kampus tetap memakai akun anonim Firebase dan status approved.
 const app = initializeApp(firebaseConfig);
@@ -408,6 +409,7 @@ document.querySelector("#jump").addEventListener("click",()=>{jumpUntil=performa
 
 // Gerakan karakter lebih halus: akselerasi, pengereman, dan putaran bertahap.
 let last=0, walkPhase=0;
+let campusFeatures = null;
 const moveVelocity=new THREE.Vector3();
 const desiredVelocity=new THREE.Vector3();
 function animate(now) {
@@ -453,6 +455,7 @@ function animate(now) {
   player.position.x=THREE.MathUtils.clamp(player.position.x,-50,50);
   player.position.z=THREE.MathUtils.clamp(player.position.z,-42,43);
   updateNearbyPlace();
+  campusFeatures?.update();
   avatar.position.y=now<jumpUntil?Math.sin((jumpUntil-now)/420*Math.PI)*1.15:(actualSpeed>.18?Math.abs(Math.sin(walkPhase*2))*.045:0);
 
   cameraTarget.set(player.position.x,1.25,player.position.z);
@@ -474,6 +477,7 @@ async function start() {
     const data=await checkStudentAccess();
     studentCard(data);
     watchPromotion(auth.currentUser.uid);
+    campusFeatures = initCampusFeatures({ app, uid: auth.currentUser.uid, profile: data, player, scene, THREE, places: campusPlaces });
     requestAnimationFrame(animate);
   } catch(error) {
     console.error("Campus error:",error);
