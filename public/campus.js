@@ -29,11 +29,11 @@ function studentCard(data) {
   const el = document.createElement("aside");
   el.className = "student-card";
   const title = document.createElement("b");
-  title.textContent = "IDENTITAS SISWA";
+  title.textContent = "IDENTITAS TARUNA/TARUNI";
   const name = document.createElement("strong");
   name.textContent = data.fullName || "Siswa";
   const info = document.createElement("span");
-  info.textContent = `${data.major || "-"} · ${data.grade || "-"} · Kelas ${data.classNumber ?? data.className ?? "-"}`;
+  info.textContent = `${data.schoolStatus || (data.gender === "P" ? "Taruni" : "Taruna")} · ${data.position || "Anggota"} · ${data.major || "-"} · ${data.grade || "-"} · Kelas ${data.classNumber ?? data.className ?? "-"}`;
   el.append(title, name, info);
   document.body.appendChild(el);
 }
