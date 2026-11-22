@@ -1,13 +1,8 @@
 
 import * as THREE from "https://esm.sh/three@0.160.0";
+import { OrbitControls } from "https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 
-import { OrbitControls } from
-"https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js";
-
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth,
   signInAnonymously,
@@ -32,7 +27,7 @@ const db = getFirestore(firebaseApp);
 
 let playerData = null;
 
-async function getCurrentUser() {
+function getCurrentUser() {
   return new Promise((resolve, reject) => {
     let unsubscribe = () => {};
 
@@ -42,7 +37,10 @@ async function getCurrentUser() {
         unsubscribe();
         resolve(user);
       },
-      reject
+      error => {
+        unsubscribe();
+        reject(error);
+      }
     );
   });
 }
@@ -72,7 +70,7 @@ async function checkStudentAccess() {
 }
 
 // ==========================================
-// 2. TAMPILAN IDENTITAS SISWA
+// 2. IDENTITAS SISWA - KANAN ATAS
 // ==========================================
 
 function createStudentCard(data) {
@@ -80,12 +78,14 @@ function createStudentCard(data) {
 
   card.style.cssText = `
     position: fixed;
-    top: 18px;
-    left: 18px;
+    top: 85px;
+    right: 18px;
+    left: auto;
     z-index: 1000;
-    width: 245px;
+    width: 220px;
+    max-width: calc(100vw - 36px);
     box-sizing: border-box;
-    padding: 16px;
+    padding: 13px;
     border: 1px solid #d4af37;
     border-radius: 13px;
     background: rgba(12, 35, 55, 0.94);
@@ -99,25 +99,25 @@ function createStudentCard(data) {
   heading.textContent = "IDENTITAS SISWA";
   heading.style.cssText = `
     color: #e4b84f;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
     letter-spacing: 1px;
-    margin-bottom: 12px;
+    margin-bottom: 9px;
   `;
 
   const name = document.createElement("div");
   name.textContent = data.fullName || "Nama siswa";
   name.style.cssText = `
-    font-size: 17px;
+    font-size: 15px;
     font-weight: bold;
-    margin-bottom: 12px;
+    margin-bottom: 9px;
     overflow-wrap: anywhere;
   `;
 
   const details = document.createElement("div");
   details.style.cssText = `
-    font-size: 13px;
-    line-height: 1.9;
+    font-size: 12px;
+    line-height: 1.8;
     color: #e4edf5;
   `;
 
@@ -144,6 +144,12 @@ function createStudentCard(data) {
 // 3. PENGATURAN THREE.JS
 // ==========================================
 
+const gameContainer = document.querySelector("#game");
+
+if (!gameContainer) {
+  throw new Error("Elemen #game tidak ditemukan di campus.html.");
+}
+
 const scene = new THREE.Scene();
 
 scene.background = new THREE.Color(0x9bc8dc);
@@ -166,7 +172,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 
-document.querySelector("#game").appendChild(renderer.domElement);
+gameContainer.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 
@@ -198,9 +204,7 @@ scene.add(sun);
 // ==========================================
 
 function material(color) {
-  return new THREE.MeshStandardMaterial({
-    color
-  });
+  return new THREE.MeshStandardMaterial({ color });
 }
 
 function block(x, y, z, width, height, depth, color) {
@@ -218,29 +222,19 @@ function block(x, y, z, width, height, depth, color) {
 }
 
 function building(name, x, z, width, depth, color = 0xf1eee5) {
-  // Lantai gedung
   block(x, 0, z, width, 0.5, depth, 0xb9b9ad);
-
-  // Bangunan utama
   block(x, 0.5, z, width, 3, depth, color);
-
-  // Atap
   block(x, 3.5, z, width, 0.35, depth, 0x985444);
 
-  // Jendela
+  // Jendela gedung
   for (
     let xx = x - width / 2 + 1;
     xx < x + width / 2;
     xx += 2.5
   ) {
     block(
-      xx,
-      1.4,
-      z - depth / 2 - 0.08,
-      1,
-      1,
-      0.12,
-      0x8cc5d5
+      xx, 1.4, z - depth / 2 - 0.08,
+      1, 1, 0.12, 0x8cc5d5
     );
   }
 
@@ -250,7 +244,6 @@ function building(name, x, z, width, depth, color = 0xf1eee5) {
   canvas.height = 100;
 
   const ctx = canvas.getContext("2d");
-
   ctx.fillStyle = "#102b43";
   ctx.font = "bold 36px Arial";
   ctx.textAlign = "center";
@@ -259,9 +252,7 @@ function building(name, x, z, width, depth, color = 0xf1eee5) {
   const texture = new THREE.CanvasTexture(canvas);
 
   const sign = new THREE.Sprite(
-    new THREE.SpriteMaterial({
-      map: texture
-    })
+    new THREE.SpriteMaterial({ map: texture })
   );
 
   sign.position.set(x, 5, z);
@@ -274,13 +265,8 @@ function building(name, x, z, width, depth, color = 0xf1eee5) {
 // 6. AREA KAMPUS
 // ==========================================
 
-// Lapangan dan tanah
 block(0, -0.5, 0, 120, 1, 100, 0x76a96b);
-
-// Jalan depan
 block(0, 0.02, 35, 120, 0.08, 10, 0x555e65);
-
-// Jalan tengah
 block(0, 0.03, 12, 7, 0.1, 70, 0xb9b9ad);
 
 // ==========================================
@@ -383,25 +369,18 @@ function animate(time) {
   player.position.x += (moveX / length) * 9 * delta;
   player.position.z += (moveZ / length) * 9 * delta;
 
-  // Batas area sekolah
   player.position.x = THREE.MathUtils.clamp(
-    player.position.x,
-    -48,
-    48
+    player.position.x, -48, 48
   );
 
   player.position.z = THREE.MathUtils.clamp(
-    player.position.z,
-    -40,
-    42
+    player.position.z, -40, 42
   );
 
-  // Arah karakter
   if (moveX !== 0 || moveZ !== 0) {
     player.rotation.y = Math.atan2(moveX, moveZ);
   }
 
-  // Kamera mengikuti pemain
   controls.target.lerp(player.position, 0.025);
 
   controls.update();
@@ -435,6 +414,8 @@ async function startCampus() {
     requestAnimationFrame(animate);
 
   } catch (error) {
+    console.error("Campus error:", error);
+
     alert(error.message || "Tidak dapat membuka kampus.");
 
     window.location.href = "index.html";
