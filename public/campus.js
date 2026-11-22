@@ -367,37 +367,55 @@ let running=false, jumpUntil=0;
 document.querySelector("#run").addEventListener("click",()=>{running=!running;document.querySelector("#run").textContent=running?"LARI: ON":"LARI";document.querySelector("#run").classList.toggle("active",running);});
 document.querySelector("#jump").addEventListener("click",()=>{jumpUntil=performance.now()+420;});
 
-// Follow-camera smoothing without removing mouse orbit.
+// Gerakan karakter lebih halus: akselerasi, pengereman, dan putaran bertahap.
 let last=0, walkPhase=0;
+const moveVelocity=new THREE.Vector3();
+const desiredVelocity=new THREE.Vector3();
 function animate(now) {
   requestAnimationFrame(animate);
   const dt=Math.min((now-last)/1000,.05); last=now;
-  // Input relatif terhadap arah kamera: W selalu maju ke arah pandangan.
+
   const inputX=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+mobile.x;
   const inputZ=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-mobile.z;
   const mag=Math.hypot(inputX,inputZ);
   const moving=mag>.08;
+
   if(moving){
     const nx=inputX/Math.max(1,mag), nz=inputZ/Math.max(1,mag);
-    const x=nx*Math.cos(cameraYaw)+nz*Math.sin(cameraYaw);
-    const z=-nx*Math.sin(cameraYaw)+nz*Math.cos(cameraYaw);
-    const speed=running?13:7.5;
-    moveWithCollision(x*speed*dt,z*speed*dt);
-    player.rotation.y=Math.atan2(x,z);
-    walkPhase+=dt*(running?13:9);
-    const swing=Math.sin(walkPhase)*.62;
+    const worldX=nx*Math.cos(cameraYaw)+nz*Math.sin(cameraYaw);
+    const worldZ=-nx*Math.sin(cameraYaw)+nz*Math.cos(cameraYaw);
+    const speed=running?10:6;
+    desiredVelocity.set(worldX*speed,0,worldZ*speed);
+  } else {
+    desiredVelocity.set(0,0,0);
+  }
+
+  const response=moving?9:12;
+  moveVelocity.lerp(desiredVelocity,1-Math.exp(-response*dt));
+  moveWithCollision(moveVelocity.x*dt,moveVelocity.z*dt);
+
+  const actualSpeed=Math.hypot(moveVelocity.x,moveVelocity.z);
+  if(actualSpeed>.18){
+    // Model menghadap sisi -Z, jadi arah hadap perlu dibalik 180 derajat.
+    const targetYaw=Math.atan2(moveVelocity.x,moveVelocity.z)+Math.PI;
+    const angleDelta=Math.atan2(Math.sin(targetYaw-player.rotation.y),Math.cos(targetYaw-player.rotation.y));
+    player.rotation.y+=angleDelta*(1-Math.exp(-13*dt));
+    walkPhase+=dt*(running?11:8)*Math.min(1,actualSpeed/6);
+    const swing=Math.sin(walkPhase)*Math.min(.55,actualSpeed*.09);
     leftArm.rotation.x=swing; rightArm.rotation.x=-swing;
     leftLeg.rotation.x=-swing; rightLeg.rotation.x=swing;
   } else {
-    leftArm.rotation.x=THREE.MathUtils.damp(leftArm.rotation.x,0,9,dt);
-    rightArm.rotation.x=THREE.MathUtils.damp(rightArm.rotation.x,0,9,dt);
-    leftLeg.rotation.x=THREE.MathUtils.damp(leftLeg.rotation.x,0,9,dt);
-    rightLeg.rotation.x=THREE.MathUtils.damp(rightLeg.rotation.x,0,9,dt);
+    leftArm.rotation.x=THREE.MathUtils.damp(leftArm.rotation.x,0,10,dt);
+    rightArm.rotation.x=THREE.MathUtils.damp(rightArm.rotation.x,0,10,dt);
+    leftLeg.rotation.x=THREE.MathUtils.damp(leftLeg.rotation.x,0,10,dt);
+    rightLeg.rotation.x=THREE.MathUtils.damp(rightLeg.rotation.x,0,10,dt);
   }
+
   player.position.x=THREE.MathUtils.clamp(player.position.x,-50,50);
   player.position.z=THREE.MathUtils.clamp(player.position.z,-42,43);
   updateNearbyPlace();
-  avatar.position.y=now<jumpUntil?Math.sin((jumpUntil-now)/420*Math.PI)*1.15:(moving?Math.abs(Math.sin(walkPhase*2))*.06:0);
+  avatar.position.y=now<jumpUntil?Math.sin((jumpUntil-now)/420*Math.PI)*1.15:(actualSpeed>.18?Math.abs(Math.sin(walkPhase*2))*.045:0);
+
   cameraTarget.set(player.position.x,1.25,player.position.z);
   const horizontal=Math.cos(cameraPitch)*cameraDistance;
   cameraOffset.set(
@@ -406,7 +424,7 @@ function animate(now) {
     -Math.cos(cameraYaw)*horizontal
   );
   const desiredCamera=cameraTarget.clone().add(cameraOffset);
-  camera.position.lerp(desiredCamera,1-Math.exp(-7*dt));
+  camera.position.lerp(desiredCamera,1-Math.exp(-5.5*dt));
   camera.lookAt(cameraTarget);
   renderer.render(scene,camera);
 }
