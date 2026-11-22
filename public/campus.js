@@ -1,7 +1,7 @@
 import * as THREE from "https://esm.sh/three@0.160.0";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 import { initCampusFeatures } from "./campus-features.js";
 
@@ -66,16 +66,48 @@ function watchPromotion(uid) {
 }
 
 function studentCard(data) {
-  const el = document.createElement("aside");
-  el.className = "student-card";
-  const title = document.createElement("b");
-  title.textContent = "IDENTITAS TARUNA/TARUNI";
-  const name = document.createElement("strong");
-  name.textContent = data.fullName || "Siswa";
-  const info = document.createElement("span");
-  info.textContent = `${data.schoolStatus || (data.gender === "P" ? "Taruni" : "Taruna")} · ${data.position || "Anggota"} · ${data.major || "-"} · ${data.grade || "-"} · Kelas ${data.classNumber ?? data.className ?? "-"}`;
-  el.append(title, name, info);
-  document.body.appendChild(el);
+  const el=document.createElement("aside"); el.className="student-card";
+  el.style.width="min(260px,calc(100vw - 28px))";
+  const title=document.createElement("b"); title.textContent="KARTU IDENTITAS SISWA";
+  const portrait=document.createElement("div");
+  portrait.style.cssText="height:112px;border-radius:9px;background:linear-gradient(145deg,#dceaf2,#8eafc2);display:flex;align-items:center;justify-content:center;overflow:hidden";
+  const photo=document.createElement("canvas"); photo.width=180; photo.height=112; portrait.append(photo);
+  function drawPortrait(id) {
+    const cfg=avatarOptions[id]||avatarOptions.taruna, x=photo.getContext("2d");
+    x.clearRect(0,0,180,112); x.fillStyle="#dceaf2"; x.fillRect(0,0,180,112);
+    x.fillStyle="#173b5a"; x.fillRect(55,64,70,58);
+    x.fillStyle="#d9a47b"; x.fillRect(72,28,36,38);
+    x.fillStyle=cfg.style==="hijab"?"#172333":"#30251f"; x.fillRect(68,20,44,16);
+    if(cfg.style==="hijab"){x.fillRect(65,30,50,48);x.fillStyle="#d9a47b";x.fillRect(75,34,30,27);}
+    x.fillStyle="#fff";x.fillRect(78,42,5,5);x.fillRect(98,42,5,5);
+    x.fillStyle="#173b5a";x.font="bold 10px Arial";x.textAlign="center";x.fillText("AVATAR 3D",90,105);
+  }
+  drawPortrait(data.avatarId||"taruna");
+  const name=document.createElement("strong"); name.textContent=data.fullName||"Siswa";
+  const info=document.createElement("span");
+  info.textContent=`${data.schoolStatus||(data.gender==="P"?"Taruni":"Taruna")} · ${data.position||"Anggota"} · ${data.major||"-"} · ${data.grade||"-"} · Kelas ${data.classNumber??data.className??"-"}`;
+  const change=document.createElement("button"); change.type="button"; change.textContent="GANTI KARAKTER";
+  change.style.cssText="margin-top:5px;padding:9px;border:0;border-radius:8px;background:#e4bd58;color:#102b43;font-weight:bold;cursor:pointer";
+  change.addEventListener("click",()=> {
+    let picker=el.querySelector(".avatar-picker");
+    if(picker){picker.remove();return;}
+    picker=document.createElement("div");picker.className="avatar-picker";
+    picker.style.cssText="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px";
+    Object.entries(avatarOptions).forEach(([id,cfg])=>{
+      const option=document.createElement("button");option.type="button";option.textContent=cfg.label;
+      option.style.cssText="padding:8px 5px;border:1px solid #d4af37;border-radius:7px;background:#183b54;color:white;font-size:11px";
+      option.addEventListener("click",async()=>{
+        try {
+          await updateDoc(doc(db,"players",auth.currentUser.uid),{avatarId:id});
+          buildAvatar(id);drawPortrait(id);data.avatarId=id;
+          picker.remove();
+        } catch(error){console.error(error);alert("Gagal menyimpan karakter. Periksa Firestore Rules.");}
+      });
+      picker.appendChild(option);
+    });
+    el.appendChild(picker);
+  });
+  el.append(title,portrait,name,info,change); document.body.appendChild(el);
 }
 
 const root = document.querySelector("#game");
@@ -351,31 +383,54 @@ function showPlaceInfo(place){
   hint.style.cssText="display:block;margin-top:8px;color:#9edcf5";
   interactionPanel.append(heading,detail,hint);
 }
-// Karakter blocky bergaya game voxel/Roblox, seluruh bagian dianimasikan.
+// Avatar 3D yang dapat dipilih dan disimpan di profil siswa.
 const player = new THREE.Group(); scene.add(player);
 const avatar = new THREE.Group(); player.add(avatar);
+let leftArm, rightArm, leftLeg, rightLeg;
+const avatarOptions = {
+  taruna: { label:"Taruna Klasik", shirt:0x174b78, pants:0x263746, hair:0x20252a, skin:0xd9a47b, style:"male" },
+  taruni: { label:"Taruni Hijab", shirt:0x174b78, pants:0x263746, hair:0x172333, skin:0xd9a47b, style:"hijab" },
+  sporty: { label:"Sporty Biru", shirt:0x167caa, pants:0x172b43, hair:0x30251f, skin:0xd9a47b, style:"male" },
+  formal: { label:"Formal Navy", shirt:0x102b43, pants:0x172333, hair:0x241c19, skin:0xc98f6b, style:"male" }
+};
+let selectedAvatarId = "taruna";
 function part(parent,w,h,d,color,x,y,z) {
   const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));
   m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; parent.add(m); return m;
 }
-const skin=0xd9a47b, shirt=0x1c4c78, pants=0x263746, shoe=0x20252a;
-part(avatar,.82,.92,.42,shirt,0,1.35,0); // torso
-part(avatar,.58,.58,.58,skin,0,2.12,0); // head
-// rambut
-part(avatar,.62,.16,.62,0x20252a,0,2.47,0);
-part(avatar,.12,.1,.04,0xffffff,-.14,2.17,-.3);
-part(avatar,.12,.1,.04,0xffffff,.14,2.17,-.3);
-part(avatar,.045,.07,.025,0x202020,-.14,2.17,-.325);
-part(avatar,.045,.07,.025,0x202020,.14,2.17,-.325);
-part(avatar,.14,.035,.035,0x9b5b48,0,2.00,-.31);
-const leftArm=new THREE.Group(); leftArm.position.set(-.52,1.75,0); avatar.add(leftArm);
-part(leftArm,.28,.78,.3,shirt,0,-.35,0); part(leftArm,.25,.22,.26,skin,0,-.82,0);
-const rightArm=new THREE.Group(); rightArm.position.set(.52,1.75,0); avatar.add(rightArm);
-part(rightArm,.28,.78,.3,shirt,0,-.35,0); part(rightArm,.25,.22,.26,skin,0,-.82,0);
-const leftLeg=new THREE.Group(); leftLeg.position.set(-.22,.9,0); avatar.add(leftLeg);
-part(leftLeg,.32,.78,.34,pants,0,-.36,0); part(leftLeg,.34,.2,.5,shoe,0,-.82,-.07);
-const rightLeg=new THREE.Group(); rightLeg.position.set(.22,.9,0); avatar.add(rightLeg);
-part(rightLeg,.32,.78,.34,pants,0,-.36,0); part(rightLeg,.34,.2,.5,shoe,0,-.82,-.07);
+function buildAvatar(id) {
+  selectedAvatarId = avatarOptions[id] ? id : "taruna";
+  const cfg=avatarOptions[selectedAvatarId];
+  while(avatar.children.length) {
+    const child=avatar.children.pop();
+    child.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});
+  }
+  part(avatar,.82,.92,.42,cfg.shirt,0,1.35,0);
+  part(avatar,.18,.12,.035,0xe4bd58,0,1.78,-.225);
+  part(avatar,.13,.13,.035,0xe4bd58,-.25,1.48,-.225);
+  part(avatar,.58,.58,.58,cfg.skin,0,2.12,0);
+  if(cfg.style==="hijab") {
+    part(avatar,.68,.68,.65,0x172333,0,2.18,0);
+    part(avatar,.58,.48,.08,cfg.skin,0,2.12,-.34);
+    part(avatar,.64,.55,.12,0x172333,0,1.83,-.29);
+  } else {
+    part(avatar,.62,.16,.62,cfg.hair,0,2.47,0);
+    part(avatar,.62,.22,.12,cfg.hair,0,2.34,-.29);
+  }
+  part(avatar,.12,.1,.04,0xffffff,-.14,2.17,-.3);
+  part(avatar,.12,.1,.04,0xffffff,.14,2.17,-.3);
+  part(avatar,.045,.07,.025,0x202020,-.14,2.17,-.325);
+  part(avatar,.045,.07,.025,0x202020,.14,2.17,-.325);
+  leftArm=new THREE.Group(); leftArm.position.set(-.52,1.75,0); avatar.add(leftArm);
+  part(leftArm,.28,.78,.3,cfg.shirt,0,-.35,0); part(leftArm,.25,.22,.26,cfg.skin,0,-.82,0);
+  rightArm=new THREE.Group(); rightArm.position.set(.52,1.75,0); avatar.add(rightArm);
+  part(rightArm,.28,.78,.3,cfg.shirt,0,-.35,0); part(rightArm,.25,.22,.26,cfg.skin,0,-.82,0);
+  leftLeg=new THREE.Group(); leftLeg.position.set(-.22,.9,0); avatar.add(leftLeg);
+  part(leftLeg,.32,.78,.34,cfg.pants,0,-.36,0); part(leftLeg,.34,.2,.5,0x20252a,0,-.82,-.07);
+  rightLeg=new THREE.Group(); rightLeg.position.set(.22,.9,0); avatar.add(rightLeg);
+  part(rightLeg,.32,.78,.34,cfg.pants,0,-.36,0); part(rightLeg,.34,.2,.5,0x20252a,0,-.82,-.07);
+}
+buildAvatar(selectedAvatarId);
 player.position.set(0,0,25);
 
 // Input keyboard + tombol layar sentuh.

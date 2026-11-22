@@ -52,8 +52,12 @@ service cloud.firestore {
         && request.resource.data.followDeclaration == true
         && request.resource.data.createdAt == request.time;
 
-      // Perubahan jabatan harus dilakukan melalui backend admin tepercaya.
-      allow update, delete: if false;
+      // Siswa hanya boleh mengubah pilihan avatar miliknya sendiri.
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avatarId'])
+        && request.resource.data.avatarId in ['taruna','taruni','sporty','formal'];
+      // Perubahan jabatan dan penghapusan akun melalui backend admin tepercaya.
+      allow delete: if false;
     }
 
     match /classCounts/{id} {
