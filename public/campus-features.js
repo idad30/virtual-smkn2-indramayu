@@ -10,15 +10,15 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
 
   const style = document.createElement("style");
   style.textContent = `
-    #campus-menu{position:fixed;right:14px;top:150px;z-index:20;display:flex;flex-direction:column;gap:7px}
+    #campus-menu{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:20;display:flex;flex-direction:row;gap:7px;max-width:calc(100vw - 350px)}
     #campus-menu button{border:1px solid #d4af37;border-radius:10px;padding:10px 13px;background:#102b43ed;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 4px 14px #0004}
     #campus-menu button.active{background:#d4af37;color:#102b43}
-    #campus-window{display:none;position:fixed;right:14px;top:300px;z-index:20;width:min(330px,calc(100vw - 28px));max-height:42vh;overflow:auto;padding:16px;border:1px solid #d4af37;border-radius:14px;background:#0b2030f2;color:#fff;font:13px/1.55 Arial,sans-serif;box-shadow:0 8px 28px #0006}
+    #campus-window{display:none;position:fixed;right:14px;top:205px;z-index:20;width:min(330px,calc(100vw - 28px));max-height:42vh;overflow:auto;padding:16px;border:1px solid #d4af37;border-radius:14px;background:#0b2030f2;color:#fff;font:13px/1.55 Arial,sans-serif;box-shadow:0 8px 28px #0006}
     #campus-window h3{margin:0 0 10px;color:#f0c96b;font-size:16px}
     #campus-window .mission{padding:9px;margin:8px 0;border:1px solid #ffffff24;border-radius:9px;background:#ffffff09}
     #campus-window .done{color:#8ce0a8}
     #campus-window .muted{color:#b7c8d4}
-    @media(max-width:700px){#campus-menu{top:auto;bottom:165px;right:10px}#campus-menu button{padding:9px;font-size:11px}#campus-window{top:auto;bottom:305px;right:10px;max-height:35vh}}
+    @media(max-width:700px){#campus-menu{top:auto;bottom:165px;left:50%;right:auto;max-width:calc(100vw - 20px);flex-wrap:wrap;justify-content:center}#campus-menu button{padding:9px;font-size:11px}#campus-window{top:auto;bottom:305px;right:10px;max-height:35vh}}
   `;
   document.head.appendChild(style);
 
@@ -32,7 +32,7 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
   const tabs = [
     ["info", "INFO"],
     ["missions", "MISI"],
-    ["multiplayer", "MULTIPLAYER"]
+    ["multiplayer", "CARI PLAYER"]
   ];
   const buttons = new Map();
   function openTab(tab) {
@@ -94,21 +94,30 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
         windowPanel.appendChild(item);
       });
     } else {
-      heading.textContent = "Pemain Online";
+      heading.textContent = "Cari Player Instagram";
       const hint = document.createElement("p");
       hint.className = "muted";
-      hint.textContent = rtdb ? "Pemain lain yang sedang berada di kampus akan muncul di sini dan di area 3D." : "Multiplayer belum aktif. Admin perlu membuat Realtime Database dan mengisi databaseURL di firebase-config.js.";
+      hint.textContent = rtdb ? "Cari pemain berdasarkan username Instagram yang dipakai saat pendaftaran." : "Fitur pencarian memerlukan Realtime Database yang aktif.";
       windowPanel.appendChild(hint);
+      const search = document.createElement("input");
+      search.type = "search"; search.placeholder = "Cari username Instagram (tanpa @)";
+      search.autocomplete = "off"; search.style.cssText = "width:100%;padding:11px;border-radius:8px;border:1px solid #d4af37;background:#fff;color:#102b43;margin:4px 0 9px";
       const list = document.createElement("div");
-      const entries = [...otherAvatars.values()];
-      if (!entries.length) list.textContent = "Belum ada pemain lain yang online.";
-      entries.forEach(entry => {
-        const row = document.createElement("div");
-        row.className = "mission";
-        row.textContent = entry.name + " · " + (entry.major || "Siswa");
-        list.appendChild(row);
-      });
-      windowPanel.appendChild(list);
+      function showMatches(){
+        list.replaceChildren();
+        const query=search.value.trim().replace(/^@/,"").toLowerCase();
+        const entries=[...otherAvatars.values()].filter(entry=>!query || String(entry.instagram||"").toLowerCase().includes(query));
+        if(!entries.length){list.textContent=query?"Tidak ada pemain online dengan username tersebut.":"Belum ada pemain lain yang online.";return;}
+        entries.forEach(entry=>{
+          const row=document.createElement("div"); row.className="mission";
+          const name=document.createElement("strong"); name.textContent=entry.name;
+          const ig=document.createElement("div"); ig.className="muted"; ig.textContent="@"+(entry.instagram||"belum diisi");
+          const major=document.createElement("div"); major.className="muted"; major.textContent=entry.major||"Siswa";
+          row.append(name,ig,major); list.appendChild(row);
+        });
+      }
+      search.addEventListener("input",showMatches);
+      windowPanel.append(search,list); showMatches();
     }
   }
 
@@ -172,11 +181,11 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
       if (otherUid === uid || !value || value.online !== true) continue;
       let entry = otherAvatars.get(otherUid);
       if (!entry) {
-        entry = { name: value.name || "Pemain", major: value.major || "", avatar: makeRemoteAvatar(value.name) };
+        entry = { name: value.name || "Pemain", major: value.major || "", instagram: value.instagram || "", avatar: makeRemoteAvatar(value.name) };
         otherAvatars.set(otherUid, entry);
       }
       entry.name = value.name || "Pemain";
-      entry.major = value.major || "";
+      entry.major = value.major || "";\n      entry.instagram = value.instagram || "";
       if (value.x != null && value.z != null) entry.avatar.position.set(value.x,0,value.z);
     }
     for (const [otherUid, entry] of otherAvatars) {
