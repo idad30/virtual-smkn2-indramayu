@@ -149,21 +149,57 @@ function building(name,x,z,w,d,color=0xf1eee5) {
   signLabel(name,x,z);
 }
 
-// Lingkungan sekolah demo (posisi bangunan masih ilustratif).
-block(0,-.5,0,120,1,100,0x76a96b);
-block(0,.02,35,120,.08,10,0x555e65);
-block(0,.03,12,7,.1,70,0xb9b9ad);
-building("GEDUNG UTAMA",-17,-5,24,12);
-building("KANTIN",18,-5,13,9,0xe8d9b7);
-building("BARAK ESKUL",-30,-24,13,9);
-building("UKS",-12,-25,9,7);
-[
- ["LAB NKPI",-39,0],["LAB APHPI",-39,15],["LAB TKJ",-21,17],["LAB RPL",-3,17],
- ["LAB TAB",15,-25],["LAB KULINER",33,-18],["LAB APAPL",36,1],["LAB TP",17,17]
-].forEach(([n,x,z])=>building(n,x,z,13,8,0xe6e9e5));
-block(0,0,31,19,2.4,1.2,0x173b5a);
-block(0,2.1,31,15,.25,1.35,0xe4b84f);
+// DENAH KAMPUS - REKONSTRUKSI VISUAL TERSTRUKTUR
+// Tata letak ini merupakan rekonstruksi visual, bukan site plan ukur resmi.
+block(0,-.5,0,120,1,100,0x78a96e);
+block(0,.02,34,120,.08,8,0x555e65);
+block(0,.035,19,7,.1,30,0xb9b9ad);
+block(0,.035,2,7,.1,16,0xb9b9ad);
+block(-25,.035,-8,7,.1,52,0x555e65);
+block(25,.035,-8,7,.1,52,0x555e65);
+block(0,.035,-31,57,.1,6,0x555e65);
 
+// Lapangan upacara pusat kampus
+block(0,.045,-5,40,.08,25,0x789b59);
+for(let x=-17;x<=17;x+=4) block(x,.095,8,.12,.025,1.2,0xf4f0dc);
+block(0,.11,-5,1.1,.025,25,0xf4f0dc);
+block(0,.11,-5,40,.025,.12,0xf4f0dc);
+
+// Gedung dikelompokkan dalam beberapa blok di sekitar halaman
+building("GEDUNG UTAMA",0,-29,27,11,0xf0eee5);
+building("RUANG GURU",-24,-28,15,10,0xe9e5d8);
+building("KANTIN",25,-28,15,10,0xe8d9b7);
+building("BARAK ESKUL",-43,-12,12,10);
+building("UKS",43,-12,10,9);
+building("PERPUSTAKAAN",-25,17,15,10,0xe8e5dc);
+building("MASJID",25,17,15,12,0xe6e2d6);
+[
+ ["LAB NKPI",-43,8],["LAB APHPI",-43,25],
+ ["LAB TKJ",-24,34],["LAB RPL",-6,34],
+ ["LAB TAB",7,-29],["LAB KULINER",43,-29],
+ ["LAB APAPL",43,8],["LAB TP",7,17]
+].forEach(([n,x,z])=>building(n,x,z,13,8,0xe6e9e5));
+
+// Lapangan olahraga dan area kegiatan
+block(0,.045,-43,34,.08,8,0x668c52);
+block(0,.12,-43,18,.08,1,0xf4f0dc);
+block(0,.12,-43,1,.08,8,0xf4f0dc);
+block(0,0,-36,12,.45,2,0x173b5a);
+block(0,.45,-36,10,2,.25,0x173b5a);
+signLabel("AREA KEGIATAN",0,-36);
+
+// Gerbang depan, pos keamanan, dan papan nama
+building("POS SATPAM",-10,39,7,6,0xe9e4d8);
+building("POS SATPAM",10,39,7,6,0xe9e4d8);
+block(0,0,42,20,.35,.7,0x173b5a);
+block(0,.35,42,16,2.4,.25,0x173b5a);
+signLabel("SMKN 2 INDRAMAYU",0,41.7);
+
+// Jalur pedestrian penghubung blok
+block(-25,.06,5,2.4,.08,38,0xd8d4c8);
+block(25,.06,5,2.4,.08,38,0xd8d4c8);
+block(0,.06,20,54,.08,2.4,0xd8d4c8);
+block(0,.06,-22,54,.08,2.4,0xd8d4c8);
 // Pohon sederhana agar area terasa hidup.
 function tree(x,z) {
   const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.25,1.5,7),mat(0x765033));
@@ -277,18 +313,23 @@ for(let i=0;i<8;i++) {
 
 // Area interaksi dan penghalang gedung (ukuran mengikuti denah ilustratif).
 const campusPlaces = [
-  {name:"Gedung Utama",x:-17,z:-5,w:24,d:12,info:"Gedung utama sekolah. Area administrasi dan kegiatan belajar."},
-  {name:"Kantin",x:18,z:-5,w:13,d:9,info:"Tempat siswa beristirahat dan membeli makanan."},
-  {name:"Barak Eskul",x:-30,z:-24,w:13,d:9,info:"Area kegiatan dan pembinaan ekstrakurikuler."},
-  {name:"UKS",x:-12,z:-25,w:9,d:7,info:"Unit Kesehatan Sekolah."},
-  {name:"Lab NKPI",x:-39,z:0,w:13,d:8,info:"Laboratorium program keahlian NKPI."},
-  {name:"Lab APHPI",x:-39,z:15,w:13,d:8,info:"Laboratorium program keahlian APHPI."},
-  {name:"Lab TKJ",x:-21,z:17,w:13,d:8,info:"Laboratorium Teknik Komputer dan Jaringan."},
-  {name:"Lab RPL",x:-3,z:17,w:13,d:8,info:"Laboratorium Rekayasa Perangkat Lunak."},
-  {name:"Lab TAB",x:15,z:-25,w:13,d:8,info:"Laboratorium program keahlian TAB."},
-  {name:"Lab Kuliner",x:33,z:-18,w:13,d:8,info:"Laboratorium praktik Kuliner."},
-  {name:"Lab APAPL",x:36,z:1,w:13,d:8,info:"Laboratorium program keahlian APAPL."},
-  {name:"Lab TP",x:17,z:17,w:13,d:8,info:"Laboratorium program keahlian TP."}
+  {name:"Gedung Utama",x:0,z:-29,w:27,d:11,info:"Gedung utama SMKN 2 Indramayu."},
+  {name:"Ruang Guru",x:-24,z:-28,w:15,d:10,info:"Area kerja dan persiapan guru."},
+  {name:"Kantin",x:25,z:-28,w:15,d:10,info:"Tempat siswa beristirahat."},
+  {name:"Barak Eskul",x:-43,z:-12,w:12,d:10,info:"Area kegiatan ekstrakurikuler."},
+  {name:"UKS",x:43,z:-12,w:10,d:9,info:"Unit Kesehatan Sekolah."},
+  {name:"Perpustakaan",x:-25,z:17,w:15,d:10,info:"Area membaca dan belajar."},
+  {name:"Masjid",x:25,z:17,w:15,d:12,info:"Tempat ibadah warga sekolah."},
+  {name:"Lab NKPI",x:-43,z:8,w:13,d:8,info:"Laboratorium program keahlian NKPI."},
+  {name:"Lab APHPI",x:-43,z:25,w:13,d:8,info:"Laboratorium program keahlian APHPI."},
+  {name:"Lab TKJ",x:-24,z:34,w:13,d:8,info:"Laboratorium Teknik Jaringan Komputer dan Telekomunikasi."},
+  {name:"Lab RPL",x:-6,z:34,w:13,d:8,info:"Laboratorium Pengembangan Perangkat Lunak dan Gim."},
+  {name:"Lab TAB",x:7,z:-29,w:13,d:8,info:"Laboratorium program keahlian teknik alat berat."},
+  {name:"Lab Kuliner",x:43,z:-29,w:13,d:8,info:"Laboratorium praktik Kuliner."},
+  {name:"Lab APAPL",x:43,z:8,w:13,d:8,info:"Laboratorium program keahlian APAPL."},
+  {name:"Lab TP",x:7,z:17,w:13,d:8,info:"Area praktik program keahlian TP."},
+  {name:"Pos Satpam",x:-10,z:39,w:7,d:6,info:"Pos keamanan gerbang sekolah."},
+  {name:"Pos Satpam",x:10,z:39,w:7,d:6,info:"Pos keamanan gerbang sekolah."}
 ];
 const interactionPanel=document.createElement("div");
 interactionPanel.id="interaction-panel";
@@ -376,7 +417,7 @@ const leftLeg=new THREE.Group(); leftLeg.position.set(-.22,.9,0); avatar.add(lef
 part(leftLeg,.32,.78,.34,pants,0,-.36,0); part(leftLeg,.34,.2,.5,shoe,0,-.82,-.07);
 const rightLeg=new THREE.Group(); rightLeg.position.set(.22,.9,0); avatar.add(rightLeg);
 part(rightLeg,.32,.78,.34,pants,0,-.36,0); part(rightLeg,.34,.2,.5,shoe,0,-.82,-.07);
-player.position.set(0,0,25);
+player.position.set(0,0,30);
 
 // Input keyboard + tombol layar sentuh.
 const keys = Object.create(null);
