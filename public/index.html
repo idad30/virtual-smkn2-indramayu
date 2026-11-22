@@ -11,7 +11,7 @@
 <section class="hero">
   <div class="eyebrow">VIRTUAL CAMPUS EXPERIENCE</div>
   <h1>Jelajahi sekolahmu<br><em>dalam dunia 3D.</em></h1>
-  <p>Daftar sebagai siswa virtual SMKN 2 Indramayu. Tanpa password game.</p>
+  <p>Daftar sebagai taruna/taruni virtual SMKN 2 Indramayu. Akun aktif otomatis setelah registrasi.</p>
   <div class="steps"><span>01 · Identitas</span><span>02 · Jurusan & kelas</span><span>03 · Masuk kampus</span></div>
 </section>
 <section class="panel" id="registerPanel">
@@ -20,6 +20,13 @@
   <form id="registration">
     <label>Nama lengkap<input id="fullName" required maxlength="70" placeholder="Nama sesuai data sekolah"></label>
     <label>Username Instagram<input id="instagram" required maxlength="40" placeholder="@username" autocomplete="off"></label>
+    <label>Jenis kelamin
+      <select id="gender" required>
+        <option value="">Pilih jenis kelamin</option>
+        <option value="L">Laki-laki</option>
+        <option value="P">Perempuan</option>
+      </select>
+    </label>
     <div class="followbox">
       <b>Ikuti akun resmi sekolah</b>
       <p>@smkn2indramayu_official</p>
@@ -28,34 +35,26 @@
     </div>
     <div class="two">
       <label>Tingkat kelas<select id="grade" required><option value="">Pilih tingkat</option><option value="X">X</option><option value="XI">XI</option><option value="XII">XII</option></select></label>
-      <label>
-  Jurusan
-  <select id="major" required>
-    <option value="">Pilih jurusan</option>
-    <option value="NKPI">NKPI</option>
-    <option value="APHPI">APHPI</option>
-    <option value="TKJ">TKJ</option>
-    <option value="RPL">RPL</option>
-    <option value="TAB">TAB</option>
-    <option value="KULINER">KULINER</option>
-    <option value="APAPL">APAPL</option>
-    <option value="TP">TP</option>
-  </select>
-</label>
+      <label>Jurusan
+        <select id="major" required>
+          <option value="">Pilih jurusan</option>
+          <option value="NKPI">NKPI</option><option value="APHPI">APHPI</option><option value="TKJ">TKJ</option><option value="RPL">RPL</option><option value="TAB">TAB</option><option value="KULINER">KULINER</option><option value="APAPL">APAPL</option><option value="TP">TP</option>
+        </select>
+      </label>
     </div>
-    <div class="notice">Kelas akan ditentukan otomatis berdasarkan jurusan dan tingkat yang dipilih. Pemilihan jurusan hanya satu kali untuk setiap akun.</div>
-    <button id="submitBtn" type="submit">Kirim registrasi</button>
+    <div class="notice">Akun langsung aktif setelah registrasi. Status awal otomatis Taruna atau Taruni sesuai jenis kelamin. Jabatan dapat diberikan kemudian melalui pengangkatan admin.</div>
+    <button id="submitBtn" type="submit">Daftar & masuk</button>
   </form>
   <div id="message" role="status"></div>
 </section>
 <section class="panel hidden" id="statusPanel">
-  <h2>Status pendaftaran</h2><div id="statusContent"></div>
+  <h2>Status akun</h2><div id="statusContent"></div>
   <button class="secondary" id="refreshBtn">Perbarui status</button>
 </section>
 <section class="panel hidden" id="campusPanel">
   <h2>Selamat datang di Virtual SMKN 2 Indramayu!</h2>
   <p id="playerSummary"></p>
-  <a class="buttonlink" href="campus.html">Masuk demo kampus 3D →</a>
+  <a class="buttonlink" href="campus.html">Masuk kampus 3D →</a>
 </section>
 <footer>Virtual SMKN 2 Indramayu · Prototipe pengembangan</footer>
 </main>
