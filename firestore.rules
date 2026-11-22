@@ -1,12 +1,86 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Profil hanya dapat dibaca pemiliknya. Penulisan registrasi hanya melalui Cloud Function.
-    match /players/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if false;
+
+    function signedIn() {
+      return request.auth != null;
     }
-    // Penghitung kelas tidak boleh dibaca/diubah langsung oleh browser.
+
+    function validMajor(major) {
+      return major in [
+        'NKPI', 'APHPI', 'TKJ', 'RPL',
+        'TAB', 'KULINER', 'APAPL', 'TP'
+      ];
+    }
+
+    function validClass(major, number) {
+      return number is int &&
+        (
+          (major == 'NKPI' && number >= 1 && number <= 2) ||
+          (major == 'APHPI' && number >= 1 && number <= 2) ||
+          (major == 'TKJ' && number >= 1 && number <= 3) ||
+          (major == 'RPL' && number >= 1 && number <= 2) ||
+          (major == 'TAB' && number >= 1 && number <= 3) ||
+          (major == 'KULINER' && number >= 1 && number <= 3) ||
+          (major == 'APAPL' && number == 1) ||
+          (major == 'TP' && number >= 1 && number <= 2)
+        );
+    }
+
+    match /players/{uid} {
+
+      // Siswa hanya dapat membaca data miliknya.
+      allow read: if signedIn() &&
+        request.auth.uid == uid;
+
+      // Pendaftaran hanya boleh dibuat satu kali.
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasAll([
+          'uid',
+          'fullName',
+          'instagram',
+          'grade',
+          'major',
+          'classNumber',
+          'status',
+          'followDeclaration',
+          'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'fullName',
+          'instagram',
+          'grade',
+          'major',
+          'classNumber',
+          'status',
+          'followDeclaration',
+          'createdAt'
+        ])
+        && request.resource.data.uid == uid
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() >= 3
+        && request.resource.data.fullName.size() <= 70
+        && request.resource.data.instagram is string
+        && request.resource.data.instagram.matches('^[A-Za-z0-9._]{2,30}$')
+        && request.resource.data.grade in ['X', 'XI', 'XII']
+        && validMajor(request.resource.data.major)
+        && validClass(
+          request.resource.data.major,
+          request.resource.data.classNumber
+        )
+        && request.resource.data.status == 'pending'
+        && request.resource.data.followDeclaration == true
+        && request.resource.data.createdAt == request.time;
+
+      // Siswa tidak boleh mengubah atau menghapus data.
+      allow update, delete: if false;
+    }
+
+    // Penghitung kelas tidak dapat diakses langsung.
     match /classCounts/{id} {
       allow read, write: if false;
     }
