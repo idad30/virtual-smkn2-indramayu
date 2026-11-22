@@ -5,8 +5,6 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
   let rtdb = null;
   try { rtdb = getDatabase(app, firebaseConfig.databaseURL); }
   catch (error) { console.warn("Realtime Database belum dikonfigurasi:", error); }
-  const presenceRoot = ref(rtdb, "campusPlayers");
-  const myPresence = ref(rtdb, "campusPlayers/" + uid);
   const otherAvatars = new Map();
   const completed = new Set();
 
@@ -165,6 +163,8 @@ export function initCampusFeatures({ app, uid, profile, player, scene, THREE, pl
   if (!rtdb) {
     return { update: updateMissionProgress, destroy() {} };
   }
+  const presenceRoot = ref(rtdb, "campusPlayers");
+  const myPresence = ref(rtdb, "campusPlayers/" + uid);
 
   onValue(presenceRoot, snapshot => {
     const live = snapshot.val() || {};
