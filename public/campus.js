@@ -255,6 +255,7 @@ interactionPanel.id="interaction-panel";
 interactionPanel.style.cssText="display:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9;width:min(360px,calc(100vw - 32px));padding:14px 16px;border:1px solid #d4af37;border-radius:14px;background:rgba(9,27,42,.95);color:#fff;font:13px/1.5 Arial,sans-serif;box-shadow:0 6px 24px #0005;text-align:center;pointer-events:none";
 document.body.appendChild(interactionPanel);
 let nearbyPlace=null;
+let infoOpen=false;
 function updateNearbyPlace(){
   nearbyPlace=null;
   let best=5.2;
@@ -267,14 +268,18 @@ function updateNearbyPlace(){
   }
   if(nearbyPlace){
     interactionPanel.style.display="block";
-    interactionPanel.innerHTML="";
-    const heading=document.createElement("strong");
-    heading.textContent=nearbyPlace.name;
-    heading.style.color="#e8bd58";
-    const detail=document.createElement("div");
-    detail.textContent="Tekan E untuk melihat informasi";
-    interactionPanel.append(heading,detail);
+    if(infoOpen) showPlaceInfo(nearbyPlace);
+    else {
+      interactionPanel.innerHTML="";
+      const heading=document.createElement("strong");
+      heading.textContent=nearbyPlace.name;
+      heading.style.color="#e8bd58";
+      const detail=document.createElement("div");
+      detail.textContent="Tekan E untuk melihat informasi";
+      interactionPanel.append(heading,detail);
+    }
   } else {
+    infoOpen=false;
     interactionPanel.style.display="none";
   }
 }
@@ -292,18 +297,19 @@ function moveWithCollision(dx,dz){
   if(!blockedAt(player.position.x,nextZ)) player.position.z=nextZ;
 }
 function showPlaceInfo(place){
-  interactionPanel.style.pointerEvents="auto";
+  infoOpen=true;
+  interactionPanel.style.display="block";
+  interactionPanel.style.pointerEvents="none";
   interactionPanel.innerHTML="";
   const heading=document.createElement("strong");
   heading.textContent=place.name;
   heading.style.cssText="display:block;color:#e8bd58;font-size:15px;margin-bottom:5px";
   const detail=document.createElement("div");
   detail.textContent=place.info;
-  const close=document.createElement("button");
-  close.type="button"; close.textContent="TUTUP";
-  close.style.cssText="margin-top:10px;padding:7px 16px;border:0;border-radius:8px;background:#d4af37;color:#102b43;font-weight:bold";
-  close.addEventListener("click",()=>{interactionPanel.style.pointerEvents="none";updateNearbyPlace();});
-  interactionPanel.append(heading,detail,close);
+  const hint=document.createElement("small");
+  hint.textContent="Tekan E lagi untuk menutup";
+  hint.style.cssText="display:block;margin-top:8px;color:#9edcf5";
+  interactionPanel.append(heading,detail,hint);
 }
 // Karakter blocky bergaya game voxel/Roblox, seluruh bagian dianimasikan.
 const player = new THREE.Group(); scene.add(player);
@@ -338,7 +344,8 @@ addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true; if(["arrowup","ar
 addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
 addEventListener("keydown",e=>{
   if(e.key.toLowerCase()==="e" && nearbyPlace && !e.repeat){
-    showPlaceInfo(nearbyPlace);
+    if(infoOpen){infoOpen=false;updateNearbyPlace();}
+    else showPlaceInfo(nearbyPlace);
   }
 });
 const joystick=document.querySelector("#joystick");
