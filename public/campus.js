@@ -496,7 +496,8 @@ function buildAvatar(id) {
   part(rightLeg,.32,.78,.34,cfg.pants,0,-.36,0); part(rightLeg,.34,.2,.5,0x20252a,0,-.82,-.07);
 }
 buildAvatar(selectedAvatarId);
-player.position.set(0,0,25);
+// Spawn di jalur utama yang kosong, bukan di dalam LAB TKJ.
+player.position.set(0,0,0);
 player.visible=false;
 
 // Input keyboard + tombol layar sentuh.
@@ -606,12 +607,12 @@ async function start() {
     watchPromotion(auth.currentUser.uid);
     const intro=document.getElementById("drone-intro");
     document.getElementById("start-walk").addEventListener("click",async()=>{
-      walkMode=true;player.visible=true;intro.style.display="none";
+      walkMode=true;moveVelocity.set(0,0,0);player.position.set(0,0,0);player.visible=true;intro.style.display="none";
       cameraYaw=0;cameraPitch=.22;cameraDistance=10;
       try { if(innerWidth<900 && screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch(error) { console.info("Orientasi landscape dapat diaktifkan dari pengaturan HP."); }
     });
     campusFeatures = initCampusFeatures({ app, uid: auth.currentUser.uid, profile: data, player, scene, THREE, places: campusPlaces });
-    document.querySelector('#start-walk').addEventListener('click',async()=>{try{if(innerWidth<=900&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape');}catch(e){console.info('Landscape tidak didukung browser ini',e);}walkStarted=true;player.visible=true;document.querySelector('#drone-intro').style.display='none';document.querySelector('.mobile-controls').style.display='flex';});
+    document.querySelector('#start-walk').addEventListener('click',async()=>{try{if(innerWidth<=900&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape');}catch(e){console.info('Landscape tidak didukung browser ini',e);}walkStarted=true;moveVelocity.set(0,0,0);player.position.set(0,0,0);player.visible=true;document.querySelector('#drone-intro').style.display='none';document.querySelector('.mobile-controls').style.display='flex';});
     requestAnimationFrame(animate);
   } catch(error) {
     console.error("Campus error:",error);
