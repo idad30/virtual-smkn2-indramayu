@@ -515,6 +515,7 @@ function buildAvatar(id) {
 }
 buildAvatar(selectedAvatarId);
 player.position.set(0,0,25);
+player.visible=false;
 
 // Input keyboard + tombol layar sentuh.
 const keys = Object.create(null);
@@ -597,16 +598,18 @@ function animate(now) {
   campusFeatures?.update();
   avatar.position.y=now<jumpUntil?Math.sin((jumpUntil-now)/420*Math.PI)*1.15:(actualSpeed>.18?Math.abs(Math.sin(walkPhase*2))*.045:0);
 
-  cameraTarget.set(player.position.x,1.25,player.position.z);
-  const horizontal=Math.cos(cameraPitch)*cameraDistance;
-  cameraOffset.set(
-    -Math.sin(cameraYaw)*horizontal,
-    Math.sin(cameraPitch)*cameraDistance+2.1,
-    -Math.cos(cameraYaw)*horizontal
-  );
-  const desiredCamera=cameraTarget.clone().add(cameraOffset);
-  camera.position.lerp(desiredCamera,1-Math.exp(-5.5*dt));
-  camera.lookAt(cameraTarget);
+  if(walkMode){
+    cameraTarget.set(player.position.x,1.25,player.position.z);
+    const horizontal=Math.cos(cameraPitch)*cameraDistance;
+    cameraOffset.set(-Math.sin(cameraYaw)*horizontal,Math.sin(cameraPitch)*cameraDistance+2.1,-Math.cos(cameraYaw)*horizontal);
+    const desiredCamera=cameraTarget.clone().add(cameraOffset);
+    camera.position.lerp(desiredCamera,1-Math.exp(-5.5*dt));
+    camera.lookAt(cameraTarget);
+  } else {
+    const t=(now-droneStartedAt)/1000;
+    camera.position.set(Math.sin(t*.12)*48,30+Math.sin(t*.18)*5,Math.cos(t*.12)*48);
+    camera.lookAt(0,0,0);
+  }
   renderer.render(scene,camera);
 }
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
@@ -616,6 +619,12 @@ async function start() {
     const data=await checkStudentAccess();
     studentCard(data);
     watchPromotion(auth.currentUser.uid);
+    const intro=document.getElementById("drone-intro");
+    document.getElementById("start-walk").addEventListener("click",async()=>{
+      walkMode=true;player.visible=true;intro.style.display="none";
+      cameraYaw=0;cameraPitch=.22;cameraDistance=10;
+      try { if(innerWidth<900 && screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch(error) { console.info("Orientasi landscape dapat diaktifkan dari pengaturan HP."); }
+    });
     campusFeatures = initCampusFeatures({ app, uid: auth.currentUser.uid, profile: data, player, scene, THREE, places: campusPlaces });
     requestAnimationFrame(animate);
   } catch(error) {
