@@ -139,10 +139,13 @@ function studentCard(data) {
     rows.forEach((row,i)=>{const y=420+i*62;c.fillStyle="#a9c2d2";c.font="26px Arial";c.fillText(row[0],520,y);c.fillStyle="#fff";c.fillText(": "+row[1],760,y);});
     const link=document.createElement("a");link.download="ID-Card-"+(fullName.replace(/[^a-z0-9]+/gi,"-")||"siswa")+".png";link.href=card.toDataURL("image/png");link.click();
   });
+  const home=document.createElement("button"); home.type="button"; home.textContent="← KEMBALI KE HALAMAN UTAMA";
+  home.style.cssText="width:100%;margin-top:8px;padding:10px;background:#e4bd58;color:#102b43;font-weight:bold";
+  home.addEventListener("click",()=>{location.href="index.html";});
   const close=document.createElement("button"); close.type="button"; close.textContent="TUTUP";
   close.style.cssText="width:100%;margin-top:8px;padding:10px;background:#344e60;color:white";
   close.addEventListener("click",()=>modal.style.display="none");
-  panel.append(heading,nameLabel,info,avatarTitle,avatarButtons,save,download,close);
+  panel.append(heading,nameLabel,info,avatarTitle,avatarButtons,save,download,home,close);
   modal.append(panel); modal.addEventListener("click",e=>{if(e.target===modal)modal.style.display="none";});
   open.addEventListener("click",()=>modal.style.display="flex");
   el.append(open);document.body.append(el,modal);refreshAvatarButtons();
@@ -575,7 +578,7 @@ player.visible=false;
 
 // Input keyboard + tombol layar sentuh.
 const keys = Object.create(null);
-addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true; if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase())) e.preventDefault();},{passive:false});
+addEventListener("keydown",e=>{const key=e.key.toLowerCase();keys[key]=true;if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(key))e.preventDefault();if(key===" "&&!e.repeat)jumpUntil=performance.now()+420;},{passive:false});
 addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
 addEventListener("keydown",e=>{
   if(e.key.toLowerCase()==="e" && !e.repeat && nearbyPlace){
@@ -600,6 +603,10 @@ function releaseJoy(){joyPointer=null;mobile.x=0;mobile.z=0;stick.style.transfor
 joystick.addEventListener("pointerup",releaseJoy); joystick.addEventListener("pointercancel",releaseJoy);
 let running=false, jumpUntil=0;
 document.querySelector("#run").addEventListener("click",()=>{running=!running;document.querySelector("#run").textContent=running?"LARI: ON":"LARI";document.querySelector("#run").classList.toggle("active",running);});
+// Tombol sentuh hanya ditampilkan pada perangkat HP/tablet; laptop memakai Shift dan Space.
+const mobileControls=document.querySelector(".mobile-controls");
+const touchDevice=window.matchMedia("(max-width: 900px) and (pointer: coarse)").matches;
+if(!touchDevice) mobileControls.style.display="none";
 document.querySelector("#jump").addEventListener("click",()=>{jumpUntil=performance.now()+420;});
 
 // Gerakan karakter lebih halus: akselerasi, pengereman, dan putaran bertahap.
@@ -624,7 +631,7 @@ function animate(now) {
     const nx=inputX/Math.max(1,mag), nz=inputZ/Math.max(1,mag);
     const worldX=nx*Math.cos(cameraYaw)-nz*Math.sin(cameraYaw);
     const worldZ=nx*Math.sin(cameraYaw)+nz*Math.cos(cameraYaw);
-    const speed=running?10:6;
+    const speed=(running||keys.shift)?10:6;
     desiredVelocity.set(worldX*speed,0,worldZ*speed);
   } else {
     desiredVelocity.set(0,0,0);
@@ -641,7 +648,7 @@ function animate(now) {
     const targetYaw=Math.atan2(moveVelocity.x,moveVelocity.z)+Math.PI;
     const angleDelta=Math.atan2(Math.sin(targetYaw-player.rotation.y),Math.cos(targetYaw-player.rotation.y));
     player.rotation.y+=angleDelta*(1-Math.exp(-13*dt));
-    walkPhase+=dt*(running?11:8)*Math.min(1,actualSpeed/6);
+    walkPhase+=dt*((running||keys.shift)?11:8)*Math.min(1,actualSpeed/6);
     const swing=Math.sin(walkPhase)*Math.min(.55,actualSpeed*.09);
     leftArm.rotation.x=swing; rightArm.rotation.x=-swing;
     leftLeg.rotation.x=-swing; rightLeg.rotation.x=swing;
