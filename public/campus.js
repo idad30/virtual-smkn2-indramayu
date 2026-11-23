@@ -206,8 +206,10 @@ renderer.domElement.addEventListener("wheel", event => {
   cameraDistance = THREE.MathUtils.clamp(cameraDistance + event.deltaY * 0.01, 6, 19);
 }, { passive: true });
 
-hemisphereLight = new THREE.HemisphereLight(0xeaf7ff, 0x61764d, 2.1);
+hemisphereLight = new THREE.HemisphereLight(0xeaf7ff, 0x61764d, 2.45);
 scene.add(hemisphereLight);
+const ambientFill = new THREE.AmbientLight(0xffffff, 0.42);
+scene.add(ambientFill);
 const sun = new THREE.DirectionalLight(0xfff0d1, 2.2);
 sun.position.set(-35, 65, 35);
 sun.castShadow = true;
@@ -356,8 +358,28 @@ building("TEFA JB",-4,47,8,4,0xd7d7d7,"TEFA JB Outlet",2.6);
 building("KOLAM RENANG",28,27,7,13,0x6bb6cf,"Kolam renang",1.8);
 building("KOLAM IKAN",-49,7,7,7,0x6bb6cf,"Kolam ikan",1.8);
 building("AREA PARKIR",-12,46,22,5,0xb9b9b9,"Area parkir",1.2);
-const field=new THREE.Mesh(new THREE.PlaneGeometry(9,27),new THREE.MeshStandardMaterial({color:0x5e9b55}));
-field.rotation.x=-Math.PI/2;field.position.set(7,.03,5);scene.add(field);
+// Lapangan upacara diperbesar dan diberi garis lapangan yang jelas.
+const field=new THREE.Mesh(new THREE.PlaneGeometry(14,32),new THREE.MeshStandardMaterial({color:0x579653,roughness:1}));
+field.rotation.x=-Math.PI/2;field.position.set(7,.035,5);field.receiveShadow=true;scene.add(field);
+const fieldLineMat=new THREE.MeshStandardMaterial({color:0xf4f4e9,roughness:1});
+function fieldLine(x,z,w,d){
+  const line=new THREE.Mesh(new THREE.BoxGeometry(w,.035,d),fieldLineMat);
+  line.position.set(x,.065,z);scene.add(line);
+}
+fieldLine(7,-10.8,13.5,.12);fieldLine(7,20.8,13.5,.12);
+fieldLine(.25,5,.12,31.5);fieldLine(13.75,5,.12,31.5);
+fieldLine(7,5,13.5,.12);
+const centerCircle=new THREE.Mesh(new THREE.TorusGeometry(2.5,.07,8,64),fieldLineMat);
+centerCircle.rotation.x=Math.PI/2;centerCircle.position.set(7,.09,5);scene.add(centerCircle);
+// Lampu taman di sisi lapangan untuk suasana lebih terang pada malam hari.
+const lampMat=new THREE.MeshStandardMaterial({color:0xffe7a8,emissive:0xffd477,emissiveIntensity:1.8});
+for(const [lx,lz] of [[-1, -8],[15,-8],[-1,18],[15,18]]){
+  block(lx,0,lz,.22,7,.22,0x34485a);
+  const lamp=new THREE.Mesh(new THREE.SphereGeometry(.32,12,10),lampMat);
+  lamp.position.set(lx,7.15,lz);scene.add(lamp);
+  const glow=new THREE.PointLight(0xffd99a,1.1,18,2);
+  glow.position.set(lx,6.8,lz);scene.add(glow);
+}
 campusLabel("LAPANGAN UPACARA",7,5,"#fff4c7");
 campusLabel("EMPANG UTARA",38,-42,"#fff4c7");
 const interactionPanel=document.createElement("div");
