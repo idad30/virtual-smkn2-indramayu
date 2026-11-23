@@ -431,7 +431,7 @@ function updateBuildingElevation(){
     && Math.abs(player.position.z-z)<5.7;
   if(insideMain && player.position.y>1.5) player.position.y=3.18;
   else if(insideMain) player.position.y=0;
-  else if(player.position.y<1.5) player.position.y=0;
+  else player.position.y=0;
 }
 function showPlaceInfo(place){
   infoOpen=true;
