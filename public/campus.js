@@ -430,7 +430,7 @@ function createNpcStudent(index,x,z){
     leg.position.set(side*.18,.38,0);body.add(leg);
   }
   npc.position.set(x,0,z);scene.add(npc);
-  npcStudents.push({npc,arms,baseX:x,baseZ:z,phase:index*1.7,range:2.2,speed:.45+index*.07});
+  npcStudents.push({npc,arms,name:["Adit","Raka","Dina","Salsa","Fajar"][index%5],baseX:x,baseZ:z,phase:index*1.7,range:2.2,speed:.45+index*.07});
 }
 [
   [-23,-7], [20,-12], [-22,13], [18,23], [34,18],
@@ -455,18 +455,40 @@ interactionPanel.id="interaction-panel";
 interactionPanel.style.cssText="display:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9;width:min(360px,calc(100vw - 32px));padding:14px 16px;border:1px solid #d4af37;border-radius:14px;background:rgba(9,27,42,.95);color:#fff;font:13px/1.5 Arial,sans-serif;box-shadow:0 6px 24px #0005;text-align:center;pointer-events:none";
 document.body.appendChild(interactionPanel);
 let nearbyPlace=null;
+let nearbyNpc=null;
 let infoOpen=false;
 function updateNearbyPlace(){
-  nearbyPlace=null;
-  let best=5.2;
+  nearbyPlace=null; nearbyNpc=null;
+  let bestNpc=3.8;
+  for(const student of npcStudents){
+    const distance=Math.hypot(player.position.x-student.npc.position.x,player.position.z-student.npc.position.z);
+    if(distance<bestNpc){bestNpc=distance;nearbyNpc=student;}
+  }
+  let bestPlace=5.2;
   for(const place of campusPlaces){
     const dx=player.position.x-place.x, dz=player.position.z-place.z;
     const edgeX=Math.max(0,Math.abs(dx)-place.w/2);
     const edgeZ=Math.max(0,Math.abs(dz)-place.d/2);
     const distance=Math.hypot(edgeX,edgeZ);
-    if(distance<best){best=distance;nearbyPlace=place;}
+    if(distance<bestPlace){bestPlace=distance;nearbyPlace=place;}
   }
-  if(nearbyPlace){
+  if(nearbyNpc){
+    interactionPanel.style.display="block";
+    interactionPanel.style.pointerEvents="auto";
+    if(infoOpen) showNpcDialogue(nearbyNpc);
+    else {
+      interactionPanel.replaceChildren();
+      const heading=document.createElement("strong");
+      heading.textContent=nearbyNpc.name+" · SISWA";
+      heading.style.color="#e8bd58";
+      const detail=document.createElement("div");detail.textContent="Dekati lalu tekan E atau tombol BICARA";
+      const talk=document.createElement("button");talk.type="button";talk.textContent="BICARA";
+      talk.style.cssText="margin-top:9px;padding:8px 18px;border:0;border-radius:8px;background:#e4bd58;color:#102b43;font-weight:bold";
+      talk.addEventListener("click",()=>showNpcDialogue(nearbyNpc));
+      interactionPanel.append(heading,detail,talk);
+    }
+  } else if(nearbyPlace){
+    interactionPanel.style.pointerEvents="none";
     interactionPanel.style.display="block";
     if(infoOpen) showPlaceInfo(nearbyPlace);
     else {
@@ -480,8 +502,30 @@ function updateNearbyPlace(){
     }
   } else {
     infoOpen=false;
+    interactionPanel.style.pointerEvents="none";
     interactionPanel.style.display="none";
   }
+}
+function showNpcDialogue(student){
+  infoOpen=true;
+  interactionPanel.style.display="block";
+  interactionPanel.style.pointerEvents="auto";
+  interactionPanel.replaceChildren();
+  const heading=document.createElement("strong");
+  heading.textContent=student.name+" · SISWA";
+  heading.style.cssText="display:block;color:#e8bd58;font-size:15px;margin-bottom:5px";
+  const lines=[
+    "Halo! Kamu siswa baru di sini, ya? Selamat datang!",
+    "Jangan lupa ikut kegiatan sekolah dan jaga kebersihan kampus.",
+    "Kamu sudah coba keliling kampus? Banyak tempat menarik di sini!",
+    "Semangat belajar! Sampai ketemu di kelas."
+  ];
+  const detail=document.createElement("div");
+  detail.textContent=lines[Math.floor(performance.now()/1000)%lines.length];
+  const close=document.createElement("button");close.type="button";close.textContent="SELESAI";
+  close.style.cssText="margin-top:9px;padding:8px 18px;border:0;border-radius:8px;background:#e4bd58;color:#102b43;font-weight:bold";
+  close.addEventListener("click",()=>{infoOpen=false;updateNearbyPlace();});
+  interactionPanel.append(heading,detail,close);
 }
 function blockedAt(x,z){
   const radius=.75;
@@ -595,7 +639,11 @@ const keys = Object.create(null);
 addEventListener("keydown",e=>{const key=e.key.toLowerCase();keys[key]=true;if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(key))e.preventDefault();if(key===" "&&!e.repeat)jumpUntil=performance.now()+420;},{passive:false});
 addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
 addEventListener("keydown",e=>{
-  if(e.key.toLowerCase()==="e" && !e.repeat && nearbyPlace){
+  if(e.key.toLowerCase()!=="e" || e.repeat) return;
+  if(nearbyNpc){
+    if(infoOpen){infoOpen=false;updateNearbyPlace();}
+    else showNpcDialogue(nearbyNpc);
+  } else if(nearbyPlace){
     if(infoOpen){infoOpen=false;updateNearbyPlace();}
     else showPlaceInfo(nearbyPlace);
   }
