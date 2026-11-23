@@ -693,7 +693,7 @@ async function start() {
       try { if(innerWidth<900 && screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch(error) { console.info("Orientasi landscape dapat diaktifkan dari pengaturan HP."); }
     });
     campusFeatures = initCampusFeatures({ app, uid: auth.currentUser.uid, profile: data, player, scene, THREE, places: campusPlaces });
-    document.querySelector('#start-walk').addEventListener('click',async()=>{try{if(innerWidth<=900&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape');}catch(e){console.info('Landscape tidak didukung browser ini',e);}walkStarted=true;moveVelocity.set(0,0,0);player.position.set(0,0,0);player.visible=true;document.querySelector('#drone-intro').style.display='none';document.querySelector('.mobile-controls').style.display='flex';});
+    document.querySelector('#start-walk').addEventListener('click',async()=>{try{if(innerWidth<=900&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape');}catch(e){console.info('Landscape tidak didukung browser ini',e);}walkStarted=true;moveVelocity.set(0,0,0);player.position.set(0,0,0);player.visible=true;document.querySelector('#drone-intro').style.display='none';document.querySelector('.mobile-controls').style.display=touchDevice?'flex':'none';});
     requestAnimationFrame(animate);
   } catch(error) {
     console.error("Campus error:",error);
