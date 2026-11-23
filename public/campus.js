@@ -342,9 +342,9 @@ building("RUANG TEORI NKPI",21,-18,15,8,0xf16e70,"Ruang teori NKPI",3.4);
 building("RUANG TEORI AP",-35,4,12,7,0xf2c18c,"Ruang teori APAPL",3.2);
 building("RUANG TEORI KULINER",-22,4,10,13,0xe45b9d,"Ruang teori Kuliner",3.2);
 building("RUANG TEORI TKJ",-7,4,10,13,0x67d69b,"Ruang teori TKJ",3.2);
-building("RUANG TEORI TP",17,5,9,12,0xf2c18c,"Ruang teori TP",3.2);
+building("RUANG TEORI TP",25,5,9,12,0xf2c18c,"Ruang teori TP",3.2);
 building("LAB APHPI",-36,20,9,8,0xe7e8e8,"Laboratorium APHPI",3.2);
-building("LAB TKJ",-6,22,15,8,0xe6e8e8,"Laboratorium TKJ",3.2);
+building("LAB TKJ",-17,22,15,8,0xe6e8e8,"Laboratorium TKJ",3.2);
 building("LAB TAB",31,8,7,16,0xe6e8e8,"Laboratorium TAB",3.2);
 building("RPS RPL",37,-19,6,13,0xe6e8e8,"Ruang praktik siswa RPL",3.2);
 building("MASJID",-18,31,10,9,0xe8e3d6,"Masjid SMKN 2 Indramayu",4);
@@ -381,7 +381,55 @@ for(const [lx,lz] of [[-1, -8],[15,-8],[-1,18],[15,18]]){
   glow.position.set(lx,6.8,lz);scene.add(glow);
 }
 campusLabel("LAPANGAN UPACARA",7,5,"#fff4c7");
+
 campusLabel("EMPANG UTARA",38,-42,"#fff4c7");
+
+// NPC siswa kampus: karakter sederhana yang berjalan bolak-balik di jalur terbuka.
+const npcStudents=[];
+const npcLooks=[
+  {shirt:0x174b78,pants:0x263746,skin:0xd9a47b,hair:0x20252a},
+  {shirt:0x167caa,pants:0x172b43,skin:0xc98f6b,hair:0x241c19},
+  {shirt:0x245b82,pants:0x303944,skin:0xe0b18a,hair:0x30251f},
+  {shirt:0x1d4568,pants:0x263746,skin:0xd9a47b,hair:0x172333}
+];
+function createNpcStudent(index,x,z){
+  const look=npcLooks[index%npcLooks.length];
+  const npc=new THREE.Group();
+  const body=new THREE.Group();npc.add(body);
+  const piece=(w,h,d,color,px,py,pz)=>{
+    const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));
+    mesh.position.set(px,py,pz);mesh.castShadow=true;body.add(mesh);return mesh;
+  };
+  piece(.72,.82,.38,look.shirt,0,1.25,0);
+  piece(.5,.52,.5,look.skin,0,1.92,0);
+  piece(.56,.16,.56,look.hair,0,2.19,0);
+  piece(.58,.12,.1,look.hair,0,2.08,-.25);
+  const arms=[];
+  for(const side of [-1,1]){
+    const arm=new THREE.Group();arm.position.set(side*.45,1.58,0);body.add(arm);
+    const limb=new THREE.Mesh(new THREE.BoxGeometry(.22,.65,.24),mat(look.shirt));
+    limb.position.y=-.31;arm.add(limb);arms.push(arm);
+    const leg=new THREE.Mesh(new THREE.BoxGeometry(.27,.72,.3),mat(look.pants));
+    leg.position.set(side*.18,.38,0);body.add(leg);
+  }
+  npc.position.set(x,0,z);scene.add(npc);
+  npcStudents.push({npc,arms,baseX:x,baseZ:z,phase:index*1.7,range:2.2,speed:.45+index*.07});
+}
+[
+  [-23,-7], [20,-12], [-22,13], [18,23], [34,18], [-30,42]
+].forEach(([x,z],i)=>createNpcStudent(i,x,z));
+function updateNpcStudents(now){
+  for(const student of npcStudents){
+    const t=now*.001*student.speed+student.phase;
+    student.npc.position.x=student.baseX+Math.sin(t)*student.range;
+    student.npc.position.z=student.baseZ+Math.cos(t*.7)*.8;
+    student.npc.rotation.y=Math.atan2(Math.cos(t)*student.range,-Math.sin(t*.7)*.56)+Math.PI;
+    const swing=Math.sin(t*3)*.28;
+    student.arms[0].rotation.x=swing;
+    student.arms[1].rotation.x=-swing;
+  }
+}
+
 const interactionPanel=document.createElement("div");
 interactionPanel.id="interaction-panel";
 interactionPanel.style.cssText="display:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9;width:min(360px,calc(100vw - 32px));padding:14px 16px;border:1px solid #d4af37;border-radius:14px;background:rgba(9,27,42,.95);color:#fff;font:13px/1.5 Arial,sans-serif;box-shadow:0 6px 24px #0005;text-align:center;pointer-events:none";
@@ -560,6 +608,7 @@ const desiredVelocity=new THREE.Vector3();
 function animate(now) {
   requestAnimationFrame(animate);
   updateSkyByTime();
+  updateNpcStudents(now);
   const dt=Math.min((now-last)/1000,.05); last=now;
   if(!walkStarted){const t=now*0.00012;const aerial=new THREE.Vector3(Math.sin(t)*72,44,Math.cos(t)*72);camera.position.lerp(aerial,1-Math.exp(-1.3*dt));camera.lookAt(0,0,0);renderer.render(scene,camera);return;}
 
