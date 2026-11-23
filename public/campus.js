@@ -246,165 +246,24 @@ function updateSkyByTime() {
 const mat = color => new THREE.MeshStandardMaterial({ color, roughness: 0.82 });
 function block(x,y,z,w,h,d,color) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat(color));
-  mesh.position.set(x,y+h/2,z); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
+  mesh.position.set(x,y+h/2,z); mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
   return mesh;
 }
-function signLabel(text,x,z) {
-  const canvas=document.createElement("canvas"); canvas.width=512; canvas.height=100;
-  const c=canvas.getContext("2d"); c.fillStyle="#102b43"; c.fillRect(0,0,512,100);
-  c.fillStyle="#f5d27a"; c.font="bold 36px Arial"; c.textAlign="center"; c.fillText(text,256,65);
-  const texture=new THREE.CanvasTexture(canvas); texture.colorSpace=THREE.SRGBColorSpace;
-  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture}));
-  sprite.position.set(x,4.8,z); sprite.scale.set(9,1.8,1); scene.add(sprite);
-}
-function building(name,x,z,w,d,color=0xf1eee5) {
-  block(x,0,z,w,.5,d,0xb9b9ad); block(x,.5,z,w,3,d,color); block(x,3.5,z,w,.35,d,0x985444);
-  for(let xx=x-w/2+1;xx<x+w/2;xx+=2.5) block(xx,1.35,z-d/2-.08,1,1,.12,0x8cc5d5);
-  block(x,1.0,z+d/2+.08,1.5,2,.15,0x8b6548);
-  signLabel(name,x,z);
-}
 
-// Lingkungan sekolah demo (posisi bangunan masih ilustratif).
-block(0,-.5,0,120,1,100,0x76a96b);
-block(0,.02,35,120,.08,10,0x555e65);
-block(0,.03,12,7,.1,70,0xb9b9ad);
-building("GEDUNG UTAMA",-17,-5,24,12);
-building("KANTIN",18,-5,13,9,0xe8d9b7);
-building("BARAK ESKUL",-30,-24,13,9);
-building("UKS",-12,-25,9,7);
-[
- ["LAB NKPI",-39,0],["LAB APHPI",-39,15],["LAB TKJ",-21,17],["LAB RPL",-3,17],
- ["LAB TAB",15,-25],["LAB KULINER",33,-18],["LAB APAPL",36,1],["LAB TP",17,17]
-].forEach(([n,x,z])=>building(n,x,z,13,8,0xe6e9e5));
-block(0,0,31,19,2.4,1.2,0x173b5a);
-block(0,2.1,31,15,.25,1.35,0xe4b84f);
+// Denah 3D lama sengaja dikosongkan sebelum pemetaan ulang dari denah resmi.
+// Untuk sementara hanya ada area dasar netral; tidak ada gedung/ruang dengan
+// posisi ilustratif yang dapat menyesatkan pemain.
+const temporaryGround = new THREE.Mesh(
+  new THREE.PlaneGeometry(120, 100),
+  new THREE.MeshStandardMaterial({ color: 0x789b70, roughness: 1 })
+);
+temporaryGround.rotation.x = -Math.PI / 2;
+temporaryGround.position.y = -0.06;
+temporaryGround.receiveShadow = true;
+scene.add(temporaryGround);
 
-// Pohon sederhana agar area terasa hidup.
-function tree(x,z) {
-  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.25,1.5,7),mat(0x765033));
-  trunk.position.set(x,.75,z); trunk.castShadow=true; scene.add(trunk);
-  const crown=new THREE.Mesh(new THREE.SphereGeometry(1.15,8,7),mat(0x397b45));
-  crown.position.set(x,2,z); crown.castShadow=true; scene.add(crown);
-}
-[[-48,-35],[-43,28],[47,-32],[47,25],[-5,-38],[8,-38],[48,8]].forEach(p=>tree(...p));
-
-// ==========================================
-// DETAIL LINGKUNGAN SEKOLAH - TAHAP 2
-// ==========================================
-
-// Jalur pedestrian dan marka penyeberangan di dekat gerbang.
-block(0,0.045,28,13,.06,2.2,0xd8d4c8);
-for(let i=0;i<7;i++) block(-5.4+i*1.8,.09,28,1,.025,.16,0xf8f3df);
-
-// Papan nama besar di depan sekolah.
-block(0,0,37,16,.35,.55,0x173b5a);
-block(0,.35,37,13,2.4,.25,0x173b5a);
-signLabel("SMKN 2 INDRAMAYU",0,36.7);
-
-// Tiang bendera dan bendera merah putih.
-function flagPole(x,z) {
-  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.09,7,8),mat(0xd6d9dc));
-  pole.position.set(x,3.5,z); pole.castShadow=true; scene.add(pole);
-  block(x+.85,6.15,z,1.7,.55,.06,0xe43b3b);
-  block(x+.85,5.6,z,1.7,.55,.06,0xffffff);
-}
-flagPole(-3,24);
-
-// Lampu taman.
-function lamp(x,z) {
-  const post=new THREE.Mesh(new THREE.CylinderGeometry(.07,.11,3.4,8),mat(0x263746));
-  post.position.set(x,1.7,z); post.castShadow=true; scene.add(post);
-  const head=new THREE.Mesh(new THREE.BoxGeometry(.65,.22,.45),mat(0xf5d27a));
-  head.position.set(x,3.45,z); scene.add(head);
-  const glow=new THREE.PointLight(0xffe5a1,.35,7);
-  glow.position.set(x,3.3,z); scene.add(glow);
-}
-[[-8,25],[8,25],[-45,32],[45,32],[-46,-8],[46,-8],[-8,-35],[8,-35]].forEach(p=>lamp(...p));
-
-// Bangku taman di beberapa titik halaman.
-function bench(x,z,rotation=0) {
-  const group=new THREE.Group(); group.position.set(x,0,z); group.rotation.y=rotation; scene.add(group);
-  const wood=mat(0x9a633d), metal=mat(0x34495e);
-  const seat=new THREE.Mesh(new THREE.BoxGeometry(2.4,.16,.65),wood);
-  seat.position.y=.65; seat.castShadow=true; group.add(seat);
-  for(const dx of [-.9,.9]) {
-    const leg=new THREE.Mesh(new THREE.BoxGeometry(.13,.65,.5),metal);
-    leg.position.set(dx,.33,0); group.add(leg);
-    const back=new THREE.Mesh(new THREE.BoxGeometry(.13,1,.12),metal);
-    back.position.set(dx,1.05,.25); group.add(back);
-  }
-  const backrest=new THREE.Mesh(new THREE.BoxGeometry(2.4,.16,.14),wood);
-  backrest.position.set(0,1.12,.25); group.add(backrest);
-}
-bench(-7,21,0); bench(8,21,0); bench(24,8,Math.PI/2); bench(-45,7,Math.PI/2);
-
-// Pot tanaman dan petak bunga.
-function flowerBed(x,z) {
-  block(x,0,z,3.2,.38,1.5,0x98704d);
-  block(x,.38,z,2.9,.12,1.2,0x493d2d);
-  const colors=[0xe85d75,0xf5c84c,0xffffff,0x9c7be8];
-  for(let i=0;i<8;i++) {
-    const px=x-1.15+(i%4)*.76, pz=z-.32+Math.floor(i/4)*.64;
-    const stem=new THREE.Mesh(new THREE.CylinderGeometry(.025,.035,.35,5),mat(0x367a43));
-    stem.position.set(px,.68,pz); scene.add(stem);
-    const bloom=new THREE.Mesh(new THREE.SphereGeometry(.16,7,6),mat(colors[i%colors.length]));
-    bloom.position.set(px,.88,pz); scene.add(bloom);
-  }
-}
-[[-8,27],[8,27],[-45,20],[45,20],[-8,-35],[8,-35]].forEach(p=>flowerBed(...p));
-
-// Meja kantin luar ruangan.
-function outdoorTable(x,z) {
-  const top=new THREE.Mesh(new THREE.BoxGeometry(2,.16,1.25),mat(0xe0b86d));
-  top.position.set(x,.9,z); top.castShadow=true; scene.add(top);
-  for(const dx of [-.75,.75]) for(const dz of [-.4,.4]) {
-    const leg=new THREE.Mesh(new THREE.BoxGeometry(.12,.9,.12),mat(0x52616b));
-    leg.position.set(x+dx,.45,z+dz); scene.add(leg);
-  }
-  for(const side of [-1,1]) {
-    const seat=new THREE.Mesh(new THREE.BoxGeometry(1.8,.14,.35),mat(0x9a633d));
-    seat.position.set(x,.55,z+side*.95); scene.add(seat);
-  }
-}
-outdoorTable(25,-9); outdoorTable(25,-14);
-
-// Pembatas halaman sederhana di tepi area, dengan jarak untuk akses masuk.
-for(let x=-56;x<=56;x+=4) {
-  if(Math.abs(x)>10) {
-    block(x,0,-46,.18,1.15,.18,0xe7e2d6);
-    block(x,1.05,-46,4,.12,.12,0x173b5a);
-  }
-}
-for(let z=-42;z<=42;z+=4) {
-  if(z<25 || z>39) {
-    block(-58,0,z,.18,1.15,.18,0xe7e2d6);
-    block(58,0,z,.18,1.15,.18,0xe7e2d6);
-  }
-}
-
-// Marka jalur kendaraan dan area parkir motor.
-for(let i=0;i<8;i++) {
-  block(18+i*2.2,.09,30,.12,.025,4,0xf5f0d8);
-}
-
-// Pepohonan tambahan membingkai area lapangan.
-[[-52,-28],[-52,-12],[-52,8],[-52,25],[52,-28],[52,-12],[52,8],[52,25],[-35,42],[35,42]].forEach(p=>tree(...p));
-
-// Area interaksi dan penghalang gedung (ukuran mengikuti denah ilustratif).
-const campusPlaces = [
-  {name:"Gedung Utama",x:-17,z:-5,w:24,d:12,info:"Gedung utama sekolah. Area administrasi dan kegiatan belajar."},
-  {name:"Kantin",x:18,z:-5,w:13,d:9,info:"Tempat siswa beristirahat dan membeli makanan."},
-  {name:"Barak Eskul",x:-30,z:-24,w:13,d:9,info:"Area kegiatan dan pembinaan ekstrakurikuler."},
-  {name:"UKS",x:-12,z:-25,w:9,d:7,info:"Unit Kesehatan Sekolah."},
-  {name:"Lab NKPI",x:-39,z:0,w:13,d:8,info:"Laboratorium program keahlian NKPI."},
-  {name:"Lab APHPI",x:-39,z:15,w:13,d:8,info:"Laboratorium program keahlian APHPI."},
-  {name:"Lab TKJ",x:-21,z:17,w:13,d:8,info:"Laboratorium Teknik Komputer dan Jaringan."},
-  {name:"Lab RPL",x:-3,z:17,w:13,d:8,info:"Laboratorium Rekayasa Perangkat Lunak."},
-  {name:"Lab TAB",x:15,z:-25,w:13,d:8,info:"Laboratorium program keahlian TAB."},
-  {name:"Lab Kuliner",x:33,z:-18,w:13,d:8,info:"Laboratorium praktik Kuliner."},
-  {name:"Lab APAPL",x:36,z:1,w:13,d:8,info:"Laboratorium program keahlian APAPL."},
-  {name:"Lab TP",x:17,z:17,w:13,d:8,info:"Laboratorium program keahlian TP."}
-];
+// Data lokasi dikosongkan sementara sampai denah resmi selesai dipetakan.
+const campusPlaces = [];
 const interactionPanel=document.createElement("div");
 interactionPanel.id="interaction-panel";
 interactionPanel.style.cssText="display:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9;width:min(360px,calc(100vw - 32px));padding:14px 16px;border:1px solid #d4af37;border-radius:14px;background:rgba(9,27,42,.95);color:#fff;font:13px/1.5 Arial,sans-serif;box-shadow:0 6px 24px #0005;text-align:center;pointer-events:none";
