@@ -482,6 +482,17 @@ function createBandMember(index,x,z,instrument){
     bell.rotation.x=Math.PI/2;
     for(let n=0;n<3;n++) bandPart(prop,new THREE.CylinderGeometry(.035,.035,.16,8),bandWhite,-.13+n*.13,.1,-.03);
     prop.position.set(0,1.55,-.48);
+  }else if(instrument==="glockenspiel"){
+    prop=new THREE.Group();body.add(prop);
+    // Glockenspiel lapangan: rangka, bantalan, dan bilah nada logam berwarna.
+    bandPart(prop,new THREE.BoxGeometry(1.12,.12,.58),0x263746,0,.02,0);
+    bandPart(prop,new THREE.BoxGeometry(1.2,.08,.66),bandGold,0,-.08,0);
+    const notes=[0xf2cf72,0xdceaf2,0x8fc7d8,0xe58b78,0xa6cf9b,0xc5a6d8,0xf2cf72,0xdceaf2];
+    for(let n=0;n<8;n++){
+      const bar=bandPart(prop,new THREE.BoxGeometry(.105,.055,.48),notes[n],-.43+n*.123,.11,(n%2)*.035);
+      bar.position.y=.11+(n%2)*.012;
+    }
+    prop.position.set(0,1.18,-.5);
   }else{
     prop=new THREE.Group();body.add(prop);
     bandPart(prop,new THREE.BoxGeometry(.12,.72,.12),bandGold,0,0,0);
@@ -498,7 +509,8 @@ function createBandMember(index,x,z,instrument){
   [3, -5, "snare"], [7, -5, "trumpet"], [11, -5, "trumpet"],
   [3, 1, "trumpet"], [7, 1, "bass"], [11, 1, "trumpet"],
   [3, 7, "snare"], [7, 7, "trumpet"], [11, 7, "snare"],
-  [5, 13, "snare"], [9, 13, "trumpet"]
+  [5, 13, "snare"], [9, 13, "trumpet"],
+  [4, 16, "glockenspiel"], [7, 16, "glockenspiel"], [10, 16, "glockenspiel"]
 ].forEach(([x,z,instrument],i)=>createBandMember(i,x,z,instrument));
 function updateMarchingBand(now){
   const t=now*.001;
@@ -513,6 +525,11 @@ function updateMarchingBand(now){
       member.arms[0].rotation.x=-.85+beat*.08;
       member.arms[1].rotation.x=-.85-beat*.08;
       member.prop.rotation.y=Math.sin(t*1.2+member.phase)*.035;
+    }else if(member.instrument==="glockenspiel"){
+      member.arms[0].rotation.x=-.72+Math.max(0,beat)*.58;
+      member.arms[1].rotation.x=-.72+Math.max(0,-beat)*.58;
+      member.arms[0].rotation.z=.12+Math.sin(t*4+member.phase)*.08;
+      member.arms[1].rotation.z=-.12-Math.sin(t*4+member.phase)*.08;
     }else{
       member.arms[0].rotation.x=beat*.55;
       member.arms[1].rotation.x=-beat*.55;
