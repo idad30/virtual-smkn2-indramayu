@@ -416,7 +416,10 @@ function createNpcStudent(index,x,z){
   npcStudents.push({npc,arms,baseX:x,baseZ:z,phase:index*1.7,range:2.2,speed:.45+index*.07});
 }
 [
-  [-23,-7], [20,-12], [-22,13], [18,23], [34,18], [-30,42]
+  [-23,-7], [20,-12], [-22,13], [18,23], [34,18],
+  [-30,42], [-42,32], [-40,12], [-34,-8], [-30,-28],
+  [-18,-27], [-5,-27], [12,-27], [29,-29], [40,-8],
+  [43,12], [42,34], [25,40], [8,43], [-22,40]
 ].forEach(([x,z],i)=>createNpcStudent(i,x,z));
 function updateNpcStudents(now){
   for(const student of npcStudents){
