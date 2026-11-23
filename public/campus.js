@@ -249,21 +249,56 @@ function block(x,y,z,w,h,d,color) {
   mesh.position.set(x,y+h/2,z); mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
   return mesh;
 }
-
-// Denah 3D lama sengaja dikosongkan sebelum pemetaan ulang dari denah resmi.
-// Untuk sementara hanya ada area dasar netral; tidak ada gedung/ruang dengan
-// posisi ilustratif yang dapat menyesatkan pemain.
-const temporaryGround = new THREE.Mesh(
-  new THREE.PlaneGeometry(120, 100),
-  new THREE.MeshStandardMaterial({ color: 0x789b70, roughness: 1 })
-);
-temporaryGround.rotation.x = -Math.PI / 2;
-temporaryGround.position.y = -0.06;
-temporaryGround.receiveShadow = true;
-scene.add(temporaryGround);
-
-// Data lokasi dikosongkan sementara sampai denah resmi selesai dipetakan.
-const campusPlaces = [];
+function campusLabel(text,x,z,color="#ffffff"){
+  const canvas=document.createElement("canvas");canvas.width=512;canvas.height=128;
+  const ctx=canvas.getContext("2d");ctx.fillStyle="rgba(8,25,39,.82)";ctx.fillRect(0,0,512,128);
+  ctx.strokeStyle="#d4af37";ctx.lineWidth=5;ctx.strokeRect(4,4,504,120);
+  ctx.fillStyle=color;ctx.font="bold 34px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(text.slice(0,28),256,64);
+  const texture=new THREE.CanvasTexture(canvas);const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true}));
+  sprite.position.set(x,5,z);sprite.scale.set(9,2.25,1);scene.add(sprite);
+}
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(120,100),new THREE.MeshStandardMaterial({color:0x789b70,roughness:1}));
+ground.rotation.x=-Math.PI/2;ground.position.y=-.06;ground.receiveShadow=true;scene.add(ground);
+const pathMat=new THREE.MeshStandardMaterial({color:0xc8c1ad,roughness:1});
+function path(x,z,w,d){const m=new THREE.Mesh(new THREE.BoxGeometry(w,.08,d),pathMat);m.position.set(x,.01,z);m.receiveShadow=true;scene.add(m);}
+path(0,0,7,88);path(-2,0,88,6);path(26,0,5,80);path(-26,0,5,78);
+const campusPlaces=[];
+function building(name,x,z,w,d,color,info,height=3.2){
+  block(x,0,z,w,height,d,color);
+  block(x,height,z,w+.35,.28,d+.35,0x34485a);
+  campusPlaces.push({name,x,z,w,d,info});
+  campusLabel(name,x,z,"#ffffff");
+}
+// Sisi utara mengikuti panah UTARA pada denah sumber (arah kanan pada gambar).
+building("LAB BIOLOGI",-30,-34,10,7,0xe6e8e5,"Laboratorium Biologi",3.2);
+building("LAB RPL", -16,-34,17,7,0xe2e6eb,"Laboratorium RPL dan ruang praktik",3.2);
+building("RUANG TEORI RPL",-34,-21,9,7,0xf1df8a,"Ruang teori RPL",3.2);
+building("RKB RPL",-18,-21,10,7,0xe8e8e8,"Ruang kegiatan belajar RPL",3.2);
+building("RUANG TEORI TAB",-1,-19,17,11,0x45b9e8,"Ruang teori TAB lantai 1 dan 2",4.4);
+building("RUANG TEORI NKPI",21,-18,15,8,0xf16e70,"Ruang teori NKPI",3.4);
+building("RUANG TEORI AP",-35,4,12,7,0xf2c18c,"Ruang teori APAPL",3.2);
+building("RUANG TEORI KULINER",-22,4,10,13,0xe45b9d,"Ruang teori Kuliner",3.2);
+building("RUANG TEORI TKJ",-7,4,10,13,0x67d69b,"Ruang teori TKJ",3.2);
+building("RUANG TEORI TP",17,5,9,12,0xf2c18c,"Ruang teori TP",3.2);
+building("LAB APHPI",-36,20,9,8,0xe7e8e8,"Laboratorium APHPI",3.2);
+building("LAB TKJ",-6,22,15,8,0xe6e8e8,"Laboratorium TKJ",3.2);
+building("LAB TAB",31,8,7,16,0xe6e8e8,"Laboratorium TAB",3.2);
+building("RPS RPL",37,-19,6,13,0xe6e8e8,"Ruang praktik siswa RPL",3.2);
+building("MASJID",-18,31,10,9,0xe8e3d6,"Masjid SMKN 2 Indramayu",4);
+building("R AULA 2",-31,31,12,10,0xe6e8e8,"Ruang Aula 2",4);
+building("GEDUNG UTAMA",-1,34,23,12,0xe5e5e5,"Gedung utama: ruang kepala sekolah, guru, tata usaha, dan layanan sekolah",5);
+building("BRIDGE SIMULATOR",19,29,12,9,0xe6e8e8,"Bridge Simulator dan ruang navigasi",3.6);
+building("KANTIN",-39,39,11,6,0xe8e8e8,"Kantin sekolah",3);
+building("RUANG EKSKUL",-49,27,6,9,0xe8e8e8,"Ruang ekstrakurikuler",3);
+building("POS SATPAM",8,47,7,4,0xd7d7d7,"Pos satpam",2.6);
+building("TEFA JB",-4,47,8,4,0xd7d7d7,"TEFA JB Outlet",2.6);
+building("KOLAM RENANG",28,27,7,13,0x6bb6cf,"Kolam renang",1.8);
+building("KOLAM IKAN",-49,7,7,7,0x6bb6cf,"Kolam ikan",1.8);
+building("AREA PARKIR",-12,46,22,5,0xb9b9b9,"Area parkir",1.2);
+const field=new THREE.Mesh(new THREE.PlaneGeometry(9,27),new THREE.MeshStandardMaterial({color:0x5e9b55}));
+field.rotation.x=-Math.PI/2;field.position.set(7,.03,5);scene.add(field);
+campusLabel("LAPANGAN UPACARA",7,5,"#fff4c7");
+campusLabel("EMPANG UTARA",38,-42,"#fff4c7");
 const interactionPanel=document.createElement("div");
 interactionPanel.id="interaction-panel";
 interactionPanel.style.cssText="display:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9;width:min(360px,calc(100vw - 32px));padding:14px 16px;border:1px solid #d4af37;border-radius:14px;background:rgba(9,27,42,.95);color:#fff;font:13px/1.5 Arial,sans-serif;box-shadow:0 6px 24px #0005;text-align:center;pointer-events:none";
