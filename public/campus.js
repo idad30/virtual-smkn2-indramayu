@@ -264,8 +264,23 @@ function path(x,z,w,d){const m=new THREE.Mesh(new THREE.BoxGeometry(w,.08,d),pat
 path(0,0,7,88);path(-2,0,88,6);path(26,0,5,80);path(-26,0,5,78);
 const campusPlaces=[];
 function building(name,x,z,w,d,color,info,height=3.2){
+  // Bangunan dengan lis atap, pintu depan, dan jendela berulang.
   block(x,0,z,w,height,d,color);
-  block(x,height,z,w+.35,.28,d+.35,0x34485a);
+  block(x,height,z,w+.45,.28,d+.45,0x34485a);
+  block(x,0.12,z+d/2+.035,Math.min(w*.42,3.2),.16,.12,0xe8e2d5);
+  const doorW=Math.min(1.8,w*.22), doorH=Math.min(2.45,height*.78);
+  block(x,0,z+d/2+.085,doorW,doorH,.12,0x684a32);
+  const glass=new THREE.MeshStandardMaterial({color:0x8fc7d8,metalness:.15,roughness:.25});
+  const windowW=Math.min(1.45,w*.18), windowH=Math.min(1.15,height*.34);
+  const count=Math.max(1,Math.floor((w-doorW-1)/(windowW+.9)));
+  for(let i=0;i<count;i++){
+    const wx=x-(count-1)*(windowW+.9)/2+i*(windowW+.9);
+    if(Math.abs(wx-x)<doorW*.8) continue;
+    const pane=new THREE.Mesh(new THREE.BoxGeometry(windowW,windowH,.09),glass);
+    pane.position.set(wx,Math.min(height*.62,2.15),z+d/2+.09);scene.add(pane);
+    const sill=block(wx,Math.min(height*.62,2.15)-windowH/2-.08,z+d/2+.12,windowW+.12,.12,.18,0xe8e2d5);
+  }
+  const sign=block(x,height+.34,z+d/2+.13,Math.min(w*.55,4.2),.48,.12,0x18364b);
   campusPlaces.push({name,x,z,w,d,info});
   campusLabel(name,x,z,"#ffffff");
 }
@@ -334,10 +349,15 @@ function updateNearbyPlace(){
 }
 function blockedAt(x,z){
   const radius=.75;
-  return campusPlaces.some(place =>
-    Math.abs(x-place.x)<place.w/2+radius &&
-    Math.abs(z-place.z)<place.d/2+radius
-  );
+  return campusPlaces.some(place => {
+    const withinX=Math.abs(x-place.x)<place.w/2+radius;
+    const withinZ=Math.abs(z-place.z)<place.d/2+radius;
+    // Celah pintu depan di sisi z positif agar karakter dapat masuk.
+    const atDoor=Math.abs(x-place.x)<Math.min(1.05,place.w*.16)
+      && z>=place.z+place.d/2-radius
+      && z<=place.z+place.d/2+1.25;
+    return withinX && withinZ && !atDoor;
+  });
 }
 function moveWithCollision(dx,dz){
   const nextX=THREE.MathUtils.clamp(player.position.x+dx,-50,50);
