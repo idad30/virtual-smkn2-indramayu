@@ -34,10 +34,10 @@
     .creator-link{color:#9edcf5;text-decoration:none;font-weight:bold}
     .creator-link:hover{text-decoration:underline}
     @media(max-width:700px){.datetime-panel{left:10px;bottom:10px;padding:7px 9px;font-size:9px}.datetime-panel strong{font-size:10px}}
-  </style>
+  .profile-launcher{position:fixed;right:16px;top:16px;z-index:12;border:1px solid #d4af37;border-radius:50%;width:52px;height:52px;background:#102b43;color:#f4d27d;font-weight:bold}.profile-modal{position:fixed;inset:0;z-index:25;background:#061522dc;display:flex;align-items:center;justify-content:center;padding:16px}.profile-dialog{position:relative;width:min(430px,100%);max-height:90vh;overflow:auto;padding:24px;border:1px solid #d4af37;border-radius:18px;background:#102b43;color:white}.profile-dialog h2,.profile-dialog h3{color:#f2cf72}.profile-dialog label{display:grid;gap:7px}.profile-dialog input{padding:12px;background:#071b2a;color:white;border:1px solid #46657b;border-radius:8px}.profile-close{position:absolute;right:12px;top:10px;background:transparent;color:white;font-size:24px}.profile-avatars{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.profile-avatar-option{padding:12px;background:#183b54;color:white;border:1px solid #49677a;border-radius:9px}.profile-avatar-option.selected{background:#e4bd58;color:#102b43}#intro-screen{position:fixed;inset:0;z-index:10;display:flex;align-items:flex-end;justify-content:center;padding:50px;background:linear-gradient(0deg,#061522e8,transparent 75%);pointer-events:none}.intro-copy{text-align:center;color:white;font-family:Arial;text-shadow:0 2px 10px #0009}.intro-copy h1{font-size:clamp(26px,5vw,48px)}.intro-copy button{pointer-events:auto;padding:15px 30px;border-radius:30px}</style>
 </head>
 <body>
-  <div id="game"></div>
+  <div id="game"></div><section id="intro-screen"><div class="intro-copy"><small>VIRTUAL TOUR · SMKN 2 INDRAMAYU</small><h1>Selamat Datang di Kampus Virtual</h1><p>Lihat kampus dari kamera udara, lalu mulai menjelajah.</p><button id="walk-start" type="button">JALAN-JALAN</button></div></section>
   <section id="drone-intro" aria-label="Tampilan awal kamera drone">
     <div class="intro-card">
       <span class="intro-kicker">VIRTUAL SMKN 2 INDRAMAYU</span>
@@ -55,7 +55,7 @@
   </div>
   <aside class="datetime-panel" aria-live="off"><strong id="campus-day">Memuat hari...</strong><span id="campus-date">Memuat tanggal...</span><br><span id="campus-time">Memuat waktu...</span><br><span>Support Creator: <a class="creator-link" href="https://www.instagram.com/hjrcoo/" target="_blank" rel="noopener">@hjrcoo</a></span></aside>
   <section id="event-info" role="dialog" aria-modal="true" aria-labelledby="event-info-title" style="display:none;position:fixed;inset:0;z-index:20;background:#061522d9;align-items:center;justify-content:center;padding:18px;font-family:Arial,sans-serif"><div style="width:min(520px,100%);padding:24px;border:1px solid #d4af37;border-radius:18px;background:linear-gradient(145deg,#173b54,#091b2a);color:#fff;box-shadow:0 12px 40px #0008"><div style="color:#e8bd58;font-size:11px;letter-spacing:2px;font-weight:bold">UNDANGAN & INFORMASI</div><h2 id="event-info-title" style="margin:8px 0;color:#fff;font-size:24px">PERESMIAN VIRTUAL SMKN 2 INDRAMAYU</h2><div style="color:#f2cf72;font-weight:bold;margin-bottom:14px">24 NOVEMBER 2026</div><p style="line-height:1.65;color:#e2edf4">Peresmian Virtual SMKN 2 Indramayu akan dimeriahkan oleh penampilan ekstrakurikuler:</p><ul style="line-height:1.9;padding-left:22px;color:#fff"><li>Marching Band <b>Gita Bahari</b></li><li>Pramuka <b>Wirasetia Bahari</b></li><li>Paskibra <b>Arunbara</b></li><li>PMR <b>Relawan Bahari</b></li></ul><p style="font-size:12px;color:#a9c2d2">Mari ramaikan peresmian dan saksikan penampilan terbaik dari setiap ekstrakurikuler!</p><button id="event-info-close" type="button" style="width:100%;margin-top:8px">TUTUP</button></div></section>
-  <div class="mobile-controls">
+  <div class="mobile-controls" style="display:none">
     <div id="joystick" aria-label="Joystick gerak"><div id="stick"></div></div>
     <div class="actions"><button id="jump" type="button">LOMPAT</button><button id="run" type="button">LARI</button></div>
   </div>
