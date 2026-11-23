@@ -416,6 +416,23 @@ function moveWithCollision(dx,dz){
   if(!blockedAt(nextX,player.position.z)) player.position.x=nextX;
   if(!blockedAt(player.position.x,nextZ)) player.position.z=nextZ;
 }
+// Ketinggian karakter mengikuti tangga Gedung Utama, sehingga pemain dapat
+// berjalan naik dan turun secara alami tanpa tombol teleport lantai.
+function updateBuildingElevation(){
+  const x=-1, z=34, stairX=7.25;
+  const localX=Math.abs(player.position.x-stairX);
+  const stairStart=z+4.8, stairEnd=z-3.0;
+  if(localX<1.18 && player.position.z<=stairStart && player.position.z>=stairEnd){
+    const progress=THREE.MathUtils.clamp((stairStart-player.position.z)/(stairStart-stairEnd),0,1);
+    player.position.y=progress*3.18;
+    return;
+  }
+  const insideMain=Math.abs(player.position.x-x)<10.7
+    && Math.abs(player.position.z-z)<5.7;
+  if(insideMain && player.position.y>1.5) player.position.y=3.18;
+  else if(insideMain) player.position.y=0;
+  else player.position.y=0;
+}
 function showPlaceInfo(place){
   infoOpen=true;
   interactionPanel.style.display="block";
@@ -487,28 +504,9 @@ const keys = Object.create(null);
 addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true; if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase())) e.preventDefault();},{passive:false});
 addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
 addEventListener("keydown",e=>{
-  if(e.key.toLowerCase()==="e" && !e.repeat){
-    // Gunakan tombol E di area tangga untuk berpindah lantai.
-    const nearStairs=Math.abs(player.position.x-7.25)<2.3
-      && player.position.z>30.5 && player.position.z<39.5
-      && Math.abs(player.position.x-(-1))<10;
-    if(nearStairs){
-      player.position.y=player.position.y<1.5?3.18:0;
-      infoOpen=false;
-      interactionPanel.innerHTML="";
-      const msg=document.createElement("strong");
-      msg.textContent=player.position.y>1.5?"LANTAI 2":"LANTAI 1";
-      msg.style.color="#e8bd58";
-      const hint=document.createElement("div");
-      hint.textContent="Kamu berpindah lantai. Tekan E di area tangga untuk kembali.";
-      interactionPanel.append(msg,hint);
-      interactionPanel.style.display="block";
-      return;
-    }
-    if(nearbyPlace){
-      if(infoOpen){infoOpen=false;updateNearbyPlace();}
-      else showPlaceInfo(nearbyPlace);
-    }
+  if(e.key.toLowerCase()==="e" && !e.repeat && nearbyPlace){
+    if(infoOpen){infoOpen=false;updateNearbyPlace();}
+    else showPlaceInfo(nearbyPlace);
   }
 });
 const joystick=document.querySelector("#joystick");
@@ -560,6 +558,7 @@ function animate(now) {
   const response=moving?9:12;
   moveVelocity.lerp(desiredVelocity,1-Math.exp(-response*dt));
   moveWithCollision(moveVelocity.x*dt,moveVelocity.z*dt);
+  updateBuildingElevation();
 
   const actualSpeed=Math.hypot(moveVelocity.x,moveVelocity.z);
   if(actualSpeed>.18){
