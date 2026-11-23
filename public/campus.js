@@ -510,22 +510,74 @@ function showNpcDialogue(student){
   infoOpen=true;
   interactionPanel.style.display="block";
   interactionPanel.style.pointerEvents="auto";
-  interactionPanel.replaceChildren();
-  const heading=document.createElement("strong");
-  heading.textContent=student.name+" · SISWA";
-  heading.style.cssText="display:block;color:#e8bd58;font-size:15px;margin-bottom:5px";
-  const lines=[
-    "Halo! Kamu siswa baru di sini, ya? Selamat datang!",
-    "Jangan lupa ikut kegiatan sekolah dan jaga kebersihan kampus.",
-    "Kamu sudah coba keliling kampus? Banyak tempat menarik di sini!",
-    "Semangat belajar! Sampai ketemu di kelas."
-  ];
-  const detail=document.createElement("div");
-  detail.textContent=lines[Math.floor(performance.now()/1000)%lines.length];
-  const close=document.createElement("button");close.type="button";close.textContent="SELESAI";
-  close.style.cssText="margin-top:9px;padding:8px 18px;border:0;border-radius:8px;background:#e4bd58;color:#102b43;font-weight:bold";
-  close.addEventListener("click",()=>{infoOpen=false;updateNearbyPlace();});
-  interactionPanel.append(heading,detail,close);
+  let step="start";
+  const dialogue={
+    start:{
+      npc:"Halo! Aku "+student.name+". Kamu siswa baru di sekolah ini, ya?",
+      choices:[
+        {label:"Iya, aku siswa baru.",next:"newStudent"},
+        {label:"Bukan, aku sedang keliling.",next:"explore"},
+        {label:"Aku mau tanya tentang sekolah.",next:"ask"}
+      ]
+    },
+    newStudent:{
+      npc:"Wah, selamat datang! Kamu dari jurusan apa?",
+      choices:[
+        {label:"TKJ",next:"tkj"},
+        {label:"RPL",next:"rpl"},
+        {label:"Jurusan lain",next:"major"}
+      ]
+    },
+    explore:{
+      npc:"Asyik! Kampus ini cukup luas. Sudah sempat mengunjungi kantin?",
+      choices:[
+        {label:"Belum, di mana kantin?",next:"canteen"},
+        {label:"Sudah dong!",next:"already"},
+        {label:"Aku mau lihat gedung lain.",next:"building"}
+      ]
+    },
+    ask:{
+      npc:"Boleh! Kamu ingin tahu apa?",
+      choices:[
+        {label:"Tentang kegiatan sekolah",next:"activity"},
+        {label:"Tentang fasilitas",next:"facility"},
+        {label:"Tentang tata tertib",next:"rules"}
+      ]
+    },
+    tkj:{npc:"Wih, TKJ! Semangat belajar jaringan dan komputer, ya. Jangan lupa sering praktik!",choices:[{label:"Terima kasih!",next:"end"}]},
+    rpl:{npc:"Keren! Semangat belajar membuat aplikasi dan program. Terus asah kreativitasmu!",choices:[{label:"Siap, makasih!",next:"end"}]},
+    major:{npc:"Apa pun jurusanmu, semangat terus belajar dan berkarya!",choices:[{label:"Siap!",next:"end"}]},
+    canteen:{npc:"Kantin ada di area kampus. Coba jelajahi denah dan ikuti jalan di sekitar lapangan.",choices:[{label:"Oke, aku cari.",next:"end"}]},
+    already:{npc:"Mantap! Jangan lupa buang sampah pada tempatnya supaya kantin tetap bersih.",choices:[{label:"Pasti!",next:"end"}]},
+    building:{npc:"Kamu bisa mendekati gedung-gedung untuk melihat informasi. Coba tekan E saat sudah dekat.",choices:[{label:"Aku coba dulu.",next:"end"}]},
+    activity:{npc:"Sekolah punya berbagai kegiatan dan ekstrakurikuler. Cari tahu jadwalnya dari pembina atau pengurus.",choices:[{label:"Terima kasih infonya.",next:"end"}]},
+    facility:{npc:"Ada ruang belajar, laboratorium, lapangan, kantin, dan fasilitas lainnya. Yuk, jelajahi kampus!",choices:[{label:"Siap, aku keliling.",next:"end"}]},
+    rules:{npc:"Jaga kebersihan, datang tepat waktu, saling menghormati, dan patuhi arahan guru.",choices:[{label:"Baik, aku ingat.",next:"end"}]},
+    end:{npc:"Sama-sama! Senang ngobrol denganmu. Sampai jumpa!",choices:[]}
+  };
+  function render(){
+    interactionPanel.replaceChildren();
+    const heading=document.createElement("strong");
+    heading.textContent=student.name+" · SISWA";
+    heading.style.cssText="display:block;color:#e8bd58;font-size:15px;margin-bottom:8px";
+    const detail=document.createElement("div");
+    detail.textContent=dialogue[step].npc;
+    detail.style.cssText="margin-bottom:10px";
+    interactionPanel.append(heading,detail);
+    dialogue[step].choices.forEach(choice=>{
+      const button=document.createElement("button");
+      button.type="button";button.textContent=choice.label;
+      button.style.cssText="display:block;width:100%;margin:6px 0;padding:9px 12px;border:1px solid #d4af37;border-radius:8px;background:#183b54;color:#fff;font-weight:bold;cursor:pointer";
+      button.addEventListener("click",()=>{step=choice.next;render();});
+      interactionPanel.append(button);
+    });
+    const close=document.createElement("button");
+    close.type="button";close.textContent="SELESAI";
+    close.style.cssText="margin-top:7px;padding:8px 18px;border:0;border-radius:8px;background:#e4bd58;color:#102b43;font-weight:bold;cursor:pointer";
+    close.addEventListener("click",()=>{infoOpen=false;updateNearbyPlace();});
+    interactionPanel.append(close);
+  }
+  render();
 }
 function blockedAt(x,z){
   const radius=.75;
