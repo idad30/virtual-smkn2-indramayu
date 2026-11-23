@@ -264,13 +264,59 @@ function path(x,z,w,d){const m=new THREE.Mesh(new THREE.BoxGeometry(w,.08,d),pat
 path(0,0,7,88);path(-2,0,88,6);path(26,0,5,80);path(-26,0,5,78);
 const campusPlaces=[];
 function building(name,x,z,w,d,color,info,height=3.2){
-  // Bangunan dengan lis atap, pintu depan, dan jendela berulang.
+  const glass=new THREE.MeshStandardMaterial({color:0x8fc7d8,metalness:.15,roughness:.25});
+  if(name==="GEDUNG UTAMA"){
+    // Gedung Utama dibuat dua lantai dengan ruang dalam yang benar-benar terbuka.
+    const wall=.42, floorY=3.18, totalH=6.45, doorW=2.35;
+    block(x,0,z,w,floorY-.12,d,color); // lantai dasar
+    // Dinding luar lantai 1: sisi depan sengaja memiliki bukaan pintu.
+    block(x-w/2+wall/2,0,z,wall,totalH,d,color);
+    block(x+w/2-wall/2,0,z,wall,totalH,d,color);
+    block(x,0,z-d/2+wall/2,w,totalH,wall,color);
+    const sideW=(w-doorW)/2;
+    block(x-w/2+sideW/2,0,z+d/2-wall/2,sideW,totalH,wall,color);
+    block(x+w/2-sideW/2,0,z+d/2-wall/2,sideW,totalH,wall,color);
+    // Lantai dua, terbelah untuk menyediakan ruang tangga.
+    block(x-1.4, floorY, z, w-4.8, .28, d, 0xb8c3c9);
+    block(x+w/2-1.05, floorY, z, 2.1, .28, d, 0xb8c3c9);
+    // Dinding pembatas lantai dua.
+    block(x, floorY+.28, z-d/2+wall/2,w,3.0,wall,color);
+    block(x-w/2+wall/2, floorY+.28,z,wall,d, color);
+    block(x+w/2-wall/2, floorY+.28,z,wall,d,color);
+    // Tangga bertahap di sisi kanan interior, naik dari depan ke belakang.
+    const stairX=x+w/2-3.25;
+    for(let i=0;i<11;i++){
+      const stepH=(i+1)*((floorY-.12)/11);
+      const stepZ=z+d/2-1.2-i*.72;
+      block(stairX,0,stepZ,2.05,stepH,.78,0x9babb4);
+    }
+    // Pintu masuk, kusen, jendela, dan lis atap.
+    block(x-doorW/2-.12,0,z+d/2+.12,.18,2.55,.16,0x684a32);
+    block(x+doorW/2+.12,0,z+d/2+.12,.18,2.55,.16,0x684a32);
+    block(x,2.5,z+d/2+.12,doorW+.42,.18,.16,0x684a32);
+    for(const wx of [x-7.2,x-4.3,x+4.3,x+7.2]){
+      const pane=new THREE.Mesh(new THREE.BoxGeometry(1.65,1.25,.1),glass);
+      pane.position.set(wx,2.05,z+d/2+.13);scene.add(pane);
+      const upper=new THREE.Mesh(new THREE.BoxGeometry(1.65,1.25,.1),glass);
+      upper.position.set(wx,4.95,z+d/2+.13);scene.add(upper);
+    }
+    block(x,totalH,z,w+.5,.3,d+.5,0x34485a);
+    block(x,totalH+.35,z+d/2+.18,Math.min(w*.55,5.5),.5,.14,0x18364b);
+    // Furnitur sederhana lantai 1 dan 2 sebagai penanda ruang.
+    block(x-5,.15,z-1.5,3.2,.9,1.1,0x8b735b);
+    block(x+2,.15,z-1.5,3.2,.9,1.1,0x8b735b);
+    block(x-5,floorY+.3,z-1.5,3.2,.9,1.1,0x8b735b);
+    block(x+2,floorY+.3,z-1.5,3.2,.9,1.1,0x8b735b);
+    campusPlaces.push({name,x,z,w,d,info});
+    campusLabel(name,x,z,"#ffffff");
+    return;
+  }
+  // Bangunan lain tetap memakai bentuk sederhana seperti sebelumnya.
   block(x,0,z,w,height,d,color);
   block(x,height,z,w+.45,.28,d+.45,0x34485a);
   block(x,0.12,z+d/2+.035,Math.min(w*.42,3.2),.16,.12,0xe8e2d5);
   const doorW=Math.min(1.8,w*.22), doorH=Math.min(2.45,height*.78);
   block(x,0,z+d/2+.085,doorW,doorH,.12,0x684a32);
-  const glass=new THREE.MeshStandardMaterial({color:0x8fc7d8,metalness:.15,roughness:.25});
   const windowW=Math.min(1.45,w*.18), windowH=Math.min(1.15,height*.34);
   const count=Math.max(1,Math.floor((w-doorW-1)/(windowW+.9)));
   for(let i=0;i<count;i++){
@@ -278,9 +324,9 @@ function building(name,x,z,w,d,color,info,height=3.2){
     if(Math.abs(wx-x)<doorW*.8) continue;
     const pane=new THREE.Mesh(new THREE.BoxGeometry(windowW,windowH,.09),glass);
     pane.position.set(wx,Math.min(height*.62,2.15),z+d/2+.09);scene.add(pane);
-    const sill=block(wx,Math.min(height*.62,2.15)-windowH/2-.08,z+d/2+.12,windowW+.12,.12,.18,0xe8e2d5);
+    block(wx,Math.min(height*.62,2.15)-windowH/2-.08,z+d/2+.12,windowW+.12,.12,.18,0xe8e2d5);
   }
-  const sign=block(x,height+.34,z+d/2+.13,Math.min(w*.55,4.2),.48,.12,0x18364b);
+  block(x,height+.34,z+d/2+.13,Math.min(w*.55,4.2),.48,.12,0x18364b);
   campusPlaces.push({name,x,z,w,d,info});
   campusLabel(name,x,z,"#ffffff");
 }
@@ -352,8 +398,13 @@ function blockedAt(x,z){
   return campusPlaces.some(place => {
     const withinX=Math.abs(x-place.x)<place.w/2+radius;
     const withinZ=Math.abs(z-place.z)<place.d/2+radius;
-    // Celah pintu depan di sisi z positif agar karakter dapat masuk.
-    const atDoor=Math.abs(x-place.x)<Math.min(1.05,place.w*.16)
+    // Area dalam Gedung Utama boleh dilalui; dinding fisiknya membatasi sisi luar.
+    if(place.name==="GEDUNG UTAMA"){
+      const insideX=Math.abs(x-place.x)<place.w/2-radius;
+      const insideZ=Math.abs(z-place.z)<place.d/2-radius;
+      if(insideX && insideZ) return false;
+    }
+    const atDoor=Math.abs(x-place.x)<(place.name==="GEDUNG UTAMA"?1.45:Math.min(1.05,place.w*.16))
       && z>=place.z+place.d/2-radius
       && z<=place.z+place.d/2+1.25;
     return withinX && withinZ && !atDoor;
