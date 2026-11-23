@@ -268,7 +268,7 @@ function building(name,x,z,w,d,color,info,height=3.2){
   if(name==="GEDUNG UTAMA"){
     // Gedung Utama dibuat dua lantai dengan ruang dalam yang benar-benar terbuka.
     const wall=.42, floorY=3.18, totalH=6.45, doorW=2.35;
-    block(x,0,z,w,floorY-.12,d,color); // lantai dasar
+    block(x,0,z,w,.18,d,0xc8cdd0); // lantai dasar
     // Dinding luar lantai 1: sisi depan sengaja memiliki bukaan pintu.
     block(x-w/2+wall/2,0,z,wall,totalH,d,color);
     block(x+w/2-wall/2,0,z,wall,totalH,d,color);
@@ -281,8 +281,8 @@ function building(name,x,z,w,d,color,info,height=3.2){
     block(x+w/2-1.05, floorY, z, 2.1, .28, d, 0xb8c3c9);
     // Dinding pembatas lantai dua.
     block(x, floorY+.28, z-d/2+wall/2,w,3.0,wall,color);
-    block(x-w/2+wall/2, floorY+.28,z,wall,d, color);
-    block(x+w/2-wall/2, floorY+.28,z,wall,d,color);
+    block(x-w/2+wall/2, floorY+.28,z,wall,3.0,d,color);
+    block(x+w/2-wall/2, floorY+.28,z,wall,3.0,d,color);
     // Tangga bertahap di sisi kanan interior, naik dari depan ke belakang.
     const stairX=x+w/2-3.25;
     for(let i=0;i<11;i++){
