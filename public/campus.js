@@ -437,7 +437,89 @@ function createNpcStudent(index,x,z){
   [-30,42], [-42,32], [-40,12], [-34,-8], [-30,-28],
   [-18,-27], [-5,-27], [12,-27], [29,-29], [40,-8],
   [43,12], [42,34], [25,40], [8,43], [-22,40]
-].forEach(([x,z],i)=>createNpcStudent(i,x,z));function updateNpcStudents(now){
+].forEach(([x,z],i)=>createNpcStudent(i,x,z));
+
+// Regu marching band Gita Bahari yang berlatih rutin di lapangan upacara.
+const marchingBand=[];
+const bandUniform=0x174b78, bandGold=0xd4af37, bandWhite=0xf2f2ed;
+function bandPart(parent,geometry,color,x,y,z){
+  const mesh=new THREE.Mesh(geometry,mat(color));
+  mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+}
+function createBandMember(index,x,z,instrument){
+  const group=new THREE.Group();
+  const body=new THREE.Group();group.add(body);
+  bandPart(body,new THREE.BoxGeometry(.7,.82,.38),bandUniform,0,1.25,0);
+  bandPart(body,new THREE.BoxGeometry(.5,.52,.5),0xd9a47b,0,1.92,0);
+  bandPart(body,new THREE.BoxGeometry(.56,.16,.56),0x20252a,0,2.19,0);
+  bandPart(body,new THREE.BoxGeometry(.3,.08,.08),bandGold,0,1.68,-.22);
+  for(const side of [-1,1]){
+    bandPart(body,new THREE.BoxGeometry(.28,.78,.3),bandUniform,side*.22,.42,0);
+    bandPart(body,new THREE.BoxGeometry(.34,.18,.48),0x20252a,side*.22,.03,-.04);
+  }
+  const arms=[];
+  for(const side of [-1,1]){
+    const arm=new THREE.Group();arm.position.set(side*.43,1.58,0);body.add(arm);
+    bandPart(arm,new THREE.BoxGeometry(.22,.68,.24),bandUniform,0,-.3,0);
+    bandPart(arm,new THREE.BoxGeometry(.2,.18,.22),0xd9a47b,0,-.68,0);
+    arms.push(arm);
+  }
+  let prop;
+  if(instrument==="snare"||instrument==="bass"){
+    const radius=instrument==="bass"?.58:.38;
+    prop=new THREE.Group();body.add(prop);
+    const drum=bandPart(prop,new THREE.CylinderGeometry(radius,radius,.22,20),bandWhite,0,0,0);
+    drum.rotation.x=Math.PI/2;
+    const rim=bandPart(prop,new THREE.TorusGeometry(radius,.045,8,24),bandGold,0,0,-.13);
+    rim.rotation.x=Math.PI/2;
+    prop.position.set(0,1.25,-.48);
+    if(instrument==="bass") prop.scale.set(1.12,1.12,1.12);
+  }else if(instrument==="trumpet"){
+    prop=new THREE.Group();body.add(prop);
+    const tube=bandPart(prop,new THREE.CylinderGeometry(.055,.055,.9,10),bandGold,0,0,0);
+    tube.rotation.x=Math.PI/2;
+    const bell=bandPart(prop,new THREE.CylinderGeometry(.07,.27,.34,16),bandGold,0,0,-.57);
+    bell.rotation.x=Math.PI/2;
+    for(let n=0;n<3;n++) bandPart(prop,new THREE.CylinderGeometry(.035,.035,.16,8),bandWhite,-.13+n*.13,.1,-.03);
+    prop.position.set(0,1.55,-.48);
+  }else{
+    prop=new THREE.Group();body.add(prop);
+    bandPart(prop,new THREE.BoxGeometry(.12,.72,.12),bandGold,0,0,0);
+    bandPart(prop,new THREE.SphereGeometry(.12,10,8),bandWhite,0,.42,0);
+    prop.position.set(0,1.72,-.42);
+  }
+  group.position.set(x,0,z);
+  // Semua anggota menghadap ke arah depan lapangan.
+  group.rotation.y=0;
+  scene.add(group);
+  marchingBand.push({group,body,arms,prop,instrument,phase:index*.72,index});
+}
+[
+  [3, -5, "snare"], [7, -5, "trumpet"], [11, -5, "trumpet"],
+  [3, 1, "trumpet"], [7, 1, "bass"], [11, 1, "trumpet"],
+  [3, 7, "snare"], [7, 7, "trumpet"], [11, 7, "snare"],
+  [5, 13, "snare"], [9, 13, "trumpet"]
+].forEach(([x,z,instrument],i)=>createBandMember(i,x,z,instrument));
+function updateMarchingBand(now){
+  const t=now*.001;
+  for(const member of marchingBand){
+    const beat=Math.sin(t*4.2+member.phase);
+    member.body.position.y=Math.abs(beat)*.035;
+    member.body.rotation.z=Math.sin(t*2.1+member.phase)*.025;
+    if(member.instrument==="snare"||member.instrument==="bass"){
+      member.arms[0].rotation.x=-.35+Math.max(0,beat)*.42;
+      member.arms[1].rotation.x=-.35+Math.max(0,-beat)*.42;
+    }else if(member.instrument==="trumpet"){
+      member.arms[0].rotation.x=-.85+beat*.08;
+      member.arms[1].rotation.x=-.85-beat*.08;
+      member.prop.rotation.y=Math.sin(t*1.2+member.phase)*.035;
+    }else{
+      member.arms[0].rotation.x=beat*.55;
+      member.arms[1].rotation.x=-beat*.55;
+    }
+  }
+}
+function updateNpcStudents(now){
   for(const student of npcStudents){
     const t=now*.001*student.speed+student.phase;
     student.npc.position.x=student.baseX+Math.sin(t)*student.range;
@@ -716,7 +798,7 @@ const desiredVelocity=new THREE.Vector3();
 function animate(now) {
   requestAnimationFrame(animate);
   updateSkyByTime();
-  updateNpcStudents(now);
+  updateNpcStudents(now);\n  updateMarchingBand(now);
   const dt=Math.min((now-last)/1000,.05); last=now;
   if(!walkStarted){const t=now*0.00012;const aerial=new THREE.Vector3(Math.sin(t)*72,44,Math.cos(t)*72);camera.position.lerp(aerial,1-Math.exp(-1.3*dt));camera.lookAt(0,0,0);renderer.render(scene,camera);return;}
 
