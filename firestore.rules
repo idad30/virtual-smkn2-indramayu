@@ -22,6 +22,21 @@ service cloud.firestore {
          (major == 'TP' && number >= 1 && number <= 2));
     }
 
+    // Pengaturan maintenance dapat dibaca publik agar semua halaman tahu statusnya.
+    // Hanya UID admin yang boleh mengubahnya.
+    match /settings/maintenance {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if signedIn() && request.auth.uid == '7mQtL5NIu0RtN5UOWy8TLiWL5zP2'
+        && request.resource.data.keys().hasOnly(['enabled','message','expectedEnd','updatedAt'])
+        && request.resource.data.enabled is bool
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 240
+        && request.resource.data.expectedEnd is string
+        && request.resource.data.expectedEnd.size() <= 80;
+      allow delete: if signedIn() && request.auth.uid == '7mQtL5NIu0RtN5UOWy8TLiWL5zP2';
+    }
+
     match /players/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
 
