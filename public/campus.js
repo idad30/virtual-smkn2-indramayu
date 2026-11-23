@@ -66,13 +66,88 @@ function watchPromotion(uid) {
 }
 
 function studentCard(data) {
- const launch=document.createElement("button");launch.type="button";launch.className="profile-launcher";launch.textContent="PROFIL";launch.title="Profil siswa";document.body.appendChild(launch);
- const modal=document.createElement("section");modal.className="profile-modal";modal.style.display="none";modal.innerHTML='<div class="profile-dialog"><button class="profile-close" type="button">×</button><h2>PROFIL SISWA</h2><label>Nama siswa<input id="profile-name" maxlength="70"></label><button id="save-profile-name" type="button">SIMPAN NAMA</button><h3>GANTI KARAKTER</h3><div id="profile-avatars" class="profile-avatars"></div><p id="profile-status"></p><button id="download-id-card" type="button">UNDUH ID CARD</button></div>';document.body.appendChild(modal);
- const status=modal.querySelector("#profile-status"),input=modal.querySelector("#profile-name"),list=modal.querySelector("#profile-avatars");input.value=data.fullName||"";launch.onclick=()=>modal.style.display="flex";modal.querySelector(".profile-close").onclick=()=>modal.style.display="none";modal.onclick=e=>{if(e.target===modal)modal.style.display="none";};
- Object.entries(avatarOptions).forEach(([id,cfg])=>{const btn=document.createElement("button");btn.type="button";btn.textContent=cfg.label;btn.className="profile-avatar-option"+(id===(data.avatarId||"taruna")?" selected":"");btn.onclick=async()=>{try{await updateDoc(doc(db,"players",auth.currentUser.uid),{avatarId:id});buildAvatar(id);data.avatarId=id;list.querySelectorAll("button").forEach(x=>x.classList.toggle("selected",x===btn));status.textContent="Karakter berhasil diganti.";}catch(e){console.error(e);status.textContent="Gagal menyimpan karakter. Periksa Firebase Rules.";}};list.appendChild(btn);});
- modal.querySelector("#save-profile-name").onclick=async()=>{const fullName=input.value.trim();if(fullName.length<3||fullName.length>70){status.textContent="Nama harus 3–70 karakter.";return;}try{await updateDoc(doc(db,"players",auth.currentUser.uid),{fullName});data.fullName=fullName;status.textContent="Nama berhasil diperbarui.";}catch(e){console.error(e);status.textContent="Gagal menyimpan nama. Perbarui Firebase Rules.";}}
- modal.querySelector("#download-id-card").onclick=()=>{const c=document.createElement("canvas");c.width=1100;c.height=650;const x=c.getContext("2d");x.fillStyle="#102b43";x.fillRect(0,0,1100,650);x.strokeStyle="#d4af37";x.lineWidth=10;x.strokeRect(20,20,1060,610);x.fillStyle="#f2cf72";x.font="bold 34px Arial";x.fillText("VIRTUAL SMKN 2 INDRAMAYU",60,95);x.fillStyle="white";x.font="bold 32px Arial";x.fillText(data.fullName||"Siswa",60,190);const rows=[["Status",data.schoolStatus||"Siswa"],["Jabatan",data.position||"Anggota"],["Program Keahlian",data.major||"-"],["Tingkat",data.grade||"-"],["Kelas",String(data.classNumber??"-")],["Karakter",avatarOptions[data.avatarId||"taruna"].label]];rows.forEach((r,i)=>{x.font="25px Arial";x.fillText(r[0]+" : "+r[1],60,280+i*48);});const link=document.createElement("a");link.download="ID-Card.png";link.href=c.toDataURL("image/png");link.click();};
+  const el=document.createElement("aside");
+  el.className="student-card";
+  el.style.cssText="position:fixed;top:12px;right:12px;z-index:12;width:auto;padding:0;border:0;background:transparent;box-shadow:none";
+  const open=document.createElement("button");
+  open.type="button"; open.textContent="👤";
+  open.title="Profil dan pengaturan karakter";
+  open.setAttribute("aria-label","Buka profil");
+  open.style.cssText="width:44px;height:44px;padding:0;border:1px solid #d4af37;border-radius:50%;background:#102b43ed;color:#f2cf72;font-size:22px;box-shadow:0 4px 16px #0005";
+  const modal=document.createElement("section");
+  modal.style.cssText="display:none;position:fixed;inset:0;z-index:25;background:#061522dc;align-items:center;justify-content:center;padding:16px";
+  const panel=document.createElement("div");
+  panel.style.cssText="width:min(390px,100%);max-height:88vh;overflow:auto;padding:18px;border:1px solid #d4af37;border-radius:16px;background:#102b43;color:#fff;font:13px/1.5 Arial";
+  const heading=document.createElement("b"); heading.textContent="PROFIL SISWA";
+  heading.style.cssText="display:block;color:#e8bd58;letter-spacing:1px;margin-bottom:12px";
+  const nameLabel=document.createElement("label"); nameLabel.textContent="Nama siswa";
+  nameLabel.style.cssText="display:grid;gap:6px;margin-bottom:12px";
+  const nameInput=document.createElement("input"); nameInput.value=data.fullName||""; nameInput.maxLength=70;
+  nameInput.style.cssText="width:100%;padding:11px;border:1px solid #557087;border-radius:8px;background:#091c2a;color:white";
+  nameLabel.append(nameInput);
+  const info=document.createElement("div");
+  info.textContent=`${data.schoolStatus||(data.gender==="P"?"Taruni":"Taruna")} · ${data.position||"Anggota"} · ${data.major||"-"} · ${data.grade||"-"} · Kelas ${data.classNumber??data.className??"-"}`;
+  info.style.cssText="color:#c5d6e2;margin-bottom:12px";
+  const avatarTitle=document.createElement("b"); avatarTitle.textContent="PILIH KARAKTER";
+  avatarTitle.style.cssText="display:block;color:#e8bd58;margin-bottom:8px";
+  const avatarButtons=document.createElement("div");
+  avatarButtons.style.cssText="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px";
+  function refreshAvatarButtons(){
+    [...avatarButtons.children].forEach((button,index)=>{
+      const selected=Object.keys(avatarOptions)[index]===(data.avatarId||"taruna");
+      button.style.background=selected?"#e4bd58":"#183b54";
+      button.style.color=selected?"#102b43":"white";
+    });
+  }
+  Object.entries(avatarOptions).forEach(([id,cfg])=>{
+    const option=document.createElement("button"); option.type="button"; option.textContent=cfg.label;
+    option.style.cssText="padding:10px 6px;border:1px solid #d4af37;border-radius:8px;background:#183b54;color:white;font-size:11px;font-weight:bold";
+    option.addEventListener("click",async()=>{
+      try {
+        await updateDoc(doc(db,"players",auth.currentUser.uid),{avatarId:id});
+        buildAvatar(id); data.avatarId=id; refreshAvatarButtons();
+      } catch(error){console.error(error);alert("Gagal mengganti karakter. Periksa Firestore Rules.");}
+    });
+    avatarButtons.append(option);
+  });
+  const save=document.createElement("button"); save.type="button"; save.textContent="SIMPAN NAMA";
+  save.style.cssText="width:100%;margin-top:14px;padding:11px";
+  save.addEventListener("click",async()=>{
+    const fullName=nameInput.value.trim();
+    if(fullName.length<3||fullName.length>70){alert("Nama harus 3–70 karakter.");return;}
+    try {
+      await updateDoc(doc(db,"players",auth.currentUser.uid),{fullName});
+      data.fullName=fullName;
+      save.textContent="TERSIMPAN";
+      setTimeout(()=>save.textContent="SIMPAN NAMA",1300);
+    } catch(error){console.error(error);alert("Gagal menyimpan nama. Periksa Firestore Rules.");}
+  });
+  const download=document.createElement("button"); download.type="button"; download.textContent="UNDUH ID CARD";
+  download.style.cssText="width:100%;margin-top:8px;padding:11px;background:#254b64;color:white";
+  download.addEventListener("click",()=>{
+    const card=document.createElement("canvas"); card.width=1200; card.height=760;
+    const c=card.getContext("2d");
+    const gradient=c.createLinearGradient(0,0,1200,760); gradient.addColorStop(0,"#102b43"); gradient.addColorStop(1,"#1d4c68");
+    c.fillStyle=gradient;c.fillRect(0,0,1200,760);c.strokeStyle="#d4af37";c.lineWidth=12;c.strokeRect(24,24,1152,712);
+    c.fillStyle="#f2cf72";c.font="bold 38px Arial";c.fillText("VIRTUAL SMKN 2 INDRAMAYU",70,105);
+    c.fillStyle="#fff";c.font="bold 27px Arial";c.fillText("KARTU IDENTITAS SISWA",70,155);
+    c.fillStyle="#dceaf2";c.fillRect(75,210,390,390);c.fillStyle="#173b5a";c.fillRect(185,390,170,210);
+    c.fillStyle="#d9a47b";c.fillRect(235,280,90,100);c.fillStyle="#172333";c.fillRect(225,255,110,45);
+    c.fillStyle="#fff";c.font="bold 43px Arial";const fullName=data.fullName||"Siswa";c.fillText(fullName.length>25?fullName.slice(0,24)+"…":fullName,520,285);
+    c.fillStyle="#e8bd58";c.font="bold 25px Arial";c.fillText(data.schoolStatus||(data.gender==="P"?"Taruni":"Taruna"),520,345);
+    const rows=[["Jabatan",data.position||"Anggota"],["Program Keahlian",data.major||"-"],["Tingkat",data.grade||"-"],["Kelas",String(data.classNumber??data.className??"-")]];
+    rows.forEach((row,i)=>{const y=420+i*62;c.fillStyle="#a9c2d2";c.font="26px Arial";c.fillText(row[0],520,y);c.fillStyle="#fff";c.fillText(": "+row[1],760,y);});
+    const link=document.createElement("a");link.download="ID-Card-"+(fullName.replace(/[^a-z0-9]+/gi,"-")||"siswa")+".png";link.href=card.toDataURL("image/png");link.click();
+  });
+  const close=document.createElement("button"); close.type="button"; close.textContent="TUTUP";
+  close.style.cssText="width:100%;margin-top:8px;padding:10px;background:#344e60;color:white";
+  close.addEventListener("click",()=>modal.style.display="none");
+  panel.append(heading,nameLabel,info,avatarTitle,avatarButtons,save,download,close);
+  modal.append(panel); modal.addEventListener("click",e=>{if(e.target===modal)modal.style.display="none";});
+  open.addEventListener("click",()=>modal.style.display="flex");
+  el.append(open);document.body.append(el,modal);refreshAvatarButtons();
 }
+
 const root = document.querySelector("#game");
 const scene = new THREE.Scene();
 // Langit dan suasana otomatis mengikuti waktu Indonesia (WIB).
@@ -553,7 +628,7 @@ async function start() {
       try { if(innerWidth<900 && screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch(error) { console.info("Orientasi landscape dapat diaktifkan dari pengaturan HP."); }
     });
     campusFeatures = initCampusFeatures({ app, uid: auth.currentUser.uid, profile: data, player, scene, THREE, places: campusPlaces });
-    document.querySelector('#walk-start').addEventListener('click',async()=>{try{if(innerWidth<=900&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape');}catch(e){console.info('Landscape tidak didukung browser ini',e);}walkStarted=true;player.visible=true;document.querySelector('#intro-screen').style.display='none';document.querySelector('.mobile-controls').style.display='flex';});
+    document.querySelector('#start-walk').addEventListener('click',async()=>{try{if(innerWidth<=900&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape');}catch(e){console.info('Landscape tidak didukung browser ini',e);}walkStarted=true;player.visible=true;document.querySelector('#drone-intro').style.display='none';document.querySelector('.mobile-controls').style.display='flex';});
     requestAnimationFrame(animate);
   } catch(error) {
     console.error("Campus error:",error);
