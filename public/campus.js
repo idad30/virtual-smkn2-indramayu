@@ -170,12 +170,18 @@ let hemisphereLight;
 let currentSkyPeriod = "";
 const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 260);
 camera.position.set(0, 13, 19);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const isMobileGraphics = matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+const renderer = new THREE.WebGLRenderer({
+  antialias: !isMobileGraphics,
+  powerPreference: "high-performance"
+});
 renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, isMobileGraphics ? 1.35 : 1.85));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
 root.appendChild(renderer.domElement);
 
 // Kamera third-person: selalu mengikuti posisi dan arah hadap karakter.
@@ -216,7 +222,15 @@ scene.add(ambientFill);
 const sun = new THREE.DirectionalLight(0xfff0d1, 2.2);
 sun.position.set(-35, 65, 35);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(isMobileGraphics ? 1024 : 2048, isMobileGraphics ? 1024 : 2048);
+sun.shadow.camera.left = -72;
+sun.shadow.camera.right = 72;
+sun.shadow.camera.top = 62;
+sun.shadow.camera.bottom = -62;
+sun.shadow.camera.near = 1;
+sun.shadow.camera.far = 150;
+sun.shadow.normalBias = 0.035;
+sun.shadow.bias = -0.00008;
 scene.add(sun);
 
 function updateSkyByTime() {
