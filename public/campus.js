@@ -487,9 +487,28 @@ const keys = Object.create(null);
 addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true; if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase())) e.preventDefault();},{passive:false});
 addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
 addEventListener("keydown",e=>{
-  if(e.key.toLowerCase()==="e" && nearbyPlace && !e.repeat){
-    if(infoOpen){infoOpen=false;updateNearbyPlace();}
-    else showPlaceInfo(nearbyPlace);
+  if(e.key.toLowerCase()==="e" && !e.repeat){
+    // Gunakan tombol E di area tangga untuk berpindah lantai.
+    const nearStairs=Math.abs(player.position.x-7.25)<2.3
+      && player.position.z>30.5 && player.position.z<39.5
+      && Math.abs(player.position.x-(-1))<10;
+    if(nearStairs){
+      player.position.y=player.position.y<1.5?3.18:0;
+      infoOpen=false;
+      interactionPanel.innerHTML="";
+      const msg=document.createElement("strong");
+      msg.textContent=player.position.y>1.5?"LANTAI 2":"LANTAI 1";
+      msg.style.color="#e8bd58";
+      const hint=document.createElement("div");
+      hint.textContent="Kamu berpindah lantai. Tekan E di area tangga untuk kembali.";
+      interactionPanel.append(msg,hint);
+      interactionPanel.style.display="block";
+      return;
+    }
+    if(nearbyPlace){
+      if(infoOpen){infoOpen=false;updateNearbyPlace();}
+      else showPlaceInfo(nearbyPlace);
+    }
   }
 });
 const joystick=document.querySelector("#joystick");
@@ -566,7 +585,7 @@ function animate(now) {
   avatar.position.y=now<jumpUntil?Math.sin((jumpUntil-now)/420*Math.PI)*1.15:(actualSpeed>.18?Math.abs(Math.sin(walkPhase*2))*.045:0);
 
   if(walkMode){
-    cameraTarget.set(player.position.x,1.25,player.position.z);
+    cameraTarget.set(player.position.x,player.position.y+1.25,player.position.z);
     const horizontal=Math.cos(cameraPitch)*cameraDistance;
     cameraOffset.set(-Math.sin(cameraYaw)*horizontal,Math.sin(cameraPitch)*cameraDistance+2.1,-Math.cos(cameraYaw)*horizontal);
     const desiredCamera=cameraTarget.clone().add(cameraOffset);
