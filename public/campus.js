@@ -430,15 +430,14 @@ function createNpcStudent(index,x,z){
     leg.position.set(side*.18,.38,0);body.add(leg);
   }
   npc.position.set(x,0,z);scene.add(npc);
-  npcStudents.push({npc,arms,name:["Adit","Raka","Dina","Salsa","Fajar"][index%5],baseX:x,baseZ:z,phase:index*1.7,range:2.2,speed:.45+index*.07});
+  npcStudents.push({npc,arms,name:["Adit","Raka","Dina","Salsa","Fajar","Nabila","Rizky","Putri","Bagas","Citra","Dimas","Nadya","Farhan","Alya","Reza","Intan","Yoga","Tiara","Rafi","Zahra"][index],profile:[["suka teknologi","Aku lagi belajar merakit jaringan komputer.","Kamu pernah mencoba konfigurasi router?","Aku suka praktik langsung supaya lebih paham.","Kalau ke Lab TKJ, jangan lupa ikuti aturan lab."],["suka olahraga","Aku baru selesai latihan di lapangan.","Kamu biasanya suka olahraga apa?","Seru kalau bisa olahraga bareng teman-teman.","Jangan lupa pemanasan sebelum mulai, ya."],["rajin membaca","Aku sedang mencari buku untuk dibaca.","Kamu lebih suka buku cerita atau pengetahuan?","Membaca sebentar setiap hari bisa menambah wawasan.","Perpustakaan bisa jadi tempat yang nyaman untuk belajar."],["aktif organisasi","Aku sedang menyiapkan kegiatan sekolah.","Kamu ikut ekstrakurikuler apa?","Ikut kegiatan bisa melatih kerja sama dan tanggung jawab.","Coba cari tahu kegiatan yang sesuai minatmu."],["hobi musik","Aku suka mendengarkan musik saat waktu istirahat.","Kamu bisa memainkan alat musik?","Musik bikin suasana latihan jadi lebih semangat.","Siapa tahu nanti kita bisa tampil di acara sekolah."],["suka kuliner","Aku penasaran menu apa yang ada di kantin hari ini.","Kamu suka makanan pedas?","Wah, pilihan makanan di kantin memang beragam.","Jangan lupa antre dan menjaga kebersihan."],["calon programmer","Aku sedang mencoba membuat program sederhana.","Kamu tertarik belajar coding?","Mulai dari program kecil dulu, nanti makin terbiasa.","Kalau ada error, teliti baris kodenya satu per satu."],["suka fotografi","Aku sedang mencari sudut kampus yang bagus untuk foto.","Kamu suka memotret pemandangan atau teman?","Cahaya yang bagus bisa membuat foto lebih menarik.","Tetap minta izin sebelum memotret orang lain."],["hobi otomotif","Aku senang belajar tentang mesin dan kendaraan.","Kamu tertarik dunia otomotif?","Memahami cara kerja mesin itu menarik.","Praktik harus tetap memperhatikan keselamatan."],["suka menggambar","Aku sedang membuat sketsa gedung sekolah.","Kamu suka menggambar juga?","Ide sederhana bisa jadi karya yang bagus.","Terus latihan dan jangan takut mencoba gaya baru."],["suka sains","Aku baru membaca fakta menarik tentang alam.","Pelajaran sains apa yang paling kamu suka?","Rasa ingin tahu adalah awal dari pengetahuan.","Coba amati hal-hal kecil di sekitar sekolah."],["suka bahasa","Aku sedang menghafal kosakata bahasa Inggris.","Kamu sedang belajar bahasa apa?","Belajar sedikit demi sedikit lebih mudah diingat.","Coba praktikkan dengan teman saat ada kesempatan."],["suka bahari","Aku tertarik dengan dunia kelautan.","Kamu pernah belajar tentang navigasi?","Laut menyimpan banyak hal menarik untuk dipelajari.","Pengetahuan dan kedisiplinan penting di bidang bahari."],["suka memasak","Aku sedang mencari ide resep baru.","Kamu lebih suka masakan manis atau gurih?","Memasak perlu ketelitian dan kreativitas.","Selalu jaga kebersihan alat dan bahan."],["suka desain","Aku sedang membuat desain poster kegiatan.","Kamu suka desain yang simpel atau ramai?","Warna dan tata letak bisa menyampaikan pesan.","Terus eksplorasi ide desainmu."],["suka tanaman","Aku sedang memperhatikan tanaman di taman sekolah.","Kamu suka merawat tanaman?","Lingkungan hijau membuat sekolah terasa nyaman.","Yuk, sama-sama menjaga taman sekolah."],["suka matematika","Aku sedang mengerjakan soal hitungan.","Kamu suka tantangan matematika?","Kalau bingung, pecah soal menjadi langkah kecil.","Latihan rutin bikin kita makin terbiasa."],["suka sejarah","Aku sedang mencari cerita tentang sejarah sekolah.","Kamu suka mendengar cerita masa lalu?","Sejarah membantu kita menghargai perjalanan suatu tempat.","Tanya guru atau senior untuk cerita lainnya."],["suka persahabatan","Aku senang kalau teman-teman saling membantu.","Menurutmu apa yang membuat kelas kompak?","Saling menghargai membuat suasana belajar lebih baik.","Mulai dari hal kecil seperti menyapa teman."],["suka lingkungan","Aku ingin mengajak teman menjaga kebersihan kampus.","Kamu biasanya memilah sampah?","Kebiasaan kecil bisa membuat lingkungan lebih bersih.","Ayo buang sampah pada tempatnya."]][index],baseX:x,baseZ:z,phase:index*1.7,range:2.2,speed:.45+index*.07});
 }
 [
   [-23,-7], [20,-12], [-22,13], [18,23], [34,18],
   [-30,42], [-42,32], [-40,12], [-34,-8], [-30,-28],
   [-18,-27], [-5,-27], [12,-27], [29,-29], [40,-8],
   [43,12], [42,34], [25,40], [8,43], [-22,40]
-].forEach(([x,z],i)=>createNpcStudent(i,x,z));
-function updateNpcStudents(now){
+].forEach(([x,z],i)=>createNpcStudent(i,x,z));function updateNpcStudents(now){
   for(const student of npcStudents){
     const t=now*.001*student.speed+student.phase;
     student.npc.position.x=student.baseX+Math.sin(t)*student.range;
@@ -510,70 +509,55 @@ function showNpcDialogue(student){
   infoOpen=true;
   interactionPanel.style.display="block";
   interactionPanel.style.pointerEvents="auto";
-  let step="start";
-  const dialogue={
-    start:{
-      npc:"Halo! Aku "+student.name+". Kamu siswa baru di sekolah ini, ya?",
-      choices:[
-        {label:"Iya, aku siswa baru.",next:"newStudent"},
-        {label:"Bukan, aku sedang keliling.",next:"explore"},
-        {label:"Aku mau tanya tentang sekolah.",next:"ask"}
-      ]
-    },
-    newStudent:{
-      npc:"Wah, selamat datang! Kamu dari jurusan apa?",
-      choices:[
-        {label:"TKJ",next:"tkj"},
-        {label:"RPL",next:"rpl"},
-        {label:"Jurusan lain",next:"major"}
-      ]
-    },
-    explore:{
-      npc:"Asyik! Kampus ini cukup luas. Sudah sempat mengunjungi kantin?",
-      choices:[
-        {label:"Belum, di mana kantin?",next:"canteen"},
-        {label:"Sudah dong!",next:"already"},
-        {label:"Aku mau lihat gedung lain.",next:"building"}
-      ]
-    },
-    ask:{
-      npc:"Boleh! Kamu ingin tahu apa?",
-      choices:[
-        {label:"Tentang kegiatan sekolah",next:"activity"},
-        {label:"Tentang fasilitas",next:"facility"},
-        {label:"Tentang tata tertib",next:"rules"}
-      ]
-    },
-    tkj:{npc:"Wih, TKJ! Semangat belajar jaringan dan komputer, ya. Jangan lupa sering praktik!",choices:[{label:"Terima kasih!",next:"end"}]},
-    rpl:{npc:"Keren! Semangat belajar membuat aplikasi dan program. Terus asah kreativitasmu!",choices:[{label:"Siap, makasih!",next:"end"}]},
-    major:{npc:"Apa pun jurusanmu, semangat terus belajar dan berkarya!",choices:[{label:"Siap!",next:"end"}]},
-    canteen:{npc:"Kantin ada di area kampus. Coba jelajahi denah dan ikuti jalan di sekitar lapangan.",choices:[{label:"Oke, aku cari.",next:"end"}]},
-    already:{npc:"Mantap! Jangan lupa buang sampah pada tempatnya supaya kantin tetap bersih.",choices:[{label:"Pasti!",next:"end"}]},
-    building:{npc:"Kamu bisa mendekati gedung-gedung untuk melihat informasi. Coba tekan E saat sudah dekat.",choices:[{label:"Aku coba dulu.",next:"end"}]},
-    activity:{npc:"Sekolah punya berbagai kegiatan dan ekstrakurikuler. Cari tahu jadwalnya dari pembina atau pengurus.",choices:[{label:"Terima kasih infonya.",next:"end"}]},
-    facility:{npc:"Ada ruang belajar, laboratorium, lapangan, kantin, dan fasilitas lainnya. Yuk, jelajahi kampus!",choices:[{label:"Siap, aku keliling.",next:"end"}]},
-    rules:{npc:"Jaga kebersihan, datang tepat waktu, saling menghormati, dan patuhi arahan guru.",choices:[{label:"Baik, aku ingat.",next:"end"}]},
-    end:{npc:"Sama-sama! Senang ngobrol denganmu. Sampai jumpa!",choices:[]}
-  };
+  const profile=student.profile;
+  let npcLine="Halo! Aku "+student.name+". Aku "+profile[0]+". "+profile[1];
+  let replyLine="";
+  let stage="choose";
   function render(){
     interactionPanel.replaceChildren();
     const heading=document.createElement("strong");
     heading.textContent=student.name+" · SISWA";
     heading.style.cssText="display:block;color:#e8bd58;font-size:15px;margin-bottom:8px";
     const detail=document.createElement("div");
-    detail.textContent=dialogue[step].npc;
-    detail.style.cssText="margin-bottom:10px";
+    detail.textContent=npcLine;
+    detail.style.cssText="margin-bottom:10px;line-height:1.55";
     interactionPanel.append(heading,detail);
-    dialogue[step].choices.forEach(choice=>{
-      const button=document.createElement("button");
-      button.type="button";button.textContent=choice.label;
-      button.style.cssText="display:block;width:100%;margin:6px 0;padding:9px 12px;border:1px solid #d4af37;border-radius:8px;background:#183b54;color:#fff;font-weight:bold;cursor:pointer";
-      button.addEventListener("click",()=>{step=choice.next;render();});
-      interactionPanel.append(button);
-    });
+    if(stage==="choose"){
+      const choices=[
+        {label:"Wah, menarik! Ceritakan lagi.",reply:profile[2]},
+        {label:"Aku juga tertarik dengan itu.",reply:profile[3]},
+        {label:"Ada saran untuk siswa baru?",reply:profile[4]}
+      ];
+      choices.forEach(choice=>{
+        const button=document.createElement("button");
+        button.type="button";button.textContent=choice.label;
+        button.style.cssText="display:block;position:relative;z-index:2;pointer-events:auto;width:100%;margin:7px 0;padding:11px 12px;border:1px solid #d4af37;border-radius:9px;background:#24516b;color:#fff;font-weight:bold;cursor:pointer;touch-action:manipulation";
+        button.addEventListener("click",()=>{
+          replyLine=choice.reply;
+          npcLine=student.name+": "+replyLine;
+          stage="reply";
+          render();
+        });
+        interactionPanel.append(button);
+      });
+    }else{
+      const follow=document.createElement("div");
+      follow.textContent="Kamu: Senang bisa ngobrol denganmu!";
+      follow.style.cssText="margin:8px 0;padding:9px;border-radius:8px;background:#183b54;color:#dceaf2";
+      interactionPanel.append(follow);
+      const answer=document.createElement("div");
+      answer.textContent=student.name+": "+(profile[0]==="suka persahabatan"?"Sama-sama! Semoga kita bisa berteman.":"Terima kasih sudah ngobrol! Semangat menjalani hari di sekolah, ya.");
+      answer.style.cssText="margin:8px 0;padding:9px;border-radius:8px;background:#284b3b;color:#fff";
+      interactionPanel.append(answer);
+      const again=document.createElement("button");
+      again.type="button";again.textContent="TANYA LAGI";
+      again.style.cssText="display:block;width:100%;margin-top:8px;padding:10px;border:1px solid #d4af37;border-radius:8px;background:#24516b;color:white;font-weight:bold;cursor:pointer;pointer-events:auto";
+      again.addEventListener("click",()=>{npcLine="Oh, ada lagi yang ingin kamu tanyakan?";stage="choose";render();});
+      interactionPanel.append(again);
+    }
     const close=document.createElement("button");
     close.type="button";close.textContent="SELESAI";
-    close.style.cssText="margin-top:7px;padding:8px 18px;border:0;border-radius:8px;background:#e4bd58;color:#102b43;font-weight:bold;cursor:pointer";
+    close.style.cssText="margin-top:8px;padding:9px 20px;border:0;border-radius:8px;background:#e4bd58;color:#102b43;font-weight:bold;cursor:pointer;pointer-events:auto";
     close.addEventListener("click",()=>{infoOpen=false;updateNearbyPlace();});
     interactionPanel.append(close);
   }
