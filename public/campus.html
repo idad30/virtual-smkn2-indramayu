@@ -21,6 +21,14 @@
     .actions button{min-width:76px;padding:13px 12px;border:1px solid #fff8;border-radius:13px;background:#102b43df;color:#fff;font-weight:bold;box-shadow:0 4px 12px #0004;touch-action:manipulation}
     .actions button.active{background:#b27d1b}
     @media(max-width:700px){.mobile-controls{display:flex}.top-panel{top:10px;left:10px;padding:10px 12px;font-size:10px;max-width:190px}.top-panel b{font-size:11px}.student-card{top:10px;right:10px;width:min(205px,calc(100vw - 220px));padding:8px;font-size:10px}.student-card strong{font-size:12px}}
+    #drone-intro{position:fixed;inset:0;z-index:15;display:flex;align-items:flex-end;justify-content:center;padding:8vh 18px;background:linear-gradient(180deg,#07152218 10%,#061522d9 100%);font-family:Arial,sans-serif}
+    .intro-card{width:min(520px,100%);padding:25px;border:1px solid #d4af37;border-radius:20px;background:#0b2234eF;color:#fff;text-align:center;box-shadow:0 15px 50px #0007}
+    .intro-kicker{font-size:10px;letter-spacing:3px;color:#e8bd58;font-weight:bold}
+    .intro-card h1{font-size:clamp(26px,6vw,42px);margin:10px 0}
+    .intro-card p{color:#c5d6e2;font-size:13px;line-height:1.6}
+    #start-walk{width:100%;margin-top:10px;padding:15px;border-radius:12px;background:#e8bd58;color:#102b43;font-weight:900;letter-spacing:1px}
+    #landscape-hint{display:none;position:fixed;inset:0;z-index:30;background:#071522f5;color:white;align-items:center;justify-content:center;text-align:center;padding:32px;font:bold 17px/1.5 Arial}
+    @media(max-width:700px) and (orientation:portrait){#landscape-hint{display:flex}}
     .datetime-panel{position:fixed;left:14px;bottom:14px;z-index:7;padding:9px 13px;border:1px solid #d4af37;border-radius:11px;background:rgba(9,27,42,.92);color:#fff;font:11px/1.55 Arial,sans-serif;box-shadow:0 5px 18px #0003;backdrop-filter:blur(8px)}
     .datetime-panel strong{display:block;color:#e8bd58;font-size:12px;letter-spacing:.4px}
     .creator-link{color:#9edcf5;text-decoration:none;font-weight:bold}
@@ -30,6 +38,15 @@
 </head>
 <body>
   <div id="game"></div>
+  <section id="drone-intro" aria-label="Tampilan awal kamera drone">
+    <div class="intro-card">
+      <span class="intro-kicker">VIRTUAL SMKN 2 INDRAMAYU</span>
+      <h1>JELAJAHI KAMPUS</h1>
+      <p>Lihat suasana kampus dari kamera udara sebelum mulai berjalan.</p>
+      <button id="start-walk" type="button">JALAN-JALAN</button>
+    </div>
+  </section>
+  <div id="landscape-hint">Putar HP ke posisi mendatar untuk pengalaman bermain yang lebih nyaman.</div>
   <div class="top-panel">
     <b>VIRTUAL SMKN 2 INDRAMAYU</b>
     WASD / panah: bergerak · E: interaksi gedung · Double klik: kunci mouse · Scroll: zoom

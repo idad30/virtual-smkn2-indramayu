@@ -66,61 +66,86 @@ function watchPromotion(uid) {
 }
 
 function studentCard(data) {
-  const el=document.createElement("aside"); el.className="student-card";
-  el.style.width="min(260px,calc(100vw - 28px))";
-  const title=document.createElement("b"); title.textContent="KARTU IDENTITAS SISWA";
-  const portrait=document.createElement("div");
-  portrait.style.cssText="height:112px;border-radius:9px;background:linear-gradient(145deg,#dceaf2,#8eafc2);display:flex;align-items:center;justify-content:center;overflow:hidden";
-  const photo=document.createElement("canvas"); photo.width=180; photo.height=112; portrait.append(photo);
-  function drawPortrait(id) {
-    const cfg=avatarOptions[id]||avatarOptions.taruna, x=photo.getContext("2d");
-    x.clearRect(0,0,180,112); x.fillStyle="#dceaf2"; x.fillRect(0,0,180,112);
-    x.fillStyle="#173b5a"; x.fillRect(55,64,70,58);
-    x.fillStyle="#d9a47b"; x.fillRect(72,28,36,38);
-    x.fillStyle=cfg.style==="hijab"?"#172333":"#30251f"; x.fillRect(68,20,44,16);
-    if(cfg.style==="hijab"){x.fillRect(65,30,50,48);x.fillStyle="#d9a47b";x.fillRect(75,34,30,27);}
-    x.fillStyle="#fff";x.fillRect(78,42,5,5);x.fillRect(98,42,5,5);
-    x.fillStyle="#173b5a";x.font="bold 10px Arial";x.textAlign="center";x.fillText("AVATAR 3D",90,105);
-  }
-  drawPortrait(data.avatarId||"taruna");
-  const name=document.createElement("strong"); name.textContent=data.fullName||"Siswa";
-  const info=document.createElement("span");
+  const el=document.createElement("aside");
+  el.className="student-card";
+  el.style.cssText="position:fixed;top:12px;right:12px;z-index:12;width:auto;padding:0;border:0;background:transparent;box-shadow:none";
+  const open=document.createElement("button");
+  open.type="button"; open.textContent="👤";
+  open.title="Profil dan pengaturan karakter";
+  open.setAttribute("aria-label","Buka profil");
+  open.style.cssText="width:44px;height:44px;padding:0;border:1px solid #d4af37;border-radius:50%;background:#102b43ed;color:#f2cf72;font-size:22px;box-shadow:0 4px 16px #0005";
+  const modal=document.createElement("section");
+  modal.style.cssText="display:none;position:fixed;inset:0;z-index:25;background:#061522dc;align-items:center;justify-content:center;padding:16px";
+  const panel=document.createElement("div");
+  panel.style.cssText="width:min(390px,100%);max-height:88vh;overflow:auto;padding:18px;border:1px solid #d4af37;border-radius:16px;background:#102b43;color:#fff;font:13px/1.5 Arial";
+  const heading=document.createElement("b"); heading.textContent="PROFIL SISWA";
+  heading.style.cssText="display:block;color:#e8bd58;letter-spacing:1px;margin-bottom:12px";
+  const nameLabel=document.createElement("label"); nameLabel.textContent="Nama siswa";
+  nameLabel.style.cssText="display:grid;gap:6px;margin-bottom:12px";
+  const nameInput=document.createElement("input"); nameInput.value=data.fullName||""; nameInput.maxLength=70;
+  nameInput.style.cssText="width:100%;padding:11px;border:1px solid #557087;border-radius:8px;background:#091c2a;color:white";
+  nameLabel.append(nameInput);
+  const info=document.createElement("div");
   info.textContent=`${data.schoolStatus||(data.gender==="P"?"Taruni":"Taruna")} · ${data.position||"Anggota"} · ${data.major||"-"} · ${data.grade||"-"} · Kelas ${data.classNumber??data.className??"-"}`;
-  const avatarButtons=document.createElement("div"); avatarButtons.className="avatar-buttons";
-  avatarButtons.style.cssText="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:5px";
+  info.style.cssText="color:#c5d6e2;margin-bottom:12px";
+  const avatarTitle=document.createElement("b"); avatarTitle.textContent="PILIH KARAKTER";
+  avatarTitle.style.cssText="display:block;color:#e8bd58;margin-bottom:8px";
+  const avatarButtons=document.createElement("div");
+  avatarButtons.style.cssText="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px";
+  function refreshAvatarButtons(){
+    [...avatarButtons.children].forEach((button,index)=>{
+      const selected=Object.keys(avatarOptions)[index]===(data.avatarId||"taruna");
+      button.style.background=selected?"#e4bd58":"#183b54";
+      button.style.color=selected?"#102b43":"white";
+    });
+  }
   Object.entries(avatarOptions).forEach(([id,cfg])=>{
-    const option=document.createElement("button"); option.type="button"; option.textContent=cfg.label.replace("Taruna ","").replace("Taruni ","");
-    option.title=cfg.label; option.style.cssText="min-width:0;padding:8px 3px;border:1px solid #d4af37;border-radius:7px;background:"+(id===(data.avatarId||"taruna")?"#e4bd58":"#183b54")+";color:"+(id===(data.avatarId||"taruna")?"#102b43":"white")+";font-size:10px;font-weight:bold;cursor:pointer";
+    const option=document.createElement("button"); option.type="button"; option.textContent=cfg.label;
+    option.style.cssText="padding:10px 6px;border:1px solid #d4af37;border-radius:8px;background:#183b54;color:white;font-size:11px;font-weight:bold";
     option.addEventListener("click",async()=>{
       try {
         await updateDoc(doc(db,"players",auth.currentUser.uid),{avatarId:id});
-        buildAvatar(id);drawPortrait(id);data.avatarId=id;
-        [...avatarButtons.children].forEach((button,index)=>{const selected=Object.keys(avatarOptions)[index]===id;button.style.background=selected?"#e4bd58":"#183b54";button.style.color=selected?"#102b43":"white";});
-      } catch(error){console.error(error);alert("Gagal menyimpan karakter. Periksa Firestore Rules.");}
+        buildAvatar(id); data.avatarId=id; refreshAvatarButtons();
+      } catch(error){console.error(error);alert("Gagal mengganti karakter. Periksa Firestore Rules.");}
     });
-    avatarButtons.appendChild(option);
+    avatarButtons.append(option);
+  });
+  const save=document.createElement("button"); save.type="button"; save.textContent="SIMPAN NAMA";
+  save.style.cssText="width:100%;margin-top:14px;padding:11px";
+  save.addEventListener("click",async()=>{
+    const fullName=nameInput.value.trim();
+    if(fullName.length<3||fullName.length>70){alert("Nama harus 3–70 karakter.");return;}
+    try {
+      await updateDoc(doc(db,"players",auth.currentUser.uid),{fullName});
+      data.fullName=fullName;
+      save.textContent="TERSIMPAN";
+      setTimeout(()=>save.textContent="SIMPAN NAMA",1300);
+    } catch(error){console.error(error);alert("Gagal menyimpan nama. Periksa Firestore Rules.");}
   });
   const download=document.createElement("button"); download.type="button"; download.textContent="UNDUH ID CARD";
-  download.style.cssText="margin-top:3px;padding:10px;border:1px solid #e4bd58;border-radius:8px;background:#f4d27d;color:#102b43;font-weight:bold;cursor:pointer";
+  download.style.cssText="width:100%;margin-top:8px;padding:11px;background:#254b64;color:white";
   download.addEventListener("click",()=>{
     const card=document.createElement("canvas"); card.width=1200; card.height=760;
     const c=card.getContext("2d");
     const gradient=c.createLinearGradient(0,0,1200,760); gradient.addColorStop(0,"#102b43"); gradient.addColorStop(1,"#1d4c68");
-    c.fillStyle=gradient; c.fillRect(0,0,1200,760);
-    c.strokeStyle="#d4af37"; c.lineWidth=12; c.strokeRect(24,24,1152,712);
-    c.fillStyle="#f2cf72"; c.font="bold 38px Arial"; c.fillText("VIRTUAL SMKN 2 INDRAMAYU",70,105);
-    c.fillStyle="#ffffff"; c.font="bold 27px Arial"; c.fillText("KARTU IDENTITAS SISWA",70,155);
-    c.drawImage(photo,75,210,390,390);
-    c.fillStyle="#ffffff"; c.font="bold 43px Arial";
-    const fullName=data.fullName||"Siswa"; c.fillText(fullName.length>25?fullName.slice(0,24)+"…":fullName,520,285);
-    c.fillStyle="#e8bd58"; c.font="bold 25px Arial"; c.fillText(data.schoolStatus||(data.gender==="P"?"Taruni":"Taruna"),520,345);
-    c.fillStyle="#ffffff"; c.font="26px Arial";
+    c.fillStyle=gradient;c.fillRect(0,0,1200,760);c.strokeStyle="#d4af37";c.lineWidth=12;c.strokeRect(24,24,1152,712);
+    c.fillStyle="#f2cf72";c.font="bold 38px Arial";c.fillText("VIRTUAL SMKN 2 INDRAMAYU",70,105);
+    c.fillStyle="#fff";c.font="bold 27px Arial";c.fillText("KARTU IDENTITAS SISWA",70,155);
+    c.fillStyle="#dceaf2";c.fillRect(75,210,390,390);c.fillStyle="#173b5a";c.fillRect(185,390,170,210);
+    c.fillStyle="#d9a47b";c.fillRect(235,280,90,100);c.fillStyle="#172333";c.fillRect(225,255,110,45);
+    c.fillStyle="#fff";c.font="bold 43px Arial";const fullName=data.fullName||"Siswa";c.fillText(fullName.length>25?fullName.slice(0,24)+"…":fullName,520,285);
+    c.fillStyle="#e8bd58";c.font="bold 25px Arial";c.fillText(data.schoolStatus||(data.gender==="P"?"Taruni":"Taruna"),520,345);
     const rows=[["Jabatan",data.position||"Anggota"],["Program Keahlian",data.major||"-"],["Tingkat",data.grade||"-"],["Kelas",String(data.classNumber??data.className??"-")]];
-    rows.forEach((row,i)=>{const y=420+i*62;c.fillStyle="#a9c2d2";c.fillText(row[0],520,y);c.fillStyle="#ffffff";c.fillText(": "+row[1],760,y);});
-    c.fillStyle="#f2cf72";c.font="bold 20px Arial";c.fillText("IDENTITAS DIGITAL SISWA",70,680);
-    const link=document.createElement("a"); link.download="ID-Card-"+(fullName.replace(/[^a-z0-9]+/gi,"-")||"siswa")+".png"; link.href=card.toDataURL("image/png"); link.click();
+    rows.forEach((row,i)=>{const y=420+i*62;c.fillStyle="#a9c2d2";c.font="26px Arial";c.fillText(row[0],520,y);c.fillStyle="#fff";c.fillText(": "+row[1],760,y);});
+    const link=document.createElement("a");link.download="ID-Card-"+(fullName.replace(/[^a-z0-9]+/gi,"-")||"siswa")+".png";link.href=card.toDataURL("image/png");link.click();
   });
-  el.append(title,portrait,name,info,avatarButtons,download); document.body.appendChild(el);
+  const close=document.createElement("button"); close.type="button"; close.textContent="TUTUP";
+  close.style.cssText="width:100%;margin-top:8px;padding:10px;background:#344e60;color:white";
+  close.addEventListener("click",()=>modal.style.display="none");
+  panel.append(heading,nameLabel,info,avatarTitle,avatarButtons,save,download,close);
+  modal.append(panel); modal.addEventListener("click",e=>{if(e.target===modal)modal.style.display="none";});
+  open.addEventListener("click",()=>modal.style.display="flex");
+  el.append(open);document.body.append(el,modal);refreshAvatarButtons();
 }
 
 const root = document.querySelector("#game");
@@ -154,6 +179,8 @@ root.appendChild(renderer.domElement);
 let cameraYaw = 0;
 let cameraPitch = 0.22;
 let cameraDistance = 10;
+let walkMode = false;
+let droneStartedAt = performance.now();
 const cameraTarget = new THREE.Vector3();
 const cameraOffset = new THREE.Vector3();
 const CAMERA_SENSITIVITY = 0.0025;
@@ -488,6 +515,7 @@ function buildAvatar(id) {
 }
 buildAvatar(selectedAvatarId);
 player.position.set(0,0,25);
+player.visible=false;
 
 // Input keyboard + tombol layar sentuh.
 const keys = Object.create(null);
@@ -530,7 +558,7 @@ function animate(now) {
 
   const inputX=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+mobile.x;
   const inputZ=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-mobile.z;
-  const mag=Math.hypot(inputX,inputZ);
+  const mag=walkMode?Math.hypot(inputX,inputZ):0;
   const moving=mag>.08;
 
   if(moving){
@@ -570,16 +598,18 @@ function animate(now) {
   campusFeatures?.update();
   avatar.position.y=now<jumpUntil?Math.sin((jumpUntil-now)/420*Math.PI)*1.15:(actualSpeed>.18?Math.abs(Math.sin(walkPhase*2))*.045:0);
 
-  cameraTarget.set(player.position.x,1.25,player.position.z);
-  const horizontal=Math.cos(cameraPitch)*cameraDistance;
-  cameraOffset.set(
-    -Math.sin(cameraYaw)*horizontal,
-    Math.sin(cameraPitch)*cameraDistance+2.1,
-    -Math.cos(cameraYaw)*horizontal
-  );
-  const desiredCamera=cameraTarget.clone().add(cameraOffset);
-  camera.position.lerp(desiredCamera,1-Math.exp(-5.5*dt));
-  camera.lookAt(cameraTarget);
+  if(walkMode){
+    cameraTarget.set(player.position.x,1.25,player.position.z);
+    const horizontal=Math.cos(cameraPitch)*cameraDistance;
+    cameraOffset.set(-Math.sin(cameraYaw)*horizontal,Math.sin(cameraPitch)*cameraDistance+2.1,-Math.cos(cameraYaw)*horizontal);
+    const desiredCamera=cameraTarget.clone().add(cameraOffset);
+    camera.position.lerp(desiredCamera,1-Math.exp(-5.5*dt));
+    camera.lookAt(cameraTarget);
+  } else {
+    const t=(now-droneStartedAt)/1000;
+    camera.position.set(Math.sin(t*.12)*48,30+Math.sin(t*.18)*5,Math.cos(t*.12)*48);
+    camera.lookAt(0,0,0);
+  }
   renderer.render(scene,camera);
 }
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
@@ -589,6 +619,12 @@ async function start() {
     const data=await checkStudentAccess();
     studentCard(data);
     watchPromotion(auth.currentUser.uid);
+    const intro=document.getElementById("drone-intro");
+    document.getElementById("start-walk").addEventListener("click",async()=>{
+      walkMode=true;player.visible=true;intro.style.display="none";
+      cameraYaw=0;cameraPitch=.22;cameraDistance=10;
+      try { if(innerWidth<900 && screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch(error) { console.info("Orientasi landscape dapat diaktifkan dari pengaturan HP."); }
+    });
     campusFeatures = initCampusFeatures({ app, uid: auth.currentUser.uid, profile: data, player, scene, THREE, places: campusPlaces });
     requestAnimationFrame(animate);
   } catch(error) {

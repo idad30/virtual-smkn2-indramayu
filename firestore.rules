@@ -54,8 +54,9 @@ service cloud.firestore {
 
       // Siswa hanya boleh mengubah pilihan avatar miliknya sendiri.
       allow update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avatarId'])
-        && request.resource.data.avatarId in ['taruna','taruni','sporty','formal'];
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avatarId','fullName'])
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['avatarId']) || request.resource.data.avatarId in ['taruna','taruni','sporty','formal'])
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['fullName']) || (request.resource.data.fullName is string && request.resource.data.fullName.size() >= 3 && request.resource.data.fullName.size() <= 70));
       // Perubahan jabatan dan penghapusan akun melalui backend admin tepercaya.
       allow delete: if false;
     }
