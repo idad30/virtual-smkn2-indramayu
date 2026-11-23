@@ -20,7 +20,7 @@
     .actions{display:flex;flex-direction:column;gap:10px;pointer-events:auto}
     .actions button{min-width:76px;padding:13px 12px;border:1px solid #fff8;border-radius:13px;background:#102b43df;color:#fff;font-weight:bold;box-shadow:0 4px 12px #0004;touch-action:manipulation}
     .actions button.active{background:#b27d1b}
-    @media(max-width:700px){.mobile-controls{display:flex}.top-panel{top:10px;left:10px;padding:10px 12px;font-size:10px;max-width:190px}.top-panel b{font-size:11px}.student-card{top:10px;right:10px;width:min(205px,calc(100vw - 220px));padding:8px;font-size:10px}.student-card strong{font-size:12px}}
+    @media(max-width:900px) and (pointer:coarse){.mobile-controls{display:flex}.top-panel{top:10px;left:10px;padding:10px 12px;font-size:10px;max-width:190px}.top-panel b{font-size:11px}.student-card{top:10px;right:10px;width:min(205px,calc(100vw - 220px));padding:8px;font-size:10px}.student-card strong{font-size:12px}}
     #drone-intro{position:fixed;inset:0;z-index:15;display:flex;align-items:flex-end;justify-content:center;padding:8vh 18px;background:linear-gradient(180deg,#07152218 10%,#061522d9 100%);font-family:Arial,sans-serif}
     .intro-card{width:min(520px,100%);padding:25px;border:1px solid #d4af37;border-radius:20px;background:#0b2234eF;color:#fff;text-align:center;box-shadow:0 15px 50px #0007}
     .intro-kicker{font-size:10px;letter-spacing:3px;color:#e8bd58;font-weight:bold}
@@ -47,14 +47,7 @@
     </div>
   </section>
   <div id="landscape-hint">Putar HP ke posisi mendatar untuk pengalaman bermain yang lebih nyaman.</div>
-  <div class="top-panel">
-    <b>VIRTUAL SMKN 2 INDRAMAYU</b>
-    WASD / panah: bergerak · E: interaksi gedung · Double klik: kunci mouse · Scroll: zoom
-    <br><a href="index.html">← Kembali ke halaman utama</a>
-    <br><span>Double klik area permainan untuk menyembunyikan kursor. Tekan ESC untuk melepasnya.</span><br><span>Dekati gedung lalu tekan E untuk informasi.</span><br><span>Denah 3D masih berupa ilustrasi.</span><br><button id="event-info-button" type="button" style="margin-top:8px;padding:8px 10px;border:1px solid #e8bd58;border-radius:8px;background:#e8bd58;color:#102b43;font-weight:bold;cursor:pointer">INFO PERESMIAN · 24 NOVEMBER</button>
-  </div>
   <aside class="datetime-panel" aria-live="off"><strong id="campus-day">Memuat hari...</strong><span id="campus-date">Memuat tanggal...</span><br><span id="campus-time">Memuat waktu...</span><br><span>Support Creator: <a class="creator-link" href="https://www.instagram.com/hjrcoo/" target="_blank" rel="noopener">@hjrcoo</a></span></aside>
-  <section id="event-info" role="dialog" aria-modal="true" aria-labelledby="event-info-title" style="display:none;position:fixed;inset:0;z-index:20;background:#061522d9;align-items:center;justify-content:center;padding:18px;font-family:Arial,sans-serif"><div style="width:min(520px,100%);padding:24px;border:1px solid #d4af37;border-radius:18px;background:linear-gradient(145deg,#173b54,#091b2a);color:#fff;box-shadow:0 12px 40px #0008"><div style="color:#e8bd58;font-size:11px;letter-spacing:2px;font-weight:bold">UNDANGAN & INFORMASI</div><h2 id="event-info-title" style="margin:8px 0;color:#fff;font-size:24px">PERESMIAN VIRTUAL SMKN 2 INDRAMAYU</h2><div style="color:#f2cf72;font-weight:bold;margin-bottom:14px">24 NOVEMBER 2026</div><p style="line-height:1.65;color:#e2edf4">Peresmian Virtual SMKN 2 Indramayu akan dimeriahkan oleh penampilan ekstrakurikuler:</p><ul style="line-height:1.9;padding-left:22px;color:#fff"><li>Marching Band <b>Gita Bahari</b></li><li>Pramuka <b>Wirasetia Bahari</b></li><li>Paskibra <b>Arunbara</b></li><li>PMR <b>Relawan Bahari</b></li></ul><p style="font-size:12px;color:#a9c2d2">Mari ramaikan peresmian dan saksikan penampilan terbaik dari setiap ekstrakurikuler!</p><button id="event-info-close" type="button" style="width:100%;margin-top:8px">TUTUP</button></div></section>
   <div class="mobile-controls">
     <div id="joystick" aria-label="Joystick gerak"><div id="stick"></div></div>
     <div class="actions"><button id="jump" type="button">LOMPAT</button><button id="run" type="button">LARI</button></div>
@@ -77,6 +70,6 @@
       setInterval(refreshClock, 1000);
     })();
   </script>
-  <script>\n    const eventInfo=document.getElementById("event-info");\n    document.getElementById("event-info-button").addEventListener("click",()=>eventInfo.style.display="flex");\n    document.getElementById("event-info-close").addEventListener("click",()=>eventInfo.style.display="none");\n    eventInfo.addEventListener("click",e=>{if(e.target===eventInfo)eventInfo.style.display="none";});\n  </script>\n  <script type="module" src="campus.js"></script>
+  <script type="module" src="campus.js"></script>
 </body>
 </html>
