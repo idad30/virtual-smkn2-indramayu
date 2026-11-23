@@ -467,7 +467,7 @@ function showPlaceInfo(place){
   interactionPanel.append(heading,detail,hint);
 }
 // Avatar 3D yang dapat dipilih dan disimpan di profil siswa.
-const player = new THREE.Group(); scene.add(player);
+const player = new THREE.Group(); scene.add(player); player.visible=false;
 const avatar = new THREE.Group(); player.add(avatar);
 let leftArm, rightArm, leftLeg, rightLeg;
 const avatarOptions = {
@@ -548,6 +548,7 @@ document.querySelector("#jump").addEventListener("click",()=>{jumpUntil=performa
 
 // Gerakan karakter lebih halus: akselerasi, pengereman, dan putaran bertahap.
 let last=0, walkPhase=0;
+let walkStarted=false;
 let campusFeatures = null;
 const moveVelocity=new THREE.Vector3();
 const desiredVelocity=new THREE.Vector3();
@@ -555,6 +556,7 @@ function animate(now) {
   requestAnimationFrame(animate);
   updateSkyByTime();
   const dt=Math.min((now-last)/1000,.05); last=now;
+  if(!walkStarted){const t=now*0.00012;const aerial=new THREE.Vector3(Math.sin(t)*72,44,Math.cos(t)*72);camera.position.lerp(aerial,1-Math.exp(-1.3*dt));camera.lookAt(0,0,0);renderer.render(scene,camera);return;}
 
   const inputX=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+mobile.x;
   const inputZ=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)-mobile.z;
@@ -563,8 +565,8 @@ function animate(now) {
 
   if(moving){
     const nx=inputX/Math.max(1,mag), nz=inputZ/Math.max(1,mag);
-    const worldX=nx*Math.cos(cameraYaw)+nz*Math.sin(cameraYaw);
-    const worldZ=-nx*Math.sin(cameraYaw)+nz*Math.cos(cameraYaw);
+    const worldX=nx*Math.cos(cameraYaw)-nz*Math.sin(cameraYaw);
+    const worldZ=nx*Math.sin(cameraYaw)+nz*Math.cos(cameraYaw);
     const speed=running?10:6;
     desiredVelocity.set(worldX*speed,0,worldZ*speed);
   } else {
@@ -626,6 +628,7 @@ async function start() {
       try { if(innerWidth<900 && screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch(error) { console.info("Orientasi landscape dapat diaktifkan dari pengaturan HP."); }
     });
     campusFeatures = initCampusFeatures({ app, uid: auth.currentUser.uid, profile: data, player, scene, THREE, places: campusPlaces });
+    document.querySelector('#start-walk').addEventListener('click',async()=>{try{if(innerWidth<=900&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape');}catch(e){console.info('Landscape tidak didukung browser ini',e);}walkStarted=true;player.visible=true;document.querySelector('#drone-intro').style.display='none';document.querySelector('.mobile-controls').style.display='flex';});
     requestAnimationFrame(animate);
   } catch(error) {
     console.error("Campus error:",error);
