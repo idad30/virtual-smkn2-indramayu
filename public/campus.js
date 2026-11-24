@@ -767,7 +767,8 @@ function createBandMember(index,x,z,instrument){
   // Semua anggota menghadap ke arah depan lapangan.
   group.rotation.y=0;
   scene.add(group);
-  marchingBand.push({group,body,arms,legs,prop,instrument,phase:index*.72,index});
+  const memberName=instrument==="fieldcommander"?["Eka","Silvi"][marchingBand.filter(member=>member.instrument==="fieldcommander").length]:"";
+  marchingBand.push({group,body,arms,legs,prop,instrument,memberName,phase:index*.72,index});
 }
 [
   // Formasi 9 barisan, sesuai urutan pasukan Gita Bahari.
@@ -982,7 +983,7 @@ function updateNearbyPlace(){
     interactionPanel.replaceChildren();
     const labels={fieldcommander:"FIELD COMMANDER",mayoret:"MAYORET",trumpet:"TRUMPET",bellyra:"BELLYRA",snare:"SNARE",quarto:"QUARTO / QUINTOM",cymbal:"CYMBAL",bass:"BASS DRUM",colourguard:"COLOUR GUARD"};
     const heading=document.createElement("strong");
-    heading.textContent=labels[nearbyBandMember.instrument]||"MARCHING BAND";
+    heading.textContent=(labels[nearbyBandMember.instrument]||"MARCHING BAND")+(nearbyBandMember.memberName?" · "+nearbyBandMember.memberName:"");
     heading.style.color="#e8bd58";
     const detail=document.createElement("div");detail.textContent="Tekan tombol untuk mendengarkan instrumen";
     const play=document.createElement("button");play.type="button";play.textContent="▶ DENGARKAN";
