@@ -523,6 +523,26 @@ function createBandMember(index,x,z,instrument){
     bandPart(prop,new THREE.CylinderGeometry(.025,.025,.82,8),bandWhite,0,0,0);
     prop.rotation.z=-.45;
     prop.position.set(.48,1.58,-.35);
+  }else if(instrument==="mayoret"){
+    prop=new THREE.Group();body.add(prop);
+    bandPart(prop,new THREE.CylinderGeometry(.025,.035,.92,10),bandGold,0,0,0);
+    bandPart(prop,new THREE.SphereGeometry(.09,12,10),0xf5d36b,0,.49,0);
+    bandPart(prop,new THREE.SphereGeometry(.07,12,10),0xf5d36b,0,-.49,0);
+    prop.position.set(.48,1.55,-.32);
+  }else if(instrument==="colourguard"){
+    prop=new THREE.Group();body.add(prop);
+    bandPart(prop,new THREE.CylinderGeometry(.025,.025,1.85,8),bandGold,0,0,0);
+    const fabric=bandPart(prop,new THREE.PlaneGeometry(.95,.62),0xc52e54,.48,.48,0);
+    fabric.material.side=THREE.DoubleSide;
+    bandPart(prop,new THREE.PlaneGeometry(.48,.62),0xf0c75e,.72,.48,.006).material.side=THREE.DoubleSide;
+    prop.position.set(.5,1.65,-.35);
+  }else if(instrument==="fieldcommander"){
+    prop=new THREE.Group();body.add(prop);
+    bandPart(prop,new THREE.CylinderGeometry(.09,.16,.34,12),0xd8e3e9,0,0,0);
+    bandPart(prop,new THREE.CylinderGeometry(.16,.09,.12,12),bandGold,0,-.2,0);
+    prop.rotation.x=Math.PI/2;
+    prop.position.set(.45,1.55,-.42);
+    bandPart(body,new THREE.BoxGeometry(.13,.78,.035),0xc52e54,.28,1.35,-.22).rotation.z=-.22;
   }else{
     prop=new THREE.Group();body.add(prop);
     bandPart(prop,new THREE.BoxGeometry(.12,.72,.12),bandGold,0,0,0);
@@ -541,7 +561,8 @@ function createBandMember(index,x,z,instrument){
   [3, 7, "snare"], [7, 7, "trumpet"], [11, 7, "snare"],
   [5, 13, "snare"], [9, 13, "trumpet"],
   [4, 16, "glockenspiel"], [7, 16, "glockenspiel"], [10, 16, "glockenspiel"],
-  [7, 19, "conductor"]
+  [7, 19, "conductor"], [3, 19, "mayoret"],
+  [11, 19, "colourguard"], [7, 22, "fieldcommander"]
 ].forEach(([x,z,instrument],i)=>createBandMember(i,x,z,instrument));
 function updateMarchingBand(now){
   const t=now*.001;
@@ -554,7 +575,20 @@ function updateMarchingBand(now){
       member.legs[0].rotation.x=Math.sin(t*4.2+member.phase)*.42;
       member.legs[1].rotation.x=-Math.sin(t*4.2+member.phase)*.42;
     }
-    if(member.instrument==="conductor"){
+    if(member.instrument==="mayoret"){
+      member.arms[0].rotation.x=-.85+Math.sin(t*5.2+member.phase)*.65;
+      member.arms[1].rotation.x=-.65+Math.cos(t*5.2+member.phase)*.42;
+      member.prop.rotation.z=-.35+Math.sin(t*5.2+member.phase)*.62;
+    }else if(member.instrument==="colourguard"){
+      member.arms[0].rotation.x=-.55+Math.sin(t*2.8+member.phase)*.48;
+      member.arms[1].rotation.x=-.55+Math.cos(t*2.8+member.phase)*.48;
+      member.prop.rotation.z=Math.sin(t*2.8+member.phase)*.58;
+      member.prop.rotation.x=Math.cos(t*1.4+member.phase)*.22;
+    }else if(member.instrument==="fieldcommander"){
+      member.arms[0].rotation.x=-.75+Math.sin(t*3.2)*.28;
+      member.arms[1].rotation.x=-.75+Math.cos(t*3.2)*.28;
+      member.prop.rotation.y=Math.sin(t*1.6)*.08;
+    }else if(member.instrument==="conductor"){
       member.arms[0].rotation.x=-.9+Math.sin(t*4.2)*.48;
       member.arms[1].rotation.x=-.9+Math.cos(t*4.2)*.48;
       member.arms[0].rotation.z=.25+Math.sin(t*4.2)*.16;
