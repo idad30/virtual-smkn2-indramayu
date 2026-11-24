@@ -614,14 +614,6 @@ for(const bx of [1.9,2.45,3,11,11.55,12.1]){
 }
 // Penanda apresiasi di sisi lapangan.
 campusLabel("PANGGUNG HARI GURU",7,-12.2,"#ffe7a3");
-// Tempatkan Field Commander Eka dan Silvi di atas panggung sebagai pemimpin upacara.
-const commanders=marchingBand.filter(member=>member.instrument==="fieldcommander");
-commanders.forEach((member,index)=>{
-  member.group.position.set(index===0?5.9:8.1,.68,-12.15);
-  member.group.rotation.y=0;
-});
-
-
 campusLabel("EMPANG UTARA",38,-42,"#fff4c7");
 
 // UPGRADE 5: lanskap kampus — pepohonan, taman, jalur pedestrian, dan pagar.
@@ -871,6 +863,13 @@ function createBandMember(index,x,z,instrument){
       role
     ]))
 ].forEach(([x,z,instrument],i)=>createBandMember(i,x,z,instrument));
+
+// Pindahkan Field Commander Eka dan Silvi setelah seluruh marchingBand dibuat.
+const commanders=marchingBand.filter(member=>member.instrument==="fieldcommander");
+commanders.forEach((member,index)=>{
+  member.group.position.set(index===0?5.9:8.1,.68,-12.15);
+  member.group.rotation.y=0;
+});
 
 // Papan nama kecil yang mengidentifikasi setiap barisan/divisi Gita Bahari.
 const bandDivisionNames=[
