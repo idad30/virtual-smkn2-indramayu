@@ -783,6 +783,29 @@ function createBandMember(index,x,z,instrument){
       role
     ]))
 ].forEach(([x,z,instrument],i)=>createBandMember(i,x,z,instrument));
+
+// Papan nama kecil yang mengidentifikasi setiap barisan/divisi Gita Bahari.
+const bandDivisionNames=[
+  "FIELD COMMANDER","MAYORET","TRUMPET","BELLYRA","SNARE",
+  "QUARTO / QUINTOM","CYMBAL","BASS DRUM","COLOUR GUARD"
+];
+const bandDivisionLabels=[];
+bandDivisionNames.forEach((name,row)=>{
+  const canvas=document.createElement("canvas");
+  canvas.width=512;canvas.height=112;
+  const ctx=canvas.getContext("2d");
+  ctx.fillStyle="rgba(8,27,43,.92)";
+  ctx.beginPath();ctx.roundRect(8,8,496,96,18);ctx.fill();
+  ctx.strokeStyle="#d4af37";ctx.lineWidth=5;ctx.stroke();
+  ctx.fillStyle="#f5d36b";ctx.font="bold 34px Arial";
+  ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(name,256,57);
+  const texture=new THREE.CanvasTexture(canvas);
+  texture.colorSpace=THREE.SRGBColorSpace;
+  const label=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthWrite:false}));
+  label.position.set(7,3.15,-9.45+row*3.2);
+  label.scale.set(3.2,.7,1);
+  scene.add(label);bandDivisionLabels.push(label);
+});
 // Audio interaktif marching band: melodi demo orisinal dan bunyi tiap seksi.
 let bandAudio=null;
 function getBandAudio(){
