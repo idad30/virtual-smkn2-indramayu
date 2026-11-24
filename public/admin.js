@@ -107,16 +107,23 @@ async function loadUniformSettings(){
   try{
     const snap=await getDoc(doc(db,"settings","uniforms"));
     const fallback={monday:"pdh1",tuesday:"pdh2",wednesday:"pramuka",thursday:"muslim",friday:"olahraga"};
-    const schedule=snap.exists()&&snap.data().schedule?snap.data().schedule:fallback;
+    const data=snap.exists()?snap.data():{};
+    const schedule=data.schedule||fallback;
     uniformDays.forEach(([key])=>{const field=$("#uniform-"+key);if(field)field.value=schedule[key]||fallback[key];});
+    $("#uniform-mode").value=data.mode==="manual"?"manual":"automatic";
+    $("#uniform-manual").value=data.manualUniform||"pdh1";
+    $("#uniform-manual").disabled=data.mode!=="manual";
   }catch(error){console.error(error);notice.textContent="Jadwal seragam belum dapat dimuat. Periksa Firestore Rules.";}
 }
+$("#uniform-mode")?.addEventListener("change",()=>{$("#uniform-manual").disabled=$("#uniform-mode").value!=="manual";});
 $("#saveUniforms")?.addEventListener("click",async()=>{
   const schedule={};
   uniformDays.forEach(([key])=>{schedule[key]=$("#uniform-"+key).value;});
+  const mode=$("#uniform-mode").value;
+  const manualUniform=$("#uniform-manual").value;
   const button=$("#saveUniforms");button.disabled=true;button.textContent="MENYIMPAN...";
   try{
-    await setDoc(doc(db,"settings","uniforms"),{schedule,updatedAt:serverTimestamp()});
+    await setDoc(doc(db,"settings","uniforms"),{mode,manualUniform,schedule,updatedAt:serverTimestamp()});
     button.textContent="TERSIMPAN";notice.textContent="Jadwal seragam berhasil disimpan.";
     setTimeout(()=>{button.disabled=false;button.textContent="SIMPAN JADWAL SERAGAM";},1200);
   }catch(error){
