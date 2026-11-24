@@ -215,6 +215,47 @@ renderer.domElement.addEventListener("wheel", event => {
   cameraDistance = THREE.MathUtils.clamp(cameraDistance + event.deltaY * 0.01, 6, 19);
 }, { passive: true });
 
+// Kontrol layar sentuh: geser satu jari untuk memutar kamera, cubit dua jari untuk zoom.
+renderer.domElement.style.touchAction="none";
+const cameraTouches=new Map();
+let lastTouchMidpoint=null;
+let lastTouchDistance=0;
+renderer.domElement.addEventListener("pointerdown",event=>{
+  if(event.pointerType!=="touch" || !walkStarted) return;
+  cameraTouches.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  renderer.domElement.setPointerCapture(event.pointerId);
+  if(cameraTouches.size===2){
+    const pts=[...cameraTouches.values()];
+    lastTouchMidpoint={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};
+    lastTouchDistance=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+  }
+});
+renderer.domElement.addEventListener("pointermove",event=>{
+  if(!cameraTouches.has(event.pointerId)) return;
+  const previous=cameraTouches.get(event.pointerId);
+  cameraTouches.set(event.pointerId,{x:event.clientX,y:event.clientY});
+  if(cameraTouches.size===1){
+    cameraYaw-=(event.clientX-previous.x)*CAMERA_SENSITIVITY*1.35;
+    cameraPitch=THREE.MathUtils.clamp(cameraPitch+(event.clientY-previous.y)*CAMERA_SENSITIVITY*1.35,-0.18,.78);
+  }else if(cameraTouches.size===2){
+    const pts=[...cameraTouches.values()];
+    const midpoint={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};
+    const distance=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+    if(lastTouchMidpoint){
+      cameraYaw-=(midpoint.x-lastTouchMidpoint.x)*CAMERA_SENSITIVITY;
+      cameraPitch=THREE.MathUtils.clamp(cameraPitch+(midpoint.y-lastTouchMidpoint.y)*CAMERA_SENSITIVITY,-.18,.78);
+    }
+    if(lastTouchDistance>0) cameraDistance=THREE.MathUtils.clamp(cameraDistance-(distance-lastTouchDistance)*.025,6,19);
+    lastTouchMidpoint=midpoint;lastTouchDistance=distance;
+  }
+});
+function releaseCameraTouch(event){
+  cameraTouches.delete(event.pointerId);
+  if(cameraTouches.size<2){lastTouchMidpoint=null;lastTouchDistance=0;}
+}
+renderer.domElement.addEventListener("pointerup",releaseCameraTouch);
+renderer.domElement.addEventListener("pointercancel",releaseCameraTouch);
+
 hemisphereLight = new THREE.HemisphereLight(0xeaf7ff, 0x61764d, 2.45);
 scene.add(hemisphereLight);
 const ambientFill = new THREE.AmbientLight(0xffffff, 0.42);
