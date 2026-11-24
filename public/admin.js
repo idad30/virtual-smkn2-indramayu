@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const ADMIN_UID="7mQtL5NIu0RtN5UOWy8TLiWL5zP2";
@@ -24,6 +24,7 @@ onAuthStateChanged(auth,async user=>{
     $("#adminIdentity").textContent="ADMIN TEROTORISASI";
     ready=true;
     await loadPlayers();
+    await loadUniformSettings();
   }catch(error){
     console.error(error);
     notice.textContent="Gagal memeriksa akses Firebase: "+(error.message||"kesalahan tidak diketahui");
@@ -100,3 +101,26 @@ function renderRows(){
 }
 $("#reloadBtn").addEventListener("click",loadPlayers);
 ["searchInput","gradeFilter","statusFilter"].forEach(id=>$("#"+id).addEventListener(id==="searchInput"?"input":"change",renderRows));
+
+const uniformDays=[["monday","Senin"],["tuesday","Selasa"],["wednesday","Rabu"],["thursday","Kamis"],["friday","Jumat"]];
+async function loadUniformSettings(){
+  try{
+    const snap=await getDoc(doc(db,"settings","uniforms"));
+    const fallback={monday:"pdh1",tuesday:"pdh2",wednesday:"pramuka",thursday:"muslim",friday:"olahraga"};
+    const schedule=snap.exists()&&snap.data().schedule?snap.data().schedule:fallback;
+    uniformDays.forEach(([key])=>{const field=$("#uniform-"+key);if(field)field.value=schedule[key]||fallback[key];});
+  }catch(error){console.error(error);notice.textContent="Jadwal seragam belum dapat dimuat. Periksa Firestore Rules.";}
+}
+$("#saveUniforms")?.addEventListener("click",async()=>{
+  const schedule={};
+  uniformDays.forEach(([key])=>{schedule[key]=$("#uniform-"+key).value;});
+  const button=$("#saveUniforms");button.disabled=true;button.textContent="MENYIMPAN...";
+  try{
+    await setDoc(doc(db,"settings","uniforms"),{schedule,updatedAt:serverTimestamp()});
+    button.textContent="TERSIMPAN";notice.textContent="Jadwal seragam berhasil disimpan.";
+    setTimeout(()=>{button.disabled=false;button.textContent="SIMPAN JADWAL SERAGAM";},1200);
+  }catch(error){
+    console.error(error);button.disabled=false;button.textContent="SIMPAN JADWAL SERAGAM";
+    alert("Gagal menyimpan jadwal. Pastikan Firestore Rules terbaru sudah dipublikasikan.");
+  }
+});

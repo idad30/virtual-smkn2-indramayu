@@ -41,6 +41,21 @@ service cloud.firestore {
       allow delete: if signedIn() && request.auth.uid == '7mQtL5NIu0RtN5UOWy8TLiWL5zP2';
     }
 
+    match /settings/uniforms {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['schedule','updatedAt'])
+        && request.resource.data.schedule is map
+        && request.resource.data.schedule.keys().hasOnly(['monday','tuesday','wednesday','thursday','friday'])
+        && request.resource.data.schedule.monday in ['pdh1','pdh2','pramuka','muslim','olahraga']
+        && request.resource.data.schedule.tuesday in ['pdh1','pdh2','pramuka','muslim','olahraga']
+        && request.resource.data.schedule.wednesday in ['pdh1','pdh2','pramuka','muslim','olahraga']
+        && request.resource.data.schedule.thursday in ['pdh1','pdh2','pramuka','muslim','olahraga']
+        && request.resource.data.schedule.friday in ['pdh1','pdh2','pramuka','muslim','olahraga'];
+      allow delete: if isAdmin();
+    }
+
     match /players/{uid} {
       // Admin dapat melihat daftar pemain; pemain biasa hanya dapat membaca datanya sendiri.
       allow get: if signedIn() && (request.auth.uid == uid || isAdmin());

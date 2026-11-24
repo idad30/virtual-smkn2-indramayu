@@ -98,6 +98,9 @@ function studentCard(data) {
   instagram.textContent="Instagram: @"+(data.instagram||"-");
   instagram.style.cssText="color:#a9c2d2;font-size:12px";
   info.append(classBadge,identity,instagram);
+  const uniformInfo=document.createElement("div");
+  uniformInfo.textContent="Seragam hari ini: "+(uniformNames[activeUniform]||"PDH 1");
+  uniformInfo.style.cssText="margin:0 0 12px;padding:10px;border:1px solid #d4af37;border-radius:8px;color:#f2cf72;font-weight:bold";
   const avatarTitle=document.createElement("b"); avatarTitle.textContent="PILIH KARAKTER";
   avatarTitle.style.cssText="display:block;color:#e8bd58;margin-bottom:8px";
   const avatarButtons=document.createElement("div");
@@ -155,7 +158,7 @@ function studentCard(data) {
   const close=document.createElement("button"); close.type="button"; close.textContent="TUTUP";
   close.style.cssText="width:100%;margin-top:8px;padding:10px;background:#344e60;color:white";
   close.addEventListener("click",()=>modal.style.display="none");
-  panel.append(heading,nameLabel,info,avatarTitle,avatarButtons,save,download,home,close);
+  panel.append(heading,nameLabel,info,uniformInfo,avatarTitle,avatarButtons,save,download,home,close);
   modal.append(panel); modal.addEventListener("click",e=>{if(e.target===modal)modal.style.display="none";});
   open.addEventListener("click",()=>modal.style.display="flex");
   el.append(open);document.body.append(el,modal);refreshAvatarButtons();
@@ -1282,13 +1285,34 @@ const avatarOptions = {
   formal: { label:"Formal Navy", shirt:0x102b43, pants:0x172333, hair:0x241c19, skin:0xc98f6b, style:"male" }
 };
 let selectedAvatarId = "taruna";
+let activeUniform = "pdh1";
+let dataGenderIsFemale = false;
+const defaultUniformSchedule = {monday:"pdh1",tuesday:"pdh2",wednesday:"pramuka",thursday:"muslim",friday:"olahraga"};
+const uniformNames = {pdh1:"PDH 1",pdh2:"PDH 2",pramuka:"Pramuka",muslim:"Muslim",olahraga:"Olahraga"};
+async function loadTodayUniform() {
+  const weekday = new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",weekday:"long"}).format(new Date()).toLowerCase();
+  try {
+    const snap = await getDoc(doc(db,"settings","uniforms"));
+    const schedule = snap.exists() && snap.data().schedule ? snap.data().schedule : defaultUniformSchedule;
+    activeUniform = schedule[weekday] || defaultUniformSchedule[weekday] || "pdh1";
+  } catch(error) {
+    console.warn("Jadwal seragam belum dapat dibaca:",error);
+    activeUniform = defaultUniformSchedule[weekday] || "pdh1";
+  }
+}
 function part(parent,w,h,d,color,x,y,z) {
   const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));
   m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; parent.add(m); return m;
 }
 function buildAvatar(id) {
   selectedAvatarId = avatarOptions[id] ? id : "taruna";
-  const cfg=avatarOptions[selectedAvatarId];
+  const cfg={...avatarOptions[selectedAvatarId]};
+  const uniform=activeUniform;
+  if(uniform==="pdh1"){cfg.shirt=0xf5f4ed;cfg.pants=0xf5f4ed;}
+  if(uniform==="pdh2"){cfg.shirt=0xf5f4ed;cfg.pants=0x777d85;}
+  if(uniform==="pramuka"){cfg.shirt=0x9b6035;cfg.pants=0x8d5630;}
+  if(uniform==="muslim"){cfg.shirt=0xf7f5e9;cfg.pants=0xf7f5e9;}
+  if(uniform==="olahraga"){cfg.shirt=0x123e70;cfg.pants=0x171b22;}
   while(avatar.children.length) {
     const child=avatar.children.pop();
     child.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});
@@ -1307,6 +1331,36 @@ function buildAvatar(id) {
   for(let n=0;n<4;n++) part(avatar,.045,.045,.035,trim,.035,1.63-n*.17,-.24);
   part(avatar,.78,.11,.46,dark,0,.91,0);
   part(avatar,.18,.12,.045,trim,0,.91,-.245);
+  // Aksesori dasar seragam sekolah.
+  if(uniform==="pdh2") {
+    part(avatar,.07,.48,.045,0x263b52,0,1.48,-.275);
+    part(avatar,.12,.18,.08,0x263b52,0,1.82,-.29);
+    part(avatar,.72,.12,.68,0x172333,0,2.57,0);
+  }
+  if(uniform==="pramuka") {
+    part(avatar,.22,.22,.06,0xe9d5a2,-.22,1.48,-.28);
+    part(avatar,.22,.22,.06,0xe9d5a2,.22,1.48,-.28);
+    part(avatar,.08,.12,.05,0xd62d2d,0,1.79,-.28);
+    part(avatar,.72,.12,.68,0x8c542c,0,2.57,0);
+  }
+  if(uniform==="muslim" && !dataGenderIsFemale) part(avatar,.72,.12,.72,0xf7f5e9,0,2.57,0);
+  if(uniform==="muslim" && dataGenderIsFemale) {
+    part(avatar,.72,.78,.72,0xf7f5e9,0,2.18,0);
+    part(avatar,.62,.48,.1,cfg.skin,0,2.12,-.37);
+  }
+  if(uniform==="olahraga") part(avatar,.24,.12,.045,0xe4bd58,0,1.48,-.28);
+  if(uniform==="pdh1") {
+    part(avatar,.72,.1,.68,0x172333,0,2.57,0);
+    part(avatar,.62,.08,.62,0x172333,0,2.51,-.02);
+  }
+  // Tanda DAMAY pada posisi berbeda sesuai identitas Taruna/Taruni.
+  if(uniform==="muslim" || uniform==="olahraga") {
+    const canvas=document.createElement("canvas");canvas.width=512;canvas.height=128;
+    const ctx=canvas.getContext("2d");ctx.fillStyle="#173b54";ctx.font="bold 78px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("DAMAY",256,64);
+    const texture=new THREE.CanvasTexture(canvas);
+    const tag=new THREE.Mesh(new THREE.PlaneGeometry(.48,.12),new THREE.MeshBasicMaterial({map:texture,transparent:true}));
+    tag.position.set(0,dataGenderIsFemale?1.37:1.58,-.255);avatar.add(tag);
+  }
   // Kerah simetris dan panel depan seragam.
   part(avatar,.2,.16,.08,0xf0f1e9,-.13,1.78,-.22);
   part(avatar,.2,.16,.08,0xf0f1e9,.13,1.78,-.22);
@@ -1502,6 +1556,9 @@ requestAnimationFrame(animate);
 async function start() {
   try {
     const data=await checkStudentAccess();
+    dataGenderIsFemale=data.gender==="P";
+    await loadTodayUniform();
+    buildAvatar(selectedAvatarId);
     campusAccessReady=true;
     startWalkButton.disabled=false;
     startWalkButton.textContent="JALAN-JALAN";
