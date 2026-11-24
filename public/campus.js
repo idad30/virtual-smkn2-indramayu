@@ -1349,15 +1349,17 @@ function buildAvatar(id) {
     const child=avatar.children.pop();
     child.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});
   }
-  // Seragam utama dengan detail saku, kancing, kerah, lis bahu, dan ikat pinggang.
+  // Detail badan disesuaikan dengan warna masing-masing seragam.
   part(avatar,.82,.92,.42,cfg.shirt,0,1.35,0);
-  part(avatar,.18,.12,.035,0xe4bd58,0,1.78,-.225);
-  part(avatar,.13,.13,.035,0xe4bd58,-.25,1.48,-.225);
-  const trim=0xe4bd58, dark=0x102b43;
+  const trim = uniform==="muslim" ? 0xf7f5e9 : uniform==="pramuka" ? 0xead6ad : uniform==="olahraga" ? 0xffffff : 0xe4bd58;
+  const pocket = uniform==="muslim" ? 0xf7f5e9 : uniform==="pramuka" ? 0x9b6035 : uniform==="olahraga" ? 0x123e70 : 0x245b82;
+  const dark = uniform==="olahraga" ? 0x171b22 : uniform==="pramuka" ? 0x704322 : 0x102b43;
+  part(avatar,.18,.12,.035,trim,0,1.78,-.225);
+  part(avatar,.13,.13,.035,trim,-.25,1.48,-.225);
   part(avatar,.22,.09,.035,trim,-.25,1.77,-.235);
   part(avatar,.22,.09,.035,trim,.25,1.77,-.235);
-  part(avatar,.23,.2,.045,0x245b82,-.24,1.48,-.235);
-  part(avatar,.23,.2,.045,0x245b82,.24,1.48,-.235);
+  part(avatar,.23,.2,.045,pocket,-.24,1.48,-.235);
+  part(avatar,.23,.2,.045,pocket,.24,1.48,-.235);
   part(avatar,.25,.055,.025,trim,-.24,1.59,-.265);
   part(avatar,.25,.055,.025,trim,.24,1.59,-.265);
   for(let n=0;n<4;n++) part(avatar,.045,.045,.035,trim,.035,1.63-n*.17,-.24);
@@ -1459,8 +1461,11 @@ function buildAvatar(id) {
 
   // Sepatu formal hitam dan sol gelap, konsisten untuk semua seragam sekolah.
   [-.22,.22].forEach(x=>{
-    part(avatar,.35,.055,.52,0x101317,x,.035,-.08);
-    part(avatar,.35,.16,.48,0x202328,x,.12,-.08);
+    const sole = uniform==="olahraga" ? 0xe8e8e8 : 0x101317;
+    const upper = uniform==="olahraga" ? 0x252a31 : 0x202328;
+    part(avatar,.35,.055,.52,sole,x,.035,-.08);
+    part(avatar,.35,.16,.48,upper,x,.12,-.08);
+    if(uniform==="olahraga") part(avatar,.22,.025,.035,0xffffff,x,.17,-.325);
   });
 
   leftArm=new THREE.Group(); leftArm.position.set(-.52,1.75,0); avatar.add(leftArm);
