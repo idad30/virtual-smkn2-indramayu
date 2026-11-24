@@ -865,6 +865,32 @@ function bandButton(label,action){
 bandButton("▶ MAIN LAGU",startBandSong);
 bandButton("■ BERHENTI",stopBandSong);
 bandControl.append(bandControlTitle,bandSongStatus,bandButtons);document.body.append(bandControl);
+// Klik langsung anggota Gita Bahari untuk mendengar bunyi instrumennya.
+const bandRaycaster=new THREE.Raycaster();
+const bandPointer=new THREE.Vector2();
+let bandPointerStart=null;
+renderer.domElement.addEventListener("pointerdown",event=>{
+  bandPointerStart={x:event.clientX,y:event.clientY};
+});
+renderer.domElement.addEventListener("pointerup",event=>{
+  if(!bandPointerStart)return;
+  const moved=Math.hypot(event.clientX-bandPointerStart.x,event.clientY-bandPointerStart.y);
+  bandPointerStart=null;
+  if(moved>8)return;
+  const rect=renderer.domElement.getBoundingClientRect();
+  bandPointer.x=((event.clientX-rect.left)/rect.width)*2-1;
+  bandPointer.y=-((event.clientY-rect.top)/rect.height)*2+1;
+  bandRaycaster.setFromCamera(bandPointer,camera);
+  const hits=bandRaycaster.intersectObjects(marchingBand.map(member=>member.group),true);
+  if(!hits.length)return;
+  let object=hits[0].object;
+  while(object.parent&&!marchingBand.some(member=>member.group===object))object=object.parent;
+  const member=marchingBand.find(item=>item.group===object);
+  if(member){
+    playBandPart(member.instrument);
+    bandSongStatus.textContent="♫ Memainkan instrumen "+(member.memberName||member.instrument.toUpperCase());
+  }
+});
 function updateMarchingBand(now){
   const t=now*.001;
   for(const member of marchingBand){
