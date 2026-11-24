@@ -578,6 +578,88 @@ function createBandMember(index,x,z,instrument){
       role
     ]))
 ].forEach(([x,z,instrument],i)=>createBandMember(i,x,z,instrument));
+// Audio interaktif marching band: melodi demo orisinal dan bunyi tiap seksi.
+let bandAudio=null, bandSongTimer=null, bandSongStep=0;
+function getBandAudio(){
+  if(!bandAudio) bandAudio=new (window.AudioContext||window.webkitAudioContext)();
+  if(bandAudio.state==="suspended") bandAudio.resume();
+  return bandAudio;
+}
+function bandTone(freq,duration=.18,wave="triangle",volume=.12,delay=0){
+  const ctx=getBandAudio(), osc=ctx.createOscillator(), gain=ctx.createGain(), start=ctx.currentTime+delay;
+  osc.type=wave;osc.frequency.setValueAtTime(freq,start);
+  gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(volume,start+.012);
+  gain.gain.exponentialRampToValueAtTime(.0001,start+duration);
+  osc.connect(gain);gain.connect(ctx.destination);osc.start(start);osc.stop(start+duration+.025);
+}
+function bandDrum(kind,delay=0){
+  const ctx=getBandAudio(), start=ctx.currentTime+delay;
+  if(kind==="cymbal"){
+    const length=Math.floor(ctx.sampleRate*.55), buffer=ctx.createBuffer(1,length,ctx.sampleRate), data=buffer.getChannelData(0);
+    for(let i=0;i<length;i++) data[i]=(Math.random()*2-1)*(1-i/length);
+    const src=ctx.createBufferSource(), filter=ctx.createBiquadFilter(), gain=ctx.createGain();
+    src.buffer=buffer;filter.type="highpass";filter.frequency.value=4500;
+    gain.gain.setValueAtTime(.18,start);gain.gain.exponentialRampToValueAtTime(.001,start+.5);
+    src.connect(filter);filter.connect(gain);gain.connect(ctx.destination);src.start(start);return;
+  }
+  const osc=ctx.createOscillator(),gain=ctx.createGain();
+  osc.type="sine";osc.frequency.setValueAtTime(kind==="bass"?95:kind==="quarto"?145:kind==="snare"?190:240,start);
+  osc.frequency.exponentialRampToValueAtTime(45,start+.13);
+  gain.gain.setValueAtTime(kind==="bass"?.32:.18,start);gain.gain.exponentialRampToValueAtTime(.001,start+.18);
+  osc.connect(gain);gain.connect(ctx.destination);osc.start(start);osc.stop(start+.2);
+  if(kind==="snare"){
+    const length=Math.floor(ctx.sampleRate*.12),buffer=ctx.createBuffer(1,length,ctx.sampleRate),data=buffer.getChannelData(0);
+    for(let i=0;i<length;i++)data[i]=(Math.random()*2-1)*(1-i/length);
+    const src=ctx.createBufferSource(),g=ctx.createGain();src.buffer=buffer;g.gain.setValueAtTime(.12,start);g.gain.exponentialRampToValueAtTime(.001,start+.12);src.connect(g);g.connect(ctx.destination);src.start(start);
+  }
+}
+function playBandPart(kind){
+  if(kind==="trumpet"){[523.25,659.25,783.99].forEach((n,i)=>bandTone(n,.22,"sawtooth",.08,i*.09));}
+  else if(kind==="bellyra"){[659.25,783.99,987.77].forEach((n,i)=>bandTone(n,.32,"sine",.12,i*.1));}
+  else if(["snare","bass","quarto","cymbal"].includes(kind))bandDrum(kind);
+  else if(kind==="mayoret")bandTone(1500,.16,"sine",.08);
+  else if(kind==="fieldcommander"){bandTone(440,.18,"square",.06);bandTone(660,.22,"square",.06,.2);}
+  else if(kind==="colourguard")bandTone(880,.12,"sine",.045);
+}
+const songNotes=[659,659,784,880,784,659,523,587,659,784,659,587,523,587,659,523];
+const songDrums=["bass","snare","bass","snare","bass","snare","quarto","snare"];
+function stopBandSong(){
+  if(bandSongTimer){clearInterval(bandSongTimer);bandSongTimer=null;}
+  bandSongStep=0;
+  if(bandSongStatus)bandSongStatus.textContent="Siap memainkan lagu latihan";
+}
+function startBandSong(){
+  stopBandSong();getBandAudio();
+  bandSongStatus.textContent="♫ Memainkan Lagu Latihan Gita Bahari";
+  const beatMs=360;
+  bandSongTimer=setInterval(()=>{
+    const step=bandSongStep++;
+    if(step>=songNotes.length*2){stopBandSong();return;}
+    const note=songNotes[Math.floor(step/2)];
+    if(step%2===0){
+      bandTone(note,.29,"sawtooth",.075);
+      bandTone(note/2,.31,"triangle",.07);
+      if(step%4===0)bandTone(note*1.5,.18,"sine",.035);
+    }
+    bandDrum(songDrums[step%songDrums.length]);
+    if(step%4===0)bandDrum("cymbal");
+  },beatMs);
+}
+const bandControl=document.createElement("section");
+bandControl.style.cssText="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;width:min(430px,calc(100vw - 28px));padding:12px;border:1px solid #d4af37;border-radius:15px;background:rgba(9,27,42,.96);color:#fff;text-align:center;font:13px Arial,sans-serif;box-shadow:0 8px 28px #0007";
+const bandControlTitle=document.createElement("strong");bandControlTitle.textContent="🎺 GITA BAHARI · AUDIO INTERAKTIF";
+bandControlTitle.style.cssText="display:block;color:#f2cf72;margin-bottom:8px";
+const bandSongStatus=document.createElement("div");bandSongStatus.textContent="Dekati lapangan untuk berinteraksi";
+bandSongStatus.style.cssText="font-size:12px;margin-bottom:9px;color:#dceaf2";
+const bandButtons=document.createElement("div");bandButtons.style.cssText="display:flex;gap:8px;justify-content:center;flex-wrap:wrap";
+function bandButton(label,action){
+ const button=document.createElement("button");button.type="button";button.textContent=label;
+ button.style.cssText="border:0;border-radius:9px;padding:9px 13px;background:#d4af37;color:#102b43;font-weight:bold;cursor:pointer";
+ button.addEventListener("click",action);bandButtons.append(button);
+}
+bandButton("▶ MAIN LAGU",startBandSong);
+bandButton("■ BERHENTI",stopBandSong);
+bandControl.append(bandControlTitle,bandSongStatus,bandButtons);document.body.append(bandControl);
 function updateMarchingBand(now){
   const t=now*.001;
   for(const member of marchingBand){
