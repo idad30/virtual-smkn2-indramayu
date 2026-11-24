@@ -407,14 +407,14 @@ function building(name,x,z,w,d,color,info,height=3.2){
   // Interior terbuka: lantai, dinding bersegmen dengan pintu depan, dan isi ruang.
   const wall=.28, doorW=Math.min(1.9,w*.28), doorH=Math.min(2.5,height*.82);
   block(x,-.08,z,w,.16,d,0xc9c5b9);
-  block(x-w/2+wall/2,height/2,z,wall,height,d,color);
-  block(x+w/2-wall/2,height/2,z,wall,height,d,color);
-  block(x,height/2,z-d/2+wall/2,w,height,wall,color);
+  block(x-w/2+wall/2,0,z,wall,height,d,color);
+  block(x+w/2-wall/2,0,z,wall,height,d,color);
+  block(x,0,z-d/2+wall/2,w,height,wall,color);
   const sideW=(w-doorW)/2;
-  block(x-w/2+sideW/2,height/2,z+d/2-wall/2,sideW,height,wall,color);
-  block(x+w/2-sideW/2,height/2,z+d/2-wall/2,sideW,height,wall,color);
-  block(x-doorW/2-.08,doorH/2,z+d/2,.16,doorH,.18,0x684a32);
-  block(x+doorW/2+.08,doorH/2,z+d/2,.16,doorH,.18,0x684a32);
+  block(x-w/2+sideW/2,0,z+d/2-wall/2,sideW,height,wall,color);
+  block(x+w/2-sideW/2,0,z+d/2-wall/2,sideW,height,wall,color);
+  block(x-doorW/2-.08,0,z+d/2,.16,doorH,.18,0x684a32);
+  block(x+doorW/2+.08,0,z+d/2,.16,doorH,.18,0x684a32);
   block(x,height+.12,z,w+.35,.22,d+.35,0x34485a);
   const windowW=Math.min(1.5,w*.2), windowH=Math.min(1.05,height*.34);
   const count=Math.max(1,Math.floor((w-doorW-1)/(windowW+.9)));
@@ -947,7 +947,7 @@ function blockedAt(x,z){
     const withinX=Math.abs(x-place.x)<place.w/2+radius;
     const withinZ=Math.abs(z-place.z)<place.d/2+radius;
     // Interior semua gedung dapat dimasuki; dinding fisik dan bukaan pintu mengatur akses.
-    if(true){
+    if(place.name!=="KOLAM RENANG" && place.name!=="KOLAM IKAN"){
       const insideX=Math.abs(x-place.x)<place.w/2-radius;
       const insideZ=Math.abs(z-place.z)<place.d/2-radius;
       if(insideX && insideZ) return false;
