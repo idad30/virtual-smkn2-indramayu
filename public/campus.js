@@ -1409,6 +1409,47 @@ function buildAvatar(id) {
     part(avatar,.12,.28,.62,cfg.hair,-.28,2.38,0);
     part(avatar,.12,.28,.62,cfg.hair,.28,2.38,0);
   }
+
+  // Penutup kepala sesuai jenis seragam.
+  if(uniform==="pdh1"){
+    part(avatar,.78,.075,.76,0xf5f4ed,0,2.61,0);
+    part(avatar,.52,.2,.52,0xf5f4ed,0,2.72,.015);
+    part(avatar,.42,.045,.18,0xf5f4ed,0,2.61,-.34);
+    part(avatar,.12,.055,.035,0xd4af37,0,2.73,-.255);
+  }
+  if(uniform==="pdh2"){
+    part(avatar,.78,.075,.76,0x263746,0,2.61,0);
+    part(avatar,.52,.2,.52,0x263746,0,2.72,.015);
+    part(avatar,.42,.045,.18,0x263746,0,2.61,-.34);
+    part(avatar,.12,.055,.035,0xd4af37,0,2.73,-.255);
+  }
+  if(uniform==="pramuka"){
+    part(avatar,.78,.075,.76,0x8c542c,0,2.61,0);
+    part(avatar,.52,.2,.52,0x8c542c,0,2.72,.015);
+    part(avatar,.42,.045,.18,0x8c542c,0,2.61,-.34);
+    part(avatar,.13,.07,.035,0xd62d2d,0,2.73,-.255);
+  }
+  if(uniform==="muslim" && !dataGenderIsFemale){
+    part(avatar,.72,.12,.72,0xf7f5e9,0,2.61,0);
+    part(avatar,.58,.12,.58,0xf7f5e9,0,2.72,0);
+  }
+
+  // Rok abu-abu untuk Taruni pada PDH 2; Taruna tetap memakai celana.
+  if(uniform==="pdh2" && dataGenderIsFemale){
+    const skirt=new THREE.Mesh(
+      new THREE.CylinderGeometry(.48,.57,.62,12,1,false),
+      mat(0x777d85)
+    );
+    skirt.position.set(0,.62,0);
+    skirt.castShadow=true; skirt.receiveShadow=true; avatar.add(skirt);
+  }
+
+  // Sepatu formal hitam dan sol gelap, konsisten untuk semua seragam sekolah.
+  [-.22,.22].forEach(x=>{
+    part(avatar,.35,.055,.52,0x101317,x,.035,-.08);
+    part(avatar,.35,.16,.48,0x202328,x,.12,-.08);
+  });
+
   leftArm=new THREE.Group(); leftArm.position.set(-.52,1.75,0); avatar.add(leftArm);
   part(leftArm,.28,.78,.3,cfg.shirt,0,-.35,0); part(leftArm,.25,.22,.26,cfg.skin,0,-.82,0);
   rightArm=new THREE.Group(); rightArm.position.set(.52,1.75,0); avatar.add(rightArm);
@@ -1416,11 +1457,9 @@ function buildAvatar(id) {
   leftLeg=new THREE.Group(); leftLeg.position.set(-.22,.9,0); avatar.add(leftLeg);
   part(leftLeg,.32,.78,.34,cfg.pants,0,-.36,0);
   part(leftLeg,.34,.2,.5,0x20252a,0,-.82,-.07);
-  part(leftLeg,.34,.06,.36,trim,0,-.73,-.025);
   rightLeg=new THREE.Group(); rightLeg.position.set(.22,.9,0); avatar.add(rightLeg);
   part(rightLeg,.32,.78,.34,cfg.pants,0,-.36,0);
   part(rightLeg,.34,.2,.5,0x20252a,0,-.82,-.07);
-  part(rightLeg,.34,.06,.36,trim,0,-.73,-.025);
 }
 buildAvatar(selectedAvatarId);
 // Spawn di jalur utama yang kosong, bukan di dalam LAB TKJ.
