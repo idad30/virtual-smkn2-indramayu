@@ -507,17 +507,31 @@ function createBandMember(index,x,z,instrument){
     bell.rotation.x=Math.PI/2;
     for(let n=0;n<3;n++) bandPart(prop,new THREE.CylinderGeometry(.035,.035,.16,8),bandWhite,-.13+n*.13,.1,-.03);
     prop.position.set(0,1.55,-.48);
-  }else if(instrument==="glockenspiel"){
+  }else if(instrument==="bellyra"){
     prop=new THREE.Group();body.add(prop);
-    // Glockenspiel lapangan: rangka, bantalan, dan bilah nada logam berwarna.
-    bandPart(prop,new THREE.BoxGeometry(1.12,.12,.58),0x263746,0,.02,0);
-    bandPart(prop,new THREE.BoxGeometry(1.2,.08,.66),bandGold,0,-.08,0);
+    bandPart(prop,new THREE.BoxGeometry(1.02,.12,.52),0x263746,0,0,0);
+    bandPart(prop,new THREE.BoxGeometry(1.08,.07,.58),bandGold,0,-.08,0);
     const notes=[0xf2cf72,0xdceaf2,0x8fc7d8,0xe58b78,0xa6cf9b,0xc5a6d8,0xf2cf72,0xdceaf2];
-    for(let n=0;n<8;n++){
-      const bar=bandPart(prop,new THREE.BoxGeometry(.105,.055,.48),notes[n],-.43+n*.123,.11,(n%2)*.035);
-      bar.position.y=.11+(n%2)*.012;
-    }
+    for(let n=0;n<8;n++) bandPart(prop,new THREE.BoxGeometry(.09,.055,.42),notes[n],-.39+n*.112,.1,0);
     prop.position.set(0,1.18,-.5);
+  }else if(instrument==="quarto"){
+    prop=new THREE.Group();body.add(prop);
+    for(let n=0;n<4;n++){
+      const x=-.42+(n%2)*.84, z=-.18+Math.floor(n/2)*.36;
+      const drum=bandPart(prop,new THREE.CylinderGeometry(.2,.2,.18,16),bandWhite,x,0,z);
+      drum.rotation.x=Math.PI/2;
+      const rim=bandPart(prop,new THREE.TorusGeometry(.2,.025,6,18),bandGold,x,0,z-.1);
+      rim.rotation.x=Math.PI/2;
+    }
+    prop.position.set(0,1.2,-.52);
+  }else if(instrument==="cymbal"){
+    prop=new THREE.Group();body.add(prop);
+    for(const side of [-1,1]){
+      const cymbal=bandPart(prop,new THREE.CylinderGeometry(.035,.3,.055,24),bandGold,side*.3,0,0);
+      cymbal.rotation.x=Math.PI/2;
+      bandPart(prop,new THREE.SphereGeometry(.07,10,8),0x263746,side*.3,0,-.06);
+    }
+    prop.position.set(0,1.42,-.5);
   }else if(instrument==="conductor"){
     prop=new THREE.Group();body.add(prop);
     bandPart(prop,new THREE.CylinderGeometry(.025,.025,.82,8),bandWhite,0,0,0);
@@ -556,14 +570,14 @@ function createBandMember(index,x,z,instrument){
   marchingBand.push({group,body,arms,legs,prop,instrument,phase:index*.72,index});
 }
 [
-  [3, -5, "snare"], [7, -5, "trumpet"], [11, -5, "trumpet"],
-  [3, 1, "trumpet"], [7, 1, "bass"], [11, 1, "trumpet"],
-  [3, 7, "snare"], [7, 7, "trumpet"], [11, 7, "snare"],
-  [5, 13, "snare"], [9, 13, "trumpet"],
-  [4, 16, "glockenspiel"], [7, 16, "glockenspiel"], [10, 16, "glockenspiel"],
-  [7, 19, "conductor"], [3, 19, "mayoret"],
-  [11, 19, "colourguard"], [7, 22, "fieldcommander"]
-].forEach(([x,z,instrument],i)=>createBandMember(i,x,z,instrument));
+  // Formasi 9 barisan, sesuai urutan pasukan Gita Bahari.
+  ...[[2,"fieldcommander"],[2,"mayoret"],[6,"trumpet"],[3,"bellyra"],[3,"snare"],[1,"quarto"],[2,"cymbal"],[5,"bass"],[8,"colourguard"]]
+    .flatMap(([count,role],row)=>Array.from({length:count},(_,index)=>[
+      7+(index-(count-1)/2)*1.45,
+      -8+row*3.2,
+      role
+    ]))
+.forEach(([x,z,instrument],i)=>createBandMember(i,x,z,instrument));
 function updateMarchingBand(now){
   const t=now*.001;
   for(const member of marchingBand){
