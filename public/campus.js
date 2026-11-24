@@ -587,7 +587,7 @@ hgnCtx.fillStyle="#f5d36b";hgnCtx.font="bold 42px Arial";
 hgnCtx.fillText("GURU HEBAT, INDONESIA KUAT",512,235);
 const hgnTexture=new THREE.CanvasTexture(hgnCanvas);hgnTexture.colorSpace=THREE.SRGBColorSpace;
 const hgnBoard=new THREE.Mesh(new THREE.PlaneGeometry(7.7,2.25),new THREE.MeshBasicMaterial({map:hgnTexture,side:THREE.DoubleSide}));
-hgnBoard.position.set(7,3.05,19.53);scene.add(hgnBoard);
+hgnBoard.position.set(7,3.05,-11.75);scene.add(hgnBoard);
 // Rangkaian bunga sederhana di depan panggung.
 for(const bx of [1.9,2.45,3,11,11.55,12.1]){
   const stem=new THREE.Mesh(new THREE.CylinderGeometry(.035,.045,.55,6),hgnMaterials.wood);
