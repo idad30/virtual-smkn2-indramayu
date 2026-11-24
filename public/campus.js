@@ -508,6 +508,80 @@ campusLabel("LAPANGAN UPACARA",7,5,"#fff4c7");
 
 campusLabel("EMPANG UTARA",38,-42,"#fff4c7");
 
+// UPGRADE 5: lanskap kampus — pepohonan, taman, jalur pedestrian, dan pagar.
+const trunkMat=new THREE.MeshStandardMaterial({color:0x765039,roughness:1});
+const leafMats=[
+  new THREE.MeshStandardMaterial({color:0x28764a,roughness:.9}),
+  new THREE.MeshStandardMaterial({color:0x368653,roughness:.9}),
+  new THREE.MeshStandardMaterial({color:0x4b965b,roughness:.9})
+];
+function campusTree(x,z,s=1){
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.16*s,.23*s,1.8*s,7),trunkMat);
+  trunk.position.set(x,.9*s,z);trunk.castShadow=true;scene.add(trunk);
+  for(const [ox,oy,oz,r,mat] of [[0,2.05,.0,.9,0],[.48,2.35,.08,.65,1],[-.45,2.28,-.12,.68,2],[0,2.78,-.08,.62,1]]){
+    const crown=new THREE.Mesh(new THREE.SphereGeometry(r*s,9,7),leafMats[mat]);
+    crown.position.set(x+ox*s,oy*s,z+oz*s);crown.scale.y=.9;crown.castShadow=true;scene.add(crown);
+  }
+}
+function campusBush(x,z,s=1){
+  const bush=new THREE.Mesh(new THREE.SphereGeometry(.48*s,8,6),leafMats[1]);
+  bush.position.set(x,.34*s,z);bush.scale.set(1,.72,1);bush.castShadow=true;scene.add(bush);
+}
+function gardenBed(x,z,w,d){
+  block(x,.04,z,w,.08,d,0x796348);
+  for(let i=0;i<Math.max(2,Math.floor(w/1.2));i++){
+    const px=x-w/2+.55+i*(w-.9)/Math.max(1,Math.floor(w/1.2)-1);
+    campusBush(px,z,.48);
+    const flower=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),new THREE.MeshStandardMaterial({color:i%2?0xf0c85a:0xe9a4bd,roughness:.8}));
+    flower.position.set(px,.55,z+.18);scene.add(flower);
+  }
+}
+// Pepohonan ditempatkan di ruang terbuka tepi kampus, tidak menggeser bangunan.
+[
+  [-45,-37,1.15],[-45,-13,.95],[-45,15,1.05],[-43,43,.9],
+  [46,-35,1.1],[46,-8,.95],[46,19,1.05],[45,43,.9],
+  [-29,-42,.85],[-7,-40,.9],[18,-40,.95],[36,-40,.9],
+  [-27,44,.85],[18,44,.9],[37,44,.85]
+].forEach(([x,z,s])=>campusTree(x,z,s));
+[
+  [-39,-10],[-39,-6],[-39,-2],[40,-2],[40,2],[40,6],
+  [-30,17],[-25,17],[21,17],[26,17],[-12,29],[-7,29]
+].forEach(([x,z])=>campusBush(x,z,.72));
+// Taman kecil di sisi lapangan dan dekat jalur pedestrian.
+gardenBed(-2,-14,5,1.1);
+gardenBed(16,-14,5,1.1);
+gardenBed(-2,24,5,1.1);
+gardenBed(16,24,5,1.1);
+// Jalur pedestrian abu-abu muda yang menghubungkan area lapangan.
+const pathMat=new THREE.MeshStandardMaterial({color:0xb9b9ae,roughness:1});
+function campusPath(x,z,w,d){
+  const path=new THREE.Mesh(new THREE.PlaneGeometry(w,d),pathMat);
+  path.rotation.x=-Math.PI/2;path.position.set(x,.012,z);path.receiveShadow=true;scene.add(path);
+}
+campusPath(7,-13,2.8,7);
+campusPath(7,23,2.8,7);
+campusPath(-4,5,8,2.5);
+campusPath(18,5,8,2.5);
+// Pagar rendah dekoratif pada sisi luar; dibuat terputus di akses utama.
+const fenceMat=new THREE.MeshStandardMaterial({color:0x34495a,metalness:.35,roughness:.65});
+function fenceRail(x1,z1,x2,z2){
+  const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz),angle=Math.atan2(dz,dx);
+  const rail=new THREE.Mesh(new THREE.BoxGeometry(len,.12,.12),fenceMat);
+  rail.position.set((x1+x2)/2,1.05,(z1+z2)/2);rail.rotation.y=-angle;scene.add(rail);
+  const rail2=rail.clone();rail2.position.y=.55;scene.add(rail2);
+  const count=Math.floor(len/2);
+  for(let i=0;i<=count;i++){
+    const t=count?i/count:0;
+    const post=new THREE.Mesh(new THREE.BoxGeometry(.13,1.25,.13),fenceMat);
+    post.position.set(x1+dx*t,.62,z1+dz*t);post.castShadow=true;scene.add(post);
+  }
+}
+fenceRail(-49,-40,-49,43);
+fenceRail(49,-40,49,43);
+fenceRail(-49,-40,49,-40);
+fenceRail(-49,49,-15,49);
+fenceRail(15,49,49,49);
+
 // NPC siswa kampus: karakter sederhana yang berjalan bolak-balik di jalur terbuka.
 const npcStudents=[];
 const npcLooks=[
