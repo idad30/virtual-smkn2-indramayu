@@ -276,9 +276,30 @@ function campusLabel(text,x,z,color="#ffffff"){
   const texture=new THREE.CanvasTexture(canvas);const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true}));
   sprite.position.set(x,5,z);sprite.scale.set(9,2.25,1);scene.add(sprite);
 }
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(120,100),new THREE.MeshStandardMaterial({color:0x789b70,roughness:1}));
+// Tekstur prosedural ringan agar permukaan kampus tidak terlihat polos.
+function makeSurfaceTexture(base, speckle, count, repeatX, repeatY){
+  const canvas=document.createElement("canvas");canvas.width=256;canvas.height=256;
+  const ctx=canvas.getContext("2d");ctx.fillStyle=base;ctx.fillRect(0,0,256,256);
+  let seed=92821;
+  const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+  for(let i=0;i<count;i++){
+    const alpha=.05+rand()*.16;
+    ctx.fillStyle=speckle.replace("ALPHA",alpha.toFixed(2));
+    const size=1+rand()*4;
+    ctx.fillRect(rand()*256,rand()*256,size,size);
+  }
+  const texture=new THREE.CanvasTexture(canvas);
+  texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+  texture.repeat.set(repeatX,repeatY);
+  texture.colorSpace=THREE.SRGBColorSpace;
+  texture.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),8);
+  return texture;
+}
+const grassTexture=makeSurfaceTexture("#789b70","rgba(34,75,39,ALPHA)",950,12,10);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(120,100),new THREE.MeshStandardMaterial({map:grassTexture,color:0xffffff,roughness:1}));
 ground.rotation.x=-Math.PI/2;ground.position.y=-.06;ground.receiveShadow=true;scene.add(ground);
-const pathMat=new THREE.MeshStandardMaterial({color:0xc8c1ad,roughness:1});
+const concreteTexture=makeSurfaceTexture("#c8c1ad","rgba(78,70,57,ALPHA)",620,3,3);
+const pathMat=new THREE.MeshStandardMaterial({map:concreteTexture,color:0xffffff,roughness:.96});
 function path(x,z,w,d){const m=new THREE.Mesh(new THREE.BoxGeometry(w,.08,d),pathMat);m.position.set(x,.01,z);m.receiveShadow=true;scene.add(m);}
 path(0,0,7,88);path(-2,0,88,6);path(26,0,5,80);path(-26,0,5,78);
 const campusPlaces=[];
@@ -376,7 +397,8 @@ building("KOLAM RENANG",28,27,7,13,0x6bb6cf,"Kolam renang",1.8);
 building("KOLAM IKAN",-49,7,7,7,0x6bb6cf,"Kolam ikan",1.8);
 building("AREA PARKIR",-12,46,22,5,0xb9b9b9,"Area parkir",1.2);
 // Lapangan upacara diperbesar dan diberi garis lapangan yang jelas.
-const field=new THREE.Mesh(new THREE.PlaneGeometry(14,32),new THREE.MeshStandardMaterial({color:0x579653,roughness:1}));
+const fieldTexture=makeSurfaceTexture("#579653","rgba(26,76,36,ALPHA)",1100,2,5);
+const field=new THREE.Mesh(new THREE.PlaneGeometry(14,32),new THREE.MeshStandardMaterial({map:fieldTexture,color:0xffffff,roughness:1}));
 field.rotation.x=-Math.PI/2;field.position.set(7,.035,5);field.receiveShadow=true;scene.add(field);
 const fieldLineMat=new THREE.MeshStandardMaterial({color:0xf4f4e9,roughness:1});
 function fieldLine(x,z,w,d){
