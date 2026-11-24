@@ -743,6 +743,28 @@ function createNpcStudent(index,x,z){
   [43,12], [42,34], [25,40], [8,43], [-22,40]
 ].forEach(([x,z],i)=>createNpcStudent(i,x,z));
 
+// Rute aktivitas siswa melalui jalur pejalan kaki dan tepi lapangan.
+const studentRoutes=[
+  [[0,-27],[0,-4],[0,22],[0,42]],[[-26,-28],[-26,-4],[-26,18],[-2,0]],
+  [[26,-28],[26,-5],[26,18],[2,0]],[[-38,0],[-26,0],[-2,0],[22,0],[42,0]],
+  [[42,0],[22,0],[-2,0],[-26,0],[-38,0]],[[-2,0],[-2,22],[0,42],[0,22]],
+  [[26,18],[26,0],[0,0],[-26,0]],[[-26,18],[-26,0],[-2,0],[0,-4]],
+  [[0,42],[0,22],[0,0],[0,-27]],[[22,0],[0,0],[-26,0],[-26,-28]],
+  [[-38,0],[-26,0],[-26,18],[-2,22]],[[42,0],[26,0],[26,18],[0,22]],
+  [[0,-27],[0,-4],[-2,0],[-26,0]],[[-26,18],[-26,0],[0,0],[22,0]],
+  [[26,-28],[26,-5],[26,18],[0,22]],[[0,42],[0,22],[26,18],[26,0]],
+  [[-38,0],[-26,0],[-2,0],[0,22]],[[42,0],[26,0],[0,0],[-2,-4]],
+  [[0,-27],[-26,-28],[-26,0],[-2,0]],[[26,-28],[26,0],[0,0],[0,22]]
+];
+npcStudents.forEach((student,index)=>{
+  if(index<studentRoutes.length){
+    student.route=studentRoutes[index];student.routeIndex=0;
+    student.walkSpeed=1.15+(index%4)*.12;student.pauseDuration=1400+(index%3)*650;
+    const start=student.route[0];student.npc.position.set(start[0],0,start[1]);
+    student.baseX=start[0];student.baseZ=start[1];
+  }
+});
+
 // Guru NPC di dalam ruang teori TKJ, memakai sistem dialog NPC yang sudah ada.
 const classroomTeacher=createNpcStudent(20,-17,20);
 classroomTeacher.name="Pak Guru TKJ";
@@ -1022,24 +1044,38 @@ function updateMarchingBand(now){
 }
 function updateNpcStudents(now){
   for(const student of npcStudents){
-    // Siklus 14 detik: berjalan ke satu sisi, berhenti sebentar, lalu kembali.
-    const cycle=(now*.001*student.speed+student.phase)%(Math.PI*2);
-    const pauseAtEnd=cycle>5.15&&cycle<6.05;
-    const pauseAtStart=cycle>Math.PI*2-0.55;
-    const paused=pauseAtEnd||pauseAtStart;
-    const movingCycle=pauseAtEnd?5.15:pauseAtStart?Math.PI*2-0.55:cycle;
-    const travel=Math.sin(movingCycle);
-    const lateral=Math.cos(movingCycle*.7);
-    student.npc.position.x=student.baseX+travel*student.range;
-    student.npc.position.z=student.baseZ+lateral*.8;
-    student.npc.rotation.y=Math.atan2(Math.cos(movingCycle)*student.range,-Math.sin(movingCycle*.7)*.56)+Math.PI;
-    const gait=paused?0:Math.sin(now*.001*student.speed*5+student.phase);
-    student.legs[0].rotation.x=gait*.48;
-    student.legs[1].rotation.x=-gait*.48;
-    student.arms[0].rotation.x=paused?Math.sin(now*.002+student.phase)*.08:gait*.3;
-    student.arms[1].rotation.x=paused?-.08:gait*-.3;
-    student.arms[0].rotation.z=paused?Math.sin(now*.0015+student.phase)*.08:0;
-    student.body.position.y=paused?Math.sin(now*.002+student.phase)*.025:Math.abs(gait)*.035;
+    let moving=false;
+    if(student.route && student.route.length>1){
+      const point=student.route[student.routeIndex||0];
+      const dx=point[0]-student.npc.position.x, dz=point[1]-student.npc.position.z;
+      const distance=Math.hypot(dx,dz);
+      if(student.pauseUntil && now<student.pauseUntil) moving=false;
+      else{
+        student.pauseUntil=0;
+        if(distance<.55){student.routeIndex=((student.routeIndex||0)+1)%student.route.length;student.pauseUntil=now+(student.pauseDuration||1800);}
+        else{
+          const dt=Math.min(.05,Math.max(.001,(now-(student.lastMoveAt||now))/1000));
+          const step=Math.min(distance,(student.walkSpeed||1.25)*dt);
+          student.npc.position.x+=dx/distance*step;student.npc.position.z+=dz/distance*step;
+          student.npc.rotation.y=Math.atan2(dx,dz)+Math.PI;moving=true;
+        }
+      }
+      student.lastMoveAt=now;
+    }else{
+      const cycle=(now*.001*student.speed+student.phase)%(Math.PI*2);
+      const paused=(cycle>5.15&&cycle<6.05)||(cycle>Math.PI*2-.55);
+      const movingCycle=cycle>5.15&&cycle<6.05?5.15:cycle>Math.PI*2-.55?Math.PI*2-.55:cycle;
+      student.npc.position.x=student.baseX+Math.sin(movingCycle)*student.range;
+      student.npc.position.z=student.baseZ+Math.cos(movingCycle*.7)*.8;
+      moving=!paused&&student.speed>0;
+      if(moving)student.npc.rotation.y=Math.atan2(Math.cos(movingCycle)*student.range,-Math.sin(movingCycle*.7)*.56)+Math.PI;
+    }
+    const gait=moving?Math.sin(now*.008+student.phase):0;
+    student.legs[0].rotation.x=gait*.48;student.legs[1].rotation.x=-gait*.48;
+    student.arms[0].rotation.x=moving?gait*.3:Math.sin(now*.002+student.phase)*.08;
+    student.arms[1].rotation.x=moving?gait*-.3:-.08;
+    student.arms[0].rotation.z=moving?0:Math.sin(now*.0015+student.phase)*.08;
+    student.body.position.y=moving?Math.abs(gait)*.035:Math.sin(now*.002+student.phase)*.025;
   }
 }
 
