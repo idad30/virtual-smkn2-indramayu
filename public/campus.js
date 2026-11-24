@@ -99,6 +99,7 @@ function studentCard(data) {
   instagram.style.cssText="color:#a9c2d2;font-size:12px";
   info.append(classBadge,identity,instagram);
   const uniformInfo=document.createElement("div");
+  uniformInfo.id="uniform-info";
   uniformInfo.textContent="Seragam hari ini: "+(uniformNames[activeUniform]||"PDH 1");
   uniformInfo.style.cssText="margin:0 0 12px;padding:10px;border:1px solid #d4af37;border-radius:8px;color:#f2cf72;font-weight:bold";
   const avatarTitle=document.createElement("b"); avatarTitle.textContent="PILIH KARAKTER";
@@ -1287,6 +1288,8 @@ const avatarOptions = {
 let selectedAvatarId = "taruna";
 let activeUniform = "pdh1";
 let uniformSettingsUnsubscribe = null;
+let uniformRefreshTimer = null;
+let latestUniformSettings = {};
 let dataGenderIsFemale = false;
 const defaultUniformSchedule = {monday:"pdh1",tuesday:"pdh2",wednesday:"pramuka",thursday:"muslim",friday:"olahraga"};
 const uniformNames = {pdh1:"PDH 1",pdh2:"PDH 2",pramuka:"Pramuka",muslim:"Muslim",olahraga:"Olahraga"};
@@ -1304,20 +1307,30 @@ async function loadTodayUniform() {
     activeUniform = defaultUniformSchedule[weekday] || "pdh1";
   }
 }
+function refreshActiveUniform() {
+  const weekday = new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",weekday:"long"}).format(new Date()).toLowerCase();
+  const data = latestUniformSettings || {};
+  const schedule = data.schedule || defaultUniformSchedule;
+  const nextUniform = data.mode === "manual"
+    ? (data.manualUniform || "pdh1")
+    : (schedule[weekday] || defaultUniformSchedule[weekday] || "pdh1");
+  if (nextUniform !== activeUniform) {
+    activeUniform = nextUniform;
+    buildAvatar(selectedAvatarId);
+  }
+  const uniformInfo = document.querySelector("#uniform-info");
+  if (uniformInfo) uniformInfo.textContent = "Seragam hari ini: " + (uniformNames[activeUniform] || "PDH 1");
+}
 function watchUniformSettings() {
   if (uniformSettingsUnsubscribe) uniformSettingsUnsubscribe();
   uniformSettingsUnsubscribe = onSnapshot(doc(db,"settings","uniforms"), snap => {
-    const weekday = new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",weekday:"long"}).format(new Date()).toLowerCase();
-    const data = snap.exists() ? snap.data() : {};
-    const schedule = data.schedule || defaultUniformSchedule;
-    const nextUniform = data.mode === "manual"
-      ? (data.manualUniform || "pdh1")
-      : (schedule[weekday] || defaultUniformSchedule[weekday] || "pdh1");
-    if (nextUniform !== activeUniform) {
-      activeUniform = nextUniform;
-      buildAvatar(selectedAvatarId);
-    }
+    latestUniformSettings = snap.exists() ? snap.data() : {};
+    refreshActiveUniform();
   }, error => console.warn("Gagal memantau pengaturan seragam:",error));
+  if (uniformRefreshTimer) clearInterval(uniformRefreshTimer);
+  // Periksa waktu WIB berkala agar jadwal otomatis berganti saat hari berubah,
+  // meskipun tidak ada perubahan dokumen Firestore.
+  uniformRefreshTimer = setInterval(refreshActiveUniform, 60000);
 }
 function part(parent,w,h,d,color,x,y,z) {
   const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));
