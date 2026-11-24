@@ -341,7 +341,7 @@ function building(name,x,z,w,d,color,info,height=3.2){
     const water=new THREE.Mesh(new THREE.PlaneGeometry(waterW,waterD),waterMaterial);
     water.rotation.x=-Math.PI/2;water.position.set(x,waterY,z);scene.add(water);
     water.receiveShadow=true;
-    water.userData.flowSpeed=isPool?.012:.008;
+    water.userData.flowSpeed=isPool ? .012 : .008;
     animatedWater.push({texture:waterTexture,mesh:water});
     // Tangga kecil di sisi kolam renang dan batu pijakan kolam ikan.
     if(isPool){
