@@ -1349,6 +1349,18 @@ function buildAvatar(id) {
     part(avatar,.62,.48,.1,cfg.skin,0,2.12,-.37);
   }
   if(uniform==="olahraga") part(avatar,.24,.12,.045,0xe4bd58,0,1.48,-.28);
+  if(uniform==="pdh1") {
+    part(avatar,.72,.1,.68,0x172333,0,2.57,0);
+    part(avatar,.62,.08,.62,0x172333,0,2.51,-.02);
+  }
+  // Tanda DAMAY pada posisi berbeda sesuai identitas Taruna/Taruni.
+  if(uniform==="muslim" || uniform==="olahraga") {
+    const canvas=document.createElement("canvas");canvas.width=512;canvas.height=128;
+    const ctx=canvas.getContext("2d");ctx.fillStyle="#173b54";ctx.font="bold 78px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("DAMAY",256,64);
+    const texture=new THREE.CanvasTexture(canvas);
+    const tag=new THREE.Mesh(new THREE.PlaneGeometry(.48,.12),new THREE.MeshBasicMaterial({map:texture,transparent:true}));
+    tag.position.set(0,dataGenderIsFemale?1.37:1.58,-.255);avatar.add(tag);
+  }
   // Kerah simetris dan panel depan seragam.
   part(avatar,.2,.16,.08,0xf0f1e9,-.13,1.78,-.22);
   part(avatar,.2,.16,.08,0xf0f1e9,.13,1.78,-.22);
