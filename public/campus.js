@@ -1364,38 +1364,53 @@ function animate(now) {
 }
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 
+const intro=document.getElementById("drone-intro");
+const startWalkButton=document.getElementById("start-walk");
+let campusAccessReady=false;
+let walkRequested=false;
+
+function beginWalking(){
+  if(!campusAccessReady){walkRequested=true;startWalkButton.textContent="MEMUAT AKSES...";startWalkButton.disabled=true;return;}
+  walkStarted=true;
+  walkMode=true;
+  moveVelocity.set(0,0,0);
+  player.position.set(0,0,0);
+  player.visible=true;
+  cameraYaw=0;cameraPitch=.22;cameraDistance=10;
+  if(intro) intro.style.display="none";
+  if(bandControl) bandControl.style.display="block";
+  const controls=document.querySelector(".mobile-controls");
+  if(controls) controls.style.display=touchDevice?"flex":"none";
+  if(innerWidth<=900 && document.documentElement.requestFullscreen){
+    document.documentElement.requestFullscreen().catch(error=>console.info("Fullscreen tidak tersedia:",error));
+  }
+  if(screen.orientation?.lock){
+    screen.orientation.lock("landscape").catch(error=>console.info("Orientasi landscape tidak tersedia:",error));
+  }
+}
+startWalkButton.addEventListener("click",beginWalking);
+// Mulai render kamera drone segera; tidak menunggu Firebase selesai memeriksa akun.
+requestAnimationFrame(animate);
+
 async function start() {
   try {
-    const data=await checkStudentAccess();
+    const data=await Promise.race([
+      checkStudentAccess(),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error("Pemeriksaan akun terlalu lama. Periksa koneksi internet lalu muat ulang.")),15000))
+    ]);
+    campusAccessReady=true;
+    startWalkButton.disabled=false;
+    startWalkButton.textContent="JALAN-JALAN";
     studentCard(data);
     watchPromotion(auth.currentUser.uid);
-    const intro=document.getElementById("drone-intro");
-    const startWalkButton=document.getElementById("start-walk");
-    startWalkButton.addEventListener("click",()=>{
-      // Aktifkan mode berjalan terlebih dahulu agar tidak bergantung pada izin fullscreen/orientasi.
-      walkStarted=true;
-      walkMode=true;
-      moveVelocity.set(0,0,0);
-      player.position.set(0,0,0);
-      player.visible=true;
-      cameraYaw=0;cameraPitch=.22;cameraDistance=10;
-      if(intro) intro.style.display="none";
-      if(bandControl) bandControl.style.display="block";
-      const mobileControls=document.querySelector(".mobile-controls");
-      if(mobileControls) mobileControls.style.display=touchDevice?"flex":"none";
-      if(innerWidth<=900 && document.documentElement.requestFullscreen){
-        document.documentElement.requestFullscreen().catch(error=>console.info("Fullscreen tidak tersedia:",error));
-      }
-      if(screen.orientation?.lock){
-        screen.orientation.lock("landscape").catch(error=>console.info("Orientasi landscape tidak tersedia:",error));
-      }
-    });
     campusFeatures = initCampusFeatures({ app, uid: auth.currentUser.uid, profile: data, player, scene, THREE, places: campusPlaces });
-    requestAnimationFrame(animate);
+    if(walkRequested) beginWalking();
   } catch(error) {
     console.error("Campus error:",error);
-    alert(error.message || "Tidak dapat membuka kampus.");
-    location.href="index.html";
+    startWalkButton.disabled=true;
+    startWalkButton.textContent="AKSES GAGAL - MUAT ULANG";
+    const message=document.querySelector("#drone-intro .intro-card p");
+    if(message) message.textContent=error.message || "Tidak dapat membuka kampus.";
   }
 }
 start();
