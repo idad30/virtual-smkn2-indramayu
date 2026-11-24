@@ -556,23 +556,23 @@ const hgnMaterials={
   wood:new THREE.MeshStandardMaterial({color:0x76513b,roughness:.9})
 };
 // Panggung kecil di ujung lapangan, tidak menutup jalur tengah.
-block(7,.28,18.35,8.8,.56,3.2,0x263d50);
-block(7,.62,18.35,8.55,.12,2.95,0xd4af37);
-block(7,1.42,19.72,8.2,1.55,.24,0x102b43);
-block(7,2.22,19.55,7.75,.12,.12,0xd4af37);
+block(7,.28,-12.4,8.8,.56,3.2,0x263d50);
+block(7,.62,-12.4,8.55,.12,2.95,0xd4af37);
+block(7,1.42,-10.95,8.2,1.55,.24,0x102b43);
+block(7,2.22,-11.05,7.75,.12,.12,0xd4af37);
 // Podium sambutan.
-block(4.05,1.12,17.35,.78,1.55,.62,0x76513b);
-block(4.05,1.92,17.35,.9,.12,.72,0xd4af37);
-block(4.05,2.02,17.35,.55,.08,.46,0x102b43);
+block(4.05,1.12,-13.5,.78,1.55,.62,0x76513b);
+block(4.05,1.92,-13.5,.9,.12,.72,0xd4af37);
+block(4.05,2.02,-13.5,.55,.08,.46,0x102b43);
 // Bendera merah putih mini di kedua sisi panggung.
 for(const side of [-1,1]){
   const fx=7+side*4.65;
   const pole=new THREE.Mesh(new THREE.CylinderGeometry(.035,.045,3.1,8),hgnMaterials.gold);
-  pole.position.set(fx,1.55,18.65);scene.add(pole);
+  pole.position.set(fx,1.55,-12.1);scene.add(pole);
   const flagTop=new THREE.Mesh(new THREE.PlaneGeometry(.9,.32),hgnMaterials.red);
-  flagTop.position.set(fx+side*.42,2.72,18.65);scene.add(flagTop);
+  flagTop.position.set(fx+side*.42,2.72,-12.1);scene.add(flagTop);
   const flagBottom=new THREE.Mesh(new THREE.PlaneGeometry(.9,.32),hgnMaterials.white);
-  flagBottom.position.set(fx+side*.42,2.4,18.65);scene.add(flagBottom);
+  flagBottom.position.set(fx+side*.42,2.4,-12.1);scene.add(flagBottom);
 }
 // Papan tema Hari Guru, dibuat dari canvas agar teks tetap tajam.
 const hgnCanvas=document.createElement("canvas");hgnCanvas.width=1024;hgnCanvas.height=300;
@@ -587,16 +587,22 @@ hgnCtx.fillStyle="#f5d36b";hgnCtx.font="bold 42px Arial";
 hgnCtx.fillText("GURU HEBAT, INDONESIA KUAT",512,235);
 const hgnTexture=new THREE.CanvasTexture(hgnCanvas);hgnTexture.colorSpace=THREE.SRGBColorSpace;
 const hgnBoard=new THREE.Mesh(new THREE.PlaneGeometry(7.7,2.25),new THREE.MeshBasicMaterial({map:hgnTexture,side:THREE.DoubleSide}));
-hgnBoard.position.set(7,3.05,19.53);scene.add(hgnBoard);
+hgnBoard.position.set(7,3.05,-11.75);scene.add(hgnBoard);
 // Rangkaian bunga sederhana di depan panggung.
 for(const bx of [1.9,2.45,3,11,11.55,12.1]){
   const stem=new THREE.Mesh(new THREE.CylinderGeometry(.035,.045,.55,6),hgnMaterials.wood);
-  stem.position.set(bx,.42,16.9);scene.add(stem);
+  stem.position.set(bx,.42,-10.4);scene.add(stem);
   const bloom=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8),new THREE.MeshStandardMaterial({color:bx<7?0xf1c7d5:0xffdf8a,roughness:.6}));
-  bloom.position.set(bx,.76,16.9);scene.add(bloom);
+  bloom.position.set(bx,.76,-10.4);scene.add(bloom);
 }
 // Penanda apresiasi di sisi lapangan.
-campusLabel("PANGGUNG HARI GURU",7,18.1,"#ffe7a3");
+campusLabel("PANGGUNG HARI GURU",7,-12.2,"#ffe7a3");
+// Tempatkan Field Commander Eka dan Silvi di atas panggung sebagai pemimpin upacara.
+const commanders=marchingBand.filter(member=>member.instrument==="fieldcommander");
+commanders.forEach((member,index)=>{
+  member.group.position.set(index===0?5.9:8.1,.68,-12.15);
+  member.group.rotation.y=0;
+});
 
 
 campusLabel("EMPANG UTARA",38,-42,"#fff4c7");
