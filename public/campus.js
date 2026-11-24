@@ -479,19 +479,52 @@ function building(name,x,z,w,d,color,info,height=3.2){
     for(let row=0;row<2;row++) block(x,.12,z-d*.18+row*1.35,w*.62,.18,.12,0x987653);
     if(name.includes("MASJID")) block(x,.18,z-d*.3,w*.28,.32,.2,0x2f8c78);
   } else {
+    const isTKJ=name.includes("TKJ");
+    const isClassroom=/RUANG TEORI|RKB/i.test(name);
     const cols=Math.max(1,Math.min(4,Math.floor((w-2)/2.5)));
     const rows=Math.max(1,Math.min(4,Math.floor((d-2)/1.8)));
+    // Meja siswa disusun rapi menghadap papan di bagian depan ruangan.
     for(let row=0;row<rows;row++) for(let col=0;col<cols;col++){
       const px=x+(col-(cols-1)/2)*Math.min(2.35,(w-2)/Math.max(1,cols-1));
       const pz=z-d*.22+row*Math.min(1.65,(d-2)/Math.max(1,rows-1));
       block(px,.82,pz,.95,.12,.52,deskColor);
       block(px,.42,pz-.42,.12,.78,.12,0x59636a);
       if(isLab){
-        block(px,.98,pz,.38,.34,.24,0x263b4b);
-        block(px,.98,pz-.14,.3,.2,.025,0x74c9d8);
+        // Monitor, layar, dudukan dan keyboard pada meja praktik.
+        block(px,.98,pz,.48,.38,.24,0x263b4b);
+        block(px,.99,pz-.135,.39,.27,.025,0x55b8d0);
+        block(px,.77,pz-.28,.08,.06,.08,0x303a42);
+        block(px,.91,pz+.19,.34,.035,.12,0x303a42);
+        if(isTKJ){
+          block(px-.28,.98,pz+.08,.18,.18,.2,0x87949b);
+          for(let led=0;led<3;led++){
+            const light=new THREE.Mesh(new THREE.SphereGeometry(.025,6,5),new THREE.MeshBasicMaterial({color:led===1?0x39d98a:0xe6c75a}));
+            light.position.set(px-.28+(led-1)*.045,1.04,pz+.185);scene.add(light);
+          }
+        }
+      } else {
+        // Kursi siswa dengan sandaran.
+        block(px,.43,pz+.55,.48,.1,.42,0x31566b);
+        block(px,.72,pz+.74,.46,.48,.1,0x31566b);
       }
     }
-    block(x,.65,z-d/2+.55,Math.min(w*.7,4.5),.12,.48,0x526879);
+    // Meja guru/instruktur dan papan tulis di dinding depan.
+    block(x,.78,z-d/2+.9,Math.min(w*.48,3.4),.16,.72,0x76563b);
+    block(x,.42,z-d/2+.62,.12,.72,.12,0x59636a);
+    const board=new THREE.Mesh(new THREE.BoxGeometry(Math.min(w*.62,4.8),1.05,.12),new THREE.MeshStandardMaterial({color:isLab?0x263d48:0x244d45,roughness:.8}));
+    board.position.set(x,2.05,z-d/2+.19);scene.add(board);
+    if(isLab){
+      // Rak perangkat jaringan pada laboratorium TKJ.
+      if(isTKJ){
+        for(let shelf=0;shelf<2;shelf++){
+          const sx=x-w*.34+shelf*1.25;
+          block(sx,1.05,z+d/2-.55,.9,.08,.48,0x687780);
+          block(sx,.55,z+d/2-.55,.08,1,.08,0x687780);
+          block(sx,1.55,z+d/2-.55,.08,1,.08,0x687780);
+          block(sx,1.32,z+d/2-.55,.72,.32,.34,0x53616b);
+        }
+      }
+    }
   }
   campusPlaces.push({name,x,z,w,d,info});
   campusLabel(name,x,z,"#ffffff");
