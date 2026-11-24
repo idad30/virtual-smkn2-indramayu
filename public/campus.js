@@ -303,8 +303,61 @@ const pathMat=new THREE.MeshStandardMaterial({map:concreteTexture,color:0xffffff
 function path(x,z,w,d){const m=new THREE.Mesh(new THREE.BoxGeometry(w,.08,d),pathMat);m.position.set(x,.01,z);m.receiveShadow=true;scene.add(m);}
 path(0,0,7,88);path(-2,0,88,6);path(26,0,5,80);path(-26,0,5,78);
 const campusPlaces=[];
+const animatedWater=[];
 function building(name,x,z,w,d,color,info,height=3.2){
   const glass=new THREE.MeshStandardMaterial({color:0x8fc7d8,metalness:.15,roughness:.25});
+  if(name==="KOLAM RENANG" || name==="KOLAM IKAN"){
+    const isPool=name==="KOLAM RENANG";
+    const rim= isPool ? .48 : .38;
+    const depth= isPool ? .82 : .58;
+    const waterY=isPool ? .34 : .22;
+    const waterW=w-rim*2, waterD=d-rim*2;
+    const stone=0xb8c4c8;
+    const inner=0x557b86;
+    // Bak kolam dengan bibir batu dan dasar yang terlihat melalui air.
+    block(x,-depth,z,w,.24,d,0x87979b);
+    block(x-w/2+rim/2,-.02,z,rim,.72,d,stone);
+    block(x+w/2-rim/2,-.02,z,rim,.72,d,stone);
+    block(x,-.02,z-d/2+rim/2,w,.72,rim,stone);
+    block(x,-.02,z+d/2-rim/2,w,.72,rim,stone);
+    block(x,-.17,z,waterW,.12,waterD,inner);
+    const waterCanvas=document.createElement("canvas");waterCanvas.width=256;waterCanvas.height=256;
+    const ctx=waterCanvas.getContext("2d");
+    const grad=ctx.createLinearGradient(0,0,256,256);
+    grad.addColorStop(0,isPool?"#48c4df":"#55b9b2");
+    grad.addColorStop(.5,isPool?"#168eb9":"#238d83");
+    grad.addColorStop(1,isPool?"#12658f":"#176c68");
+    ctx.fillStyle=grad;ctx.fillRect(0,0,256,256);
+    for(let i=0;i<34;i++){
+      const px=(i*73)%256, py=(i*137)%256;
+      ctx.beginPath();ctx.ellipse(px,py,12+(i%5)*5,2+(i%3),-.25,0,Math.PI*2);
+      ctx.strokeStyle="rgba(220,250,255,.28)";ctx.lineWidth=1.6;ctx.stroke();
+    }
+    const waterTexture=new THREE.CanvasTexture(waterCanvas);
+    waterTexture.wrapS=waterTexture.wrapT=THREE.RepeatWrapping;
+    waterTexture.repeat.set(1.2,2.2);
+    waterTexture.colorSpace=THREE.SRGBColorSpace;
+    const waterMaterial=new THREE.MeshPhysicalMaterial({map:waterTexture,color:0xffffff,metalness:.12,roughness:.19,transparent:true,opacity:.88,clearcoat:.9,clearcoatRoughness:.12,side:THREE.DoubleSide});
+    const water=new THREE.Mesh(new THREE.PlaneGeometry(waterW,waterD),waterMaterial);
+    water.rotation.x=-Math.PI/2;water.position.set(x,waterY,z);scene.add(water);
+    water.receiveShadow=true;
+    water.userData.flowSpeed=isPool ? .012 : .008;
+    animatedWater.push({texture:waterTexture,mesh:water});
+    // Tangga kecil di sisi kolam renang dan batu pijakan kolam ikan.
+    if(isPool){
+      for(let i=0;i<3;i++) block(x+w/2-.9,-.05+i*.12,z+d/2-1.1-i*.55,.12,.12,.5,0xd9e1df);
+      block(x,waterY+.025,z-d/2+.45,waterW*.72,.045,.08,0xe2f0ef);
+    } else {
+      for(let i=0;i<3;i++) block(x-w/2+.9+i*.45,.02,z+d/2-.75,.32,.12,.32,0xd4d0bd);
+      const lily=new THREE.Mesh(new THREE.CircleGeometry(.42,20),new THREE.MeshStandardMaterial({color:0x3c9a65,roughness:.85}));
+      lily.rotation.x=-Math.PI/2;lily.position.set(x+.9,waterY+.035,z-.7);scene.add(lily);
+      const flower=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),new THREE.MeshStandardMaterial({color:0xf1d7e4}));
+      flower.scale.set(1,.35,1);flower.position.set(x+.9,waterY+.12,z-.7);scene.add(flower);
+    }
+    campusPlaces.push({name,x,z,w,d,info});
+    campusLabel(name,x,z,"#ffffff");
+    return;
+  }
   if(name==="GEDUNG UTAMA"){
     // Gedung Utama dibuat dua lantai dengan ruang dalam yang benar-benar terbuka.
     const wall=.42, floorY=3.18, totalH=6.45, doorW=2.35;
@@ -1071,6 +1124,8 @@ const moveVelocity=new THREE.Vector3();
 const desiredVelocity=new THREE.Vector3();
 function animate(now) {
   requestAnimationFrame(animate);
+  const waterTime=now*.001;
+  for(const item of animatedWater){item.texture.offset.x=(waterTime*item.mesh.userData.flowSpeed)%1;item.texture.offset.y=(waterTime*item.mesh.userData.flowSpeed*.65)%1;}
   updateSkyByTime();
   updateNpcStudents(now);
   updateMarchingBand(now);
