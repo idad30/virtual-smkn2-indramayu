@@ -470,6 +470,7 @@ function building(name,x,z,w,d,color,info,height=3.2){
   const isLab=/LAB|RPS|BRIDGE SIMULATOR|TEFA/i.test(name);
   const isCanteen=/KANTIN|OUTLET/i.test(name);
   const isHall=/AULA|MASJID|EKSKUL/i.test(name);
+  const isClassroom=/RUANG TEORI|RKB/i.test(name);
   const deskColor=isCanteen?0x9a6940:0x987653;
   if(isCanteen){
     block(x,.48,z-d*.22,w*.72,.96,.85,0x9b7049);
@@ -478,6 +479,22 @@ function building(name,x,z,w,d,color,info,height=3.2){
   } else if(isHall){
     for(let row=0;row<2;row++) block(x,.12,z-d*.18+row*1.35,w*.62,.18,.12,0x987653);
     if(name.includes("MASJID")) block(x,.18,z-d*.3,w*.28,.32,.2,0x2f8c78);
+  } else if(isClassroom){
+    block(x,.86,z-d/2+.58,w*.54,1.25,.12,0x183b50);
+    block(x,.86,z-d/2+.50,w*.49,1.1,.035,0x173b35);
+    block(x,.26,z-d/2+.42,w*.62,.08,.22,0xd4af37);
+    block(x,.5,z-d/2+1.65,1.65,.9,.72,0x8b6748);
+    block(x,.99,z-d/2+1.65,1.72,.12,.76,0x9d7956);
+    const cols=Math.max(2,Math.min(4,Math.floor((w-2)/2.5)));
+    const rows=Math.max(2,Math.min(3,Math.floor((d-2)/2.1)));
+    for(let row=0;row<rows;row++) for(let col=0;col<cols;col++){
+      const px=x+(col-(cols-1)/2)*Math.min(2.25,(w-2)/Math.max(1,cols-1));
+      const pz=z-d*.05+row*Math.min(1.65,(d-2)/Math.max(1,rows-1));
+      block(px,.82,pz,.9,.12,.5,deskColor);
+      block(px,.43,pz-.38,.1,.78,.1,0x59636a);
+      block(px,.43,pz+.38,.1,.78,.1,0x59636a);
+      block(px,.43,pz,.72,.08,.36,0x8b6748);
+    }
   } else {
     const cols=Math.max(1,Math.min(4,Math.floor((w-2)/2.5)));
     const rows=Math.max(1,Math.min(4,Math.floor((d-2)/1.8)));
@@ -722,6 +739,19 @@ function createNpcStudent(index,x,z){
   [-18,-27], [-5,-27], [12,-27], [29,-29], [40,-8],
   [43,12], [42,34], [25,40], [8,43], [-22,40]
 ].forEach(([x,z],i)=>createNpcStudent(i,x,z));
+
+// Guru NPC di dalam ruang teori TKJ, memakai sistem dialog NPC yang sudah ada.
+const classroomTeacher=createNpcStudent(20,-17,20);
+classroomTeacher.name="Pak Guru TKJ";
+classroomTeacher.range=0;
+classroomTeacher.speed=0;
+classroomTeacher.profile=[
+  "guru Teknik Komputer dan Jaringan",
+  "Selamat datang di ruang kelas TKJ! Hari ini kita belajar dasar jaringan komputer.",
+  "Perangkat apa yang biasa digunakan untuk menghubungkan beberapa komputer?",
+  "Pahami konsepnya dahulu sebelum mulai praktik konfigurasi.",
+  "Selalu rapikan perangkat dan ikuti aturan keselamatan di laboratorium."
+];
 
 // Regu marching band Gita Bahari yang berlatih rutin di lapangan upacara.
 const marchingBand=[];
