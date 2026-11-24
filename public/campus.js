@@ -946,6 +946,12 @@ let nearbyBandMember=null;
 let infoOpen=false;
 function updateNearbyPlace(){
   nearbyPlace=null; nearbyNpc=null; nearbyBandMember=null;
+  // Panel audio hanya muncul ketika pemain benar-benar berada di area lapangan upacara.
+  const insideCeremonyField=
+    player.position.x>=.25 && player.position.x<=13.75 &&
+    player.position.z>=-10.8 && player.position.z<=20.8;
+  bandControl.style.display=insideCeremonyField?"block":"none";
+  if(insideCeremonyField) bandSongStatus.textContent="Kamu berada di lapangan upacara · Audio Gita Bahari";
   let bestNpc=3.8;
   for(const student of npcStudents){
     const distance=Math.hypot(player.position.x-student.npc.position.x,player.position.z-student.npc.position.z);
