@@ -784,7 +784,7 @@ function createBandMember(index,x,z,instrument){
     ]))
 ].forEach(([x,z,instrument],i)=>createBandMember(i,x,z,instrument));
 // Audio interaktif marching band: melodi demo orisinal dan bunyi tiap seksi.
-let bandAudio=null, bandSongTimer=null, bandSongStep=0;
+let bandAudio=null;
 function getBandAudio(){
   if(!bandAudio) bandAudio=new (window.AudioContext||window.webkitAudioContext)();
   if(bandAudio.state==="suspended") bandAudio.resume();
@@ -825,30 +825,6 @@ function playBandPart(kind){
   else if(kind==="mayoret")bandTone(1500,.16,"sine",.08);
   else if(kind==="fieldcommander"){bandTone(440,.18,"square",.06);bandTone(660,.22,"square",.06,.2);}
   else if(kind==="colourguard")bandTone(880,.12,"sine",.045);
-}
-const songNotes=[659,659,784,880,784,659,523,587,659,784,659,587,523,587,659,523];
-const songDrums=["bass","snare","bass","snare","bass","snare","quarto","snare"];
-function stopBandSong(){
-  if(bandSongTimer){clearInterval(bandSongTimer);bandSongTimer=null;}
-  bandSongStep=0;
-  if(bandSongStatus)bandSongStatus.textContent="Siap memainkan lagu latihan";
-}
-function startBandSong(){
-  stopBandSong();getBandAudio();
-  bandSongStatus.textContent="♫ Memainkan Lagu Latihan Gita Bahari";
-  const beatMs=360;
-  bandSongTimer=setInterval(()=>{
-    const step=bandSongStep++;
-    if(step>=songNotes.length*2){stopBandSong();return;}
-    const note=songNotes[Math.floor(step/2)];
-    if(step%2===0){
-      bandTone(note,.29,"sawtooth",.075);
-      bandTone(note/2,.31,"triangle",.07);
-      if(step%4===0)bandTone(note*1.5,.18,"sine",.035);
-    }
-    bandDrum(songDrums[step%songDrums.length]);
-    if(step%4===0)bandDrum("cymbal");
-  },beatMs);
 }
 // Klik langsung anggota Gita Bahari untuk mendengar bunyi instrumennya.
 const bandRaycaster=new THREE.Raycaster();
