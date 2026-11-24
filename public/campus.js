@@ -479,52 +479,19 @@ function building(name,x,z,w,d,color,info,height=3.2){
     for(let row=0;row<2;row++) block(x,.12,z-d*.18+row*1.35,w*.62,.18,.12,0x987653);
     if(name.includes("MASJID")) block(x,.18,z-d*.3,w*.28,.32,.2,0x2f8c78);
   } else {
-    const isTKJ=name.includes("TKJ");
-    const isClassroom=/RUANG TEORI|RKB/i.test(name);
     const cols=Math.max(1,Math.min(4,Math.floor((w-2)/2.5)));
     const rows=Math.max(1,Math.min(4,Math.floor((d-2)/1.8)));
-    // Meja siswa disusun rapi menghadap papan di bagian depan ruangan.
     for(let row=0;row<rows;row++) for(let col=0;col<cols;col++){
       const px=x+(col-(cols-1)/2)*Math.min(2.35,(w-2)/Math.max(1,cols-1));
       const pz=z-d*.22+row*Math.min(1.65,(d-2)/Math.max(1,rows-1));
       block(px,.82,pz,.95,.12,.52,deskColor);
       block(px,.42,pz-.42,.12,.78,.12,0x59636a);
       if(isLab){
-        // Monitor, layar, dudukan dan keyboard pada meja praktik.
-        block(px,.98,pz,.48,.38,.24,0x263b4b);
-        block(px,.99,pz-.135,.39,.27,.025,0x55b8d0);
-        block(px,.77,pz-.28,.08,.06,.08,0x303a42);
-        block(px,.91,pz+.19,.34,.035,.12,0x303a42);
-        if(isTKJ){
-          block(px-.28,.98,pz+.08,.18,.18,.2,0x87949b);
-          for(let led=0;led<3;led++){
-            const light=new THREE.Mesh(new THREE.SphereGeometry(.025,6,5),new THREE.MeshBasicMaterial({color:led===1?0x39d98a:0xe6c75a}));
-            light.position.set(px-.28+(led-1)*.045,1.04,pz+.185);scene.add(light);
-          }
-        }
-      } else {
-        // Kursi siswa dengan sandaran.
-        block(px,.43,pz+.55,.48,.1,.42,0x31566b);
-        block(px,.72,pz+.74,.46,.48,.1,0x31566b);
+        block(px,.98,pz,.38,.34,.24,0x263b4b);
+        block(px,.98,pz-.14,.3,.2,.025,0x74c9d8);
       }
     }
-    // Meja guru/instruktur dan papan tulis di dinding depan.
-    block(x,.78,z-d/2+.9,Math.min(w*.48,3.4),.16,.72,0x76563b);
-    block(x,.42,z-d/2+.62,.12,.72,.12,0x59636a);
-    const board=new THREE.Mesh(new THREE.BoxGeometry(Math.min(w*.62,4.8),1.05,.12),new THREE.MeshStandardMaterial({color:isLab?0x263d48:0x244d45,roughness:.8}));
-    board.position.set(x,2.05,z-d/2+.19);scene.add(board);
-    if(isLab){
-      // Rak perangkat jaringan pada laboratorium TKJ.
-      if(isTKJ){
-        for(let shelf=0;shelf<2;shelf++){
-          const sx=x-w*.34+shelf*1.25;
-          block(sx,1.05,z+d/2-.55,.9,.08,.48,0x687780);
-          block(sx,.55,z+d/2-.55,.08,1,.08,0x687780);
-          block(sx,1.55,z+d/2-.55,.08,1,.08,0x687780);
-          block(sx,1.32,z+d/2-.55,.72,.32,.34,0x53616b);
-        }
-      }
-    }
+    block(x,.65,z-d/2+.55,Math.min(w*.7,4.5),.12,.48,0x526879);
   }
   campusPlaces.push({name,x,z,w,d,info});
   campusLabel(name,x,z,"#ffffff");
@@ -676,17 +643,16 @@ function createNpcStudent(index,x,z){
   piece(.5,.52,.5,look.skin,0,1.92,0);
   piece(.56,.16,.56,look.hair,0,2.19,0);
   piece(.58,.12,.1,look.hair,0,2.08,-.25);
-  const arms=[],legs=[];
+  const arms=[];
   for(const side of [-1,1]){
     const arm=new THREE.Group();arm.position.set(side*.45,1.58,0);body.add(arm);
     const limb=new THREE.Mesh(new THREE.BoxGeometry(.22,.65,.24),mat(look.shirt));
     limb.position.y=-.31;arm.add(limb);arms.push(arm);
-    const legPivot=new THREE.Group();legPivot.position.set(side*.18,.72,0);body.add(legPivot);
     const leg=new THREE.Mesh(new THREE.BoxGeometry(.27,.72,.3),mat(look.pants));
-    leg.position.y=-.36;leg.castShadow=true;legPivot.add(leg);legs.push(legPivot);
+    leg.position.set(side*.18,.38,0);body.add(leg);
   }
   npc.position.set(x,0,z);scene.add(npc);
-  npcStudents.push({npc,arms,legs,name:["Adit","Raka","Dina","Salsa","Fajar","Nabila","Rizky","Putri","Bagas","Citra","Dimas","Nadya","Farhan","Alya","Reza","Intan","Yoga","Tiara","Rafi","Zahra"][index],profile:[["suka teknologi","Aku lagi belajar merakit jaringan komputer.","Kamu pernah mencoba konfigurasi router?","Aku suka praktik langsung supaya lebih paham.","Kalau ke Lab TKJ, jangan lupa ikuti aturan lab."],["suka olahraga","Aku baru selesai latihan di lapangan.","Kamu biasanya suka olahraga apa?","Seru kalau bisa olahraga bareng teman-teman.","Jangan lupa pemanasan sebelum mulai, ya."],["rajin membaca","Aku sedang mencari buku untuk dibaca.","Kamu lebih suka buku cerita atau pengetahuan?","Membaca sebentar setiap hari bisa menambah wawasan.","Perpustakaan bisa jadi tempat yang nyaman untuk belajar."],["aktif organisasi","Aku sedang menyiapkan kegiatan sekolah.","Kamu ikut ekstrakurikuler apa?","Ikut kegiatan bisa melatih kerja sama dan tanggung jawab.","Coba cari tahu kegiatan yang sesuai minatmu."],["hobi musik","Aku suka mendengarkan musik saat waktu istirahat.","Kamu bisa memainkan alat musik?","Musik bikin suasana latihan jadi lebih semangat.","Siapa tahu nanti kita bisa tampil di acara sekolah."],["suka kuliner","Aku penasaran menu apa yang ada di kantin hari ini.","Kamu suka makanan pedas?","Wah, pilihan makanan di kantin memang beragam.","Jangan lupa antre dan menjaga kebersihan."],["calon programmer","Aku sedang mencoba membuat program sederhana.","Kamu tertarik belajar coding?","Mulai dari program kecil dulu, nanti makin terbiasa.","Kalau ada error, teliti baris kodenya satu per satu."],["suka fotografi","Aku sedang mencari sudut kampus yang bagus untuk foto.","Kamu suka memotret pemandangan atau teman?","Cahaya yang bagus bisa membuat foto lebih menarik.","Tetap minta izin sebelum memotret orang lain."],["hobi otomotif","Aku senang belajar tentang mesin dan kendaraan.","Kamu tertarik dunia otomotif?","Memahami cara kerja mesin itu menarik.","Praktik harus tetap memperhatikan keselamatan."],["suka menggambar","Aku sedang membuat sketsa gedung sekolah.","Kamu suka menggambar juga?","Ide sederhana bisa jadi karya yang bagus.","Terus latihan dan jangan takut mencoba gaya baru."],["suka sains","Aku baru membaca fakta menarik tentang alam.","Pelajaran sains apa yang paling kamu suka?","Rasa ingin tahu adalah awal dari pengetahuan.","Coba amati hal-hal kecil di sekitar sekolah."],["suka bahasa","Aku sedang menghafal kosakata bahasa Inggris.","Kamu sedang belajar bahasa apa?","Belajar sedikit demi sedikit lebih mudah diingat.","Coba praktikkan dengan teman saat ada kesempatan."],["suka bahari","Aku tertarik dengan dunia kelautan.","Kamu pernah belajar tentang navigasi?","Laut menyimpan banyak hal menarik untuk dipelajari.","Pengetahuan dan kedisiplinan penting di bidang bahari."],["suka memasak","Aku sedang mencari ide resep baru.","Kamu lebih suka masakan manis atau gurih?","Memasak perlu ketelitian dan kreativitas.","Selalu jaga kebersihan alat dan bahan."],["suka desain","Aku sedang membuat desain poster kegiatan.","Kamu suka desain yang simpel atau ramai?","Warna dan tata letak bisa menyampaikan pesan.","Terus eksplorasi ide desainmu."],["suka tanaman","Aku sedang memperhatikan tanaman di taman sekolah.","Kamu suka merawat tanaman?","Lingkungan hijau membuat sekolah terasa nyaman.","Yuk, sama-sama menjaga taman sekolah."],["suka matematika","Aku sedang mengerjakan soal hitungan.","Kamu suka tantangan matematika?","Kalau bingung, pecah soal menjadi langkah kecil.","Latihan rutin bikin kita makin terbiasa."],["suka sejarah","Aku sedang mencari cerita tentang sejarah sekolah.","Kamu suka mendengar cerita masa lalu?","Sejarah membantu kita menghargai perjalanan suatu tempat.","Tanya guru atau senior untuk cerita lainnya."],["suka persahabatan","Aku senang kalau teman-teman saling membantu.","Menurutmu apa yang membuat kelas kompak?","Saling menghargai membuat suasana belajar lebih baik.","Mulai dari hal kecil seperti menyapa teman."],["suka lingkungan","Aku ingin mengajak teman menjaga kebersihan kampus.","Kamu biasanya memilah sampah?","Kebiasaan kecil bisa membuat lingkungan lebih bersih.","Ayo buang sampah pada tempatnya."]][index],baseX:x,baseZ:z,phase:index*1.7,range:2.2,speed:.45+index*.035,activity:index%5,stopPhase:(index*.83)%4.5,walkCycle:0});
+  npcStudents.push({npc,arms,name:["Adit","Raka","Dina","Salsa","Fajar","Nabila","Rizky","Putri","Bagas","Citra","Dimas","Nadya","Farhan","Alya","Reza","Intan","Yoga","Tiara","Rafi","Zahra"][index],profile:[["suka teknologi","Aku lagi belajar merakit jaringan komputer.","Kamu pernah mencoba konfigurasi router?","Aku suka praktik langsung supaya lebih paham.","Kalau ke Lab TKJ, jangan lupa ikuti aturan lab."],["suka olahraga","Aku baru selesai latihan di lapangan.","Kamu biasanya suka olahraga apa?","Seru kalau bisa olahraga bareng teman-teman.","Jangan lupa pemanasan sebelum mulai, ya."],["rajin membaca","Aku sedang mencari buku untuk dibaca.","Kamu lebih suka buku cerita atau pengetahuan?","Membaca sebentar setiap hari bisa menambah wawasan.","Perpustakaan bisa jadi tempat yang nyaman untuk belajar."],["aktif organisasi","Aku sedang menyiapkan kegiatan sekolah.","Kamu ikut ekstrakurikuler apa?","Ikut kegiatan bisa melatih kerja sama dan tanggung jawab.","Coba cari tahu kegiatan yang sesuai minatmu."],["hobi musik","Aku suka mendengarkan musik saat waktu istirahat.","Kamu bisa memainkan alat musik?","Musik bikin suasana latihan jadi lebih semangat.","Siapa tahu nanti kita bisa tampil di acara sekolah."],["suka kuliner","Aku penasaran menu apa yang ada di kantin hari ini.","Kamu suka makanan pedas?","Wah, pilihan makanan di kantin memang beragam.","Jangan lupa antre dan menjaga kebersihan."],["calon programmer","Aku sedang mencoba membuat program sederhana.","Kamu tertarik belajar coding?","Mulai dari program kecil dulu, nanti makin terbiasa.","Kalau ada error, teliti baris kodenya satu per satu."],["suka fotografi","Aku sedang mencari sudut kampus yang bagus untuk foto.","Kamu suka memotret pemandangan atau teman?","Cahaya yang bagus bisa membuat foto lebih menarik.","Tetap minta izin sebelum memotret orang lain."],["hobi otomotif","Aku senang belajar tentang mesin dan kendaraan.","Kamu tertarik dunia otomotif?","Memahami cara kerja mesin itu menarik.","Praktik harus tetap memperhatikan keselamatan."],["suka menggambar","Aku sedang membuat sketsa gedung sekolah.","Kamu suka menggambar juga?","Ide sederhana bisa jadi karya yang bagus.","Terus latihan dan jangan takut mencoba gaya baru."],["suka sains","Aku baru membaca fakta menarik tentang alam.","Pelajaran sains apa yang paling kamu suka?","Rasa ingin tahu adalah awal dari pengetahuan.","Coba amati hal-hal kecil di sekitar sekolah."],["suka bahasa","Aku sedang menghafal kosakata bahasa Inggris.","Kamu sedang belajar bahasa apa?","Belajar sedikit demi sedikit lebih mudah diingat.","Coba praktikkan dengan teman saat ada kesempatan."],["suka bahari","Aku tertarik dengan dunia kelautan.","Kamu pernah belajar tentang navigasi?","Laut menyimpan banyak hal menarik untuk dipelajari.","Pengetahuan dan kedisiplinan penting di bidang bahari."],["suka memasak","Aku sedang mencari ide resep baru.","Kamu lebih suka masakan manis atau gurih?","Memasak perlu ketelitian dan kreativitas.","Selalu jaga kebersihan alat dan bahan."],["suka desain","Aku sedang membuat desain poster kegiatan.","Kamu suka desain yang simpel atau ramai?","Warna dan tata letak bisa menyampaikan pesan.","Terus eksplorasi ide desainmu."],["suka tanaman","Aku sedang memperhatikan tanaman di taman sekolah.","Kamu suka merawat tanaman?","Lingkungan hijau membuat sekolah terasa nyaman.","Yuk, sama-sama menjaga taman sekolah."],["suka matematika","Aku sedang mengerjakan soal hitungan.","Kamu suka tantangan matematika?","Kalau bingung, pecah soal menjadi langkah kecil.","Latihan rutin bikin kita makin terbiasa."],["suka sejarah","Aku sedang mencari cerita tentang sejarah sekolah.","Kamu suka mendengar cerita masa lalu?","Sejarah membantu kita menghargai perjalanan suatu tempat.","Tanya guru atau senior untuk cerita lainnya."],["suka persahabatan","Aku senang kalau teman-teman saling membantu.","Menurutmu apa yang membuat kelas kompak?","Saling menghargai membuat suasana belajar lebih baik.","Mulai dari hal kecil seperti menyapa teman."],["suka lingkungan","Aku ingin mengajak teman menjaga kebersihan kampus.","Kamu biasanya memilah sampah?","Kebiasaan kecil bisa membuat lingkungan lebih bersih.","Ayo buang sampah pada tempatnya."]][index],baseX:x,baseZ:z,phase:index*1.7,range:2.2,speed:.45+index*.07});
 }
 [
   [-23,-7], [20,-12], [-22,13], [18,23], [34,18],
@@ -945,36 +911,12 @@ function updateMarchingBand(now){
 function updateNpcStudents(now){
   for(const student of npcStudents){
     const t=now*.001*student.speed+student.phase;
-    // Siklus aktivitas: berjalan, berhenti sejenak, lalu melanjutkan patroli.
-    const cycle=(t+student.stopPhase)%8;
-    const isResting=cycle>5.8;
-    const activityOffset=student.activity===0?Math.sin(t*.55)*.45:student.activity===1?Math.cos(t*.42)*.35:0;
-    const pace=isResting?0:1;
-    const targetX=student.baseX+Math.sin(t)*student.range+activityOffset;
-    const targetZ=student.baseZ+Math.cos(t*.7)*.8;
-    const previousX=student.npc.position.x,previousZ=student.npc.position.z;
-    if(pace){
-      student.npc.position.x=targetX;
-      student.npc.position.z=targetZ;
-    }
-    const dx=student.npc.position.x-previousX,dz=student.npc.position.z-previousZ;
-    if(Math.hypot(dx,dz)>.001) student.npc.rotation.y=Math.atan2(dx,dz);
-    const gait=pace?Math.sin(t*7):0;
-    student.arms[0].rotation.x=gait*.42;
-    student.arms[1].rotation.x=-gait*.42;
-    if(student.legs){
-      student.legs[0].rotation.x=gait*.48;
-      student.legs[1].rotation.x=-gait*.48;
-    }
-    student.npc.position.y=isResting?Math.sin(now*.002+student.phase)*.025:Math.abs(gait)*.035;
-    // Beberapa siswa sesekali menoleh dan melambaikan tangan saat berhenti.
-    if(isResting && student.activity===2){
-      student.arms[0].rotation.z=Math.sin(now*.003+student.phase)*.35;
-      student.arms[1].rotation.z=0;
-    }else{
-      student.arms[0].rotation.z=0;
-      student.arms[1].rotation.z=0;
-    }
+    student.npc.position.x=student.baseX+Math.sin(t)*student.range;
+    student.npc.position.z=student.baseZ+Math.cos(t*.7)*.8;
+    student.npc.rotation.y=Math.atan2(Math.cos(t)*student.range,-Math.sin(t*.7)*.56)+Math.PI;
+    const swing=Math.sin(t*3)*.28;
+    student.arms[0].rotation.x=swing;
+    student.arms[1].rotation.x=-swing;
   }
 }
 
@@ -1364,53 +1306,25 @@ function animate(now) {
 }
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 
-const intro=document.getElementById("drone-intro");
-const startWalkButton=document.getElementById("start-walk");
-let campusAccessReady=false;
-let walkRequested=false;
-
-function beginWalking(){
-  if(!campusAccessReady){walkRequested=true;startWalkButton.textContent="MEMUAT AKSES...";startWalkButton.disabled=true;return;}
-  walkStarted=true;
-  walkMode=true;
-  moveVelocity.set(0,0,0);
-  player.position.set(0,0,0);
-  player.visible=true;
-  cameraYaw=0;cameraPitch=.22;cameraDistance=10;
-  if(intro) intro.style.display="none";
-  if(bandControl) bandControl.style.display="block";
-  const controls=document.querySelector(".mobile-controls");
-  if(controls) controls.style.display=touchDevice?"flex":"none";
-  if(innerWidth<=900 && document.documentElement.requestFullscreen){
-    document.documentElement.requestFullscreen().catch(error=>console.info("Fullscreen tidak tersedia:",error));
-  }
-  if(screen.orientation?.lock){
-    screen.orientation.lock("landscape").catch(error=>console.info("Orientasi landscape tidak tersedia:",error));
-  }
-}
-startWalkButton.addEventListener("click",beginWalking);
-// Mulai render kamera drone segera; tidak menunggu Firebase selesai memeriksa akun.
-requestAnimationFrame(animate);
-
 async function start() {
   try {
-    const data=await Promise.race([
-      checkStudentAccess(),
-      new Promise((_,reject)=>setTimeout(()=>reject(new Error("Pemeriksaan akun terlalu lama. Periksa koneksi internet lalu muat ulang.")),15000))
-    ]);
-    campusAccessReady=true;
-    startWalkButton.disabled=false;
-    startWalkButton.textContent="JALAN-JALAN";
+    const data=await checkStudentAccess();
     studentCard(data);
     watchPromotion(auth.currentUser.uid);
+    const intro=document.getElementById("drone-intro");
+    document.getElementById("start-walk").addEventListener("click",async()=>{
+      bandControl.style.display="block";
+      walkMode=true;moveVelocity.set(0,0,0);player.position.set(0,0,0);player.visible=true;intro.style.display="none";
+      cameraYaw=0;cameraPitch=.22;cameraDistance=10;
+      try { if(innerWidth<900 && screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch(error) { console.info("Orientasi landscape dapat diaktifkan dari pengaturan HP."); }
+    });
     campusFeatures = initCampusFeatures({ app, uid: auth.currentUser.uid, profile: data, player, scene, THREE, places: campusPlaces });
-    if(walkRequested) beginWalking();
+    document.querySelector('#start-walk').addEventListener('click',async()=>{try{if(innerWidth<=900&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock('landscape');}catch(e){console.info('Landscape tidak didukung browser ini',e);}walkStarted=true;moveVelocity.set(0,0,0);player.position.set(0,0,0);player.visible=true;document.querySelector('#drone-intro').style.display='none';document.querySelector('.mobile-controls').style.display=touchDevice?'flex':'none';});
+    requestAnimationFrame(animate);
   } catch(error) {
     console.error("Campus error:",error);
-    startWalkButton.disabled=true;
-    startWalkButton.textContent="AKSES GAGAL - MUAT ULANG";
-    const message=document.querySelector("#drone-intro .intro-card p");
-    if(message) message.textContent=error.message || "Tidak dapat membuka kampus.";
+    alert(error.message || "Tidak dapat membuka kampus.");
+    location.href="index.html";
   }
 }
 start();
