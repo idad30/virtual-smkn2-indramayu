@@ -643,16 +643,17 @@ function createNpcStudent(index,x,z){
   piece(.5,.52,.5,look.skin,0,1.92,0);
   piece(.56,.16,.56,look.hair,0,2.19,0);
   piece(.58,.12,.1,look.hair,0,2.08,-.25);
-  const arms=[];
+  const arms=[],legs=[];
   for(const side of [-1,1]){
     const arm=new THREE.Group();arm.position.set(side*.45,1.58,0);body.add(arm);
     const limb=new THREE.Mesh(new THREE.BoxGeometry(.22,.65,.24),mat(look.shirt));
     limb.position.y=-.31;arm.add(limb);arms.push(arm);
+    const legPivot=new THREE.Group();legPivot.position.set(side*.18,.72,0);body.add(legPivot);
     const leg=new THREE.Mesh(new THREE.BoxGeometry(.27,.72,.3),mat(look.pants));
-    leg.position.set(side*.18,.38,0);body.add(leg);
+    leg.position.y=-.36;leg.castShadow=true;legPivot.add(leg);legs.push(legPivot);
   }
   npc.position.set(x,0,z);scene.add(npc);
-  npcStudents.push({npc,arms,name:["Adit","Raka","Dina","Salsa","Fajar","Nabila","Rizky","Putri","Bagas","Citra","Dimas","Nadya","Farhan","Alya","Reza","Intan","Yoga","Tiara","Rafi","Zahra"][index],profile:[["suka teknologi","Aku lagi belajar merakit jaringan komputer.","Kamu pernah mencoba konfigurasi router?","Aku suka praktik langsung supaya lebih paham.","Kalau ke Lab TKJ, jangan lupa ikuti aturan lab."],["suka olahraga","Aku baru selesai latihan di lapangan.","Kamu biasanya suka olahraga apa?","Seru kalau bisa olahraga bareng teman-teman.","Jangan lupa pemanasan sebelum mulai, ya."],["rajin membaca","Aku sedang mencari buku untuk dibaca.","Kamu lebih suka buku cerita atau pengetahuan?","Membaca sebentar setiap hari bisa menambah wawasan.","Perpustakaan bisa jadi tempat yang nyaman untuk belajar."],["aktif organisasi","Aku sedang menyiapkan kegiatan sekolah.","Kamu ikut ekstrakurikuler apa?","Ikut kegiatan bisa melatih kerja sama dan tanggung jawab.","Coba cari tahu kegiatan yang sesuai minatmu."],["hobi musik","Aku suka mendengarkan musik saat waktu istirahat.","Kamu bisa memainkan alat musik?","Musik bikin suasana latihan jadi lebih semangat.","Siapa tahu nanti kita bisa tampil di acara sekolah."],["suka kuliner","Aku penasaran menu apa yang ada di kantin hari ini.","Kamu suka makanan pedas?","Wah, pilihan makanan di kantin memang beragam.","Jangan lupa antre dan menjaga kebersihan."],["calon programmer","Aku sedang mencoba membuat program sederhana.","Kamu tertarik belajar coding?","Mulai dari program kecil dulu, nanti makin terbiasa.","Kalau ada error, teliti baris kodenya satu per satu."],["suka fotografi","Aku sedang mencari sudut kampus yang bagus untuk foto.","Kamu suka memotret pemandangan atau teman?","Cahaya yang bagus bisa membuat foto lebih menarik.","Tetap minta izin sebelum memotret orang lain."],["hobi otomotif","Aku senang belajar tentang mesin dan kendaraan.","Kamu tertarik dunia otomotif?","Memahami cara kerja mesin itu menarik.","Praktik harus tetap memperhatikan keselamatan."],["suka menggambar","Aku sedang membuat sketsa gedung sekolah.","Kamu suka menggambar juga?","Ide sederhana bisa jadi karya yang bagus.","Terus latihan dan jangan takut mencoba gaya baru."],["suka sains","Aku baru membaca fakta menarik tentang alam.","Pelajaran sains apa yang paling kamu suka?","Rasa ingin tahu adalah awal dari pengetahuan.","Coba amati hal-hal kecil di sekitar sekolah."],["suka bahasa","Aku sedang menghafal kosakata bahasa Inggris.","Kamu sedang belajar bahasa apa?","Belajar sedikit demi sedikit lebih mudah diingat.","Coba praktikkan dengan teman saat ada kesempatan."],["suka bahari","Aku tertarik dengan dunia kelautan.","Kamu pernah belajar tentang navigasi?","Laut menyimpan banyak hal menarik untuk dipelajari.","Pengetahuan dan kedisiplinan penting di bidang bahari."],["suka memasak","Aku sedang mencari ide resep baru.","Kamu lebih suka masakan manis atau gurih?","Memasak perlu ketelitian dan kreativitas.","Selalu jaga kebersihan alat dan bahan."],["suka desain","Aku sedang membuat desain poster kegiatan.","Kamu suka desain yang simpel atau ramai?","Warna dan tata letak bisa menyampaikan pesan.","Terus eksplorasi ide desainmu."],["suka tanaman","Aku sedang memperhatikan tanaman di taman sekolah.","Kamu suka merawat tanaman?","Lingkungan hijau membuat sekolah terasa nyaman.","Yuk, sama-sama menjaga taman sekolah."],["suka matematika","Aku sedang mengerjakan soal hitungan.","Kamu suka tantangan matematika?","Kalau bingung, pecah soal menjadi langkah kecil.","Latihan rutin bikin kita makin terbiasa."],["suka sejarah","Aku sedang mencari cerita tentang sejarah sekolah.","Kamu suka mendengar cerita masa lalu?","Sejarah membantu kita menghargai perjalanan suatu tempat.","Tanya guru atau senior untuk cerita lainnya."],["suka persahabatan","Aku senang kalau teman-teman saling membantu.","Menurutmu apa yang membuat kelas kompak?","Saling menghargai membuat suasana belajar lebih baik.","Mulai dari hal kecil seperti menyapa teman."],["suka lingkungan","Aku ingin mengajak teman menjaga kebersihan kampus.","Kamu biasanya memilah sampah?","Kebiasaan kecil bisa membuat lingkungan lebih bersih.","Ayo buang sampah pada tempatnya."]][index],baseX:x,baseZ:z,phase:index*1.7,range:2.2,speed:.45+index*.07});
+  npcStudents.push({npc,arms,legs,name:["Adit","Raka","Dina","Salsa","Fajar","Nabila","Rizky","Putri","Bagas","Citra","Dimas","Nadya","Farhan","Alya","Reza","Intan","Yoga","Tiara","Rafi","Zahra"][index],profile:[["suka teknologi","Aku lagi belajar merakit jaringan komputer.","Kamu pernah mencoba konfigurasi router?","Aku suka praktik langsung supaya lebih paham.","Kalau ke Lab TKJ, jangan lupa ikuti aturan lab."],["suka olahraga","Aku baru selesai latihan di lapangan.","Kamu biasanya suka olahraga apa?","Seru kalau bisa olahraga bareng teman-teman.","Jangan lupa pemanasan sebelum mulai, ya."],["rajin membaca","Aku sedang mencari buku untuk dibaca.","Kamu lebih suka buku cerita atau pengetahuan?","Membaca sebentar setiap hari bisa menambah wawasan.","Perpustakaan bisa jadi tempat yang nyaman untuk belajar."],["aktif organisasi","Aku sedang menyiapkan kegiatan sekolah.","Kamu ikut ekstrakurikuler apa?","Ikut kegiatan bisa melatih kerja sama dan tanggung jawab.","Coba cari tahu kegiatan yang sesuai minatmu."],["hobi musik","Aku suka mendengarkan musik saat waktu istirahat.","Kamu bisa memainkan alat musik?","Musik bikin suasana latihan jadi lebih semangat.","Siapa tahu nanti kita bisa tampil di acara sekolah."],["suka kuliner","Aku penasaran menu apa yang ada di kantin hari ini.","Kamu suka makanan pedas?","Wah, pilihan makanan di kantin memang beragam.","Jangan lupa antre dan menjaga kebersihan."],["calon programmer","Aku sedang mencoba membuat program sederhana.","Kamu tertarik belajar coding?","Mulai dari program kecil dulu, nanti makin terbiasa.","Kalau ada error, teliti baris kodenya satu per satu."],["suka fotografi","Aku sedang mencari sudut kampus yang bagus untuk foto.","Kamu suka memotret pemandangan atau teman?","Cahaya yang bagus bisa membuat foto lebih menarik.","Tetap minta izin sebelum memotret orang lain."],["hobi otomotif","Aku senang belajar tentang mesin dan kendaraan.","Kamu tertarik dunia otomotif?","Memahami cara kerja mesin itu menarik.","Praktik harus tetap memperhatikan keselamatan."],["suka menggambar","Aku sedang membuat sketsa gedung sekolah.","Kamu suka menggambar juga?","Ide sederhana bisa jadi karya yang bagus.","Terus latihan dan jangan takut mencoba gaya baru."],["suka sains","Aku baru membaca fakta menarik tentang alam.","Pelajaran sains apa yang paling kamu suka?","Rasa ingin tahu adalah awal dari pengetahuan.","Coba amati hal-hal kecil di sekitar sekolah."],["suka bahasa","Aku sedang menghafal kosakata bahasa Inggris.","Kamu sedang belajar bahasa apa?","Belajar sedikit demi sedikit lebih mudah diingat.","Coba praktikkan dengan teman saat ada kesempatan."],["suka bahari","Aku tertarik dengan dunia kelautan.","Kamu pernah belajar tentang navigasi?","Laut menyimpan banyak hal menarik untuk dipelajari.","Pengetahuan dan kedisiplinan penting di bidang bahari."],["suka memasak","Aku sedang mencari ide resep baru.","Kamu lebih suka masakan manis atau gurih?","Memasak perlu ketelitian dan kreativitas.","Selalu jaga kebersihan alat dan bahan."],["suka desain","Aku sedang membuat desain poster kegiatan.","Kamu suka desain yang simpel atau ramai?","Warna dan tata letak bisa menyampaikan pesan.","Terus eksplorasi ide desainmu."],["suka tanaman","Aku sedang memperhatikan tanaman di taman sekolah.","Kamu suka merawat tanaman?","Lingkungan hijau membuat sekolah terasa nyaman.","Yuk, sama-sama menjaga taman sekolah."],["suka matematika","Aku sedang mengerjakan soal hitungan.","Kamu suka tantangan matematika?","Kalau bingung, pecah soal menjadi langkah kecil.","Latihan rutin bikin kita makin terbiasa."],["suka sejarah","Aku sedang mencari cerita tentang sejarah sekolah.","Kamu suka mendengar cerita masa lalu?","Sejarah membantu kita menghargai perjalanan suatu tempat.","Tanya guru atau senior untuk cerita lainnya."],["suka persahabatan","Aku senang kalau teman-teman saling membantu.","Menurutmu apa yang membuat kelas kompak?","Saling menghargai membuat suasana belajar lebih baik.","Mulai dari hal kecil seperti menyapa teman."],["suka lingkungan","Aku ingin mengajak teman menjaga kebersihan kampus.","Kamu biasanya memilah sampah?","Kebiasaan kecil bisa membuat lingkungan lebih bersih.","Ayo buang sampah pada tempatnya."]][index],baseX:x,baseZ:z,phase:index*1.7,range:2.2,speed:.45+index*.035,activity:index%5,stopPhase:(index*.83)%4.5,walkCycle:0});
 }
 [
   [-23,-7], [20,-12], [-22,13], [18,23], [34,18],
@@ -911,12 +912,36 @@ function updateMarchingBand(now){
 function updateNpcStudents(now){
   for(const student of npcStudents){
     const t=now*.001*student.speed+student.phase;
-    student.npc.position.x=student.baseX+Math.sin(t)*student.range;
-    student.npc.position.z=student.baseZ+Math.cos(t*.7)*.8;
-    student.npc.rotation.y=Math.atan2(Math.cos(t)*student.range,-Math.sin(t*.7)*.56)+Math.PI;
-    const swing=Math.sin(t*3)*.28;
-    student.arms[0].rotation.x=swing;
-    student.arms[1].rotation.x=-swing;
+    // Siklus aktivitas: berjalan, berhenti sejenak, lalu melanjutkan patroli.
+    const cycle=(t+student.stopPhase)%8;
+    const isResting=cycle>5.8;
+    const activityOffset=student.activity===0?Math.sin(t*.55)*.45:student.activity===1?Math.cos(t*.42)*.35:0;
+    const pace=isResting?0:1;
+    const targetX=student.baseX+Math.sin(t)*student.range+activityOffset;
+    const targetZ=student.baseZ+Math.cos(t*.7)*.8;
+    const previousX=student.npc.position.x,previousZ=student.npc.position.z;
+    if(pace){
+      student.npc.position.x=targetX;
+      student.npc.position.z=targetZ;
+    }
+    const dx=student.npc.position.x-previousX,dz=student.npc.position.z-previousZ;
+    if(Math.hypot(dx,dz)>.001) student.npc.rotation.y=Math.atan2(dx,dz);
+    const gait=pace?Math.sin(t*7):0;
+    student.arms[0].rotation.x=gait*.42;
+    student.arms[1].rotation.x=-gait*.42;
+    if(student.legs){
+      student.legs[0].rotation.x=gait*.48;
+      student.legs[1].rotation.x=-gait*.48;
+    }
+    student.npc.position.y=isResting?Math.sin(now*.002+student.phase)*.025:Math.abs(gait)*.035;
+    // Beberapa siswa sesekali menoleh dan melambaikan tangan saat berhenti.
+    if(isResting && student.activity===2){
+      student.arms[0].rotation.z=Math.sin(now*.003+student.phase)*.35;
+      student.arms[1].rotation.z=0;
+    }else{
+      student.arms[0].rotation.z=0;
+      student.arms[1].rotation.z=0;
+    }
   }
 }
 
