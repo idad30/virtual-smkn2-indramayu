@@ -726,13 +726,19 @@ interactionPanel.style.cssText="display:none;position:fixed;left:50%;bottom:24px
 document.body.appendChild(interactionPanel);
 let nearbyPlace=null;
 let nearbyNpc=null;
+let nearbyBandMember=null;
 let infoOpen=false;
 function updateNearbyPlace(){
-  nearbyPlace=null; nearbyNpc=null;
+  nearbyPlace=null; nearbyNpc=null; nearbyBandMember=null;
   let bestNpc=3.8;
   for(const student of npcStudents){
     const distance=Math.hypot(player.position.x-student.npc.position.x,player.position.z-student.npc.position.z);
     if(distance<bestNpc){bestNpc=distance;nearbyNpc=student;}
+  }
+  let bestBand=4.2;
+  for(const member of marchingBand){
+    const distance=Math.hypot(player.position.x-member.group.position.x,player.position.z-member.group.position.z);
+    if(distance<bestBand){bestBand=distance;nearbyBandMember=member;}
   }
   let bestPlace=5.2;
   for(const place of campusPlaces){
@@ -770,6 +776,22 @@ function updateNearbyPlace(){
       detail.textContent="Tekan E untuk melihat informasi";
       interactionPanel.append(heading,detail);
     }
+  } else if(nearbyBandMember){
+    interactionPanel.style.display="block";
+    interactionPanel.style.pointerEvents="auto";
+    interactionPanel.replaceChildren();
+    const labels={fieldcommander:"FIELD COMMANDER",mayoret:"MAYORET",trumpet:"TRUMPET",bellyra:"BELLYRA",snare:"SNARE",quarto:"QUARTO / QUINTOM",cymbal:"CYMBAL",bass:"BASS DRUM",colourguard:"COLOUR GUARD"};
+    const heading=document.createElement("strong");
+    heading.textContent=labels[nearbyBandMember.instrument]||"MARCHING BAND";
+    heading.style.color="#e8bd58";
+    const detail=document.createElement("div");detail.textContent="Tekan tombol untuk mendengarkan instrumen";
+    const play=document.createElement("button");play.type="button";play.textContent="▶ DENGARKAN";
+    play.style.cssText="margin:8px 5px 0;padding:8px 14px;border:0;border-radius:8px;background:#e4bd58;color:#102b43;font-weight:bold";
+    play.addEventListener("click",()=>playBandPart(nearbyBandMember.instrument));
+    const song=document.createElement("button");song.type="button";song.textContent="♫ MAIN LAGU";
+    song.style.cssText=play.style.cssText;
+    song.addEventListener("click",startBandSong);
+    interactionPanel.append(heading,detail,play,song);
   } else {
     infoOpen=false;
     interactionPanel.style.pointerEvents="none";
