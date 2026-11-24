@@ -850,21 +850,6 @@ function startBandSong(){
     if(step%4===0)bandDrum("cymbal");
   },beatMs);
 }
-const bandControl=document.createElement("section");
-bandControl.style.cssText="display:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;width:min(430px,calc(100vw - 28px));padding:12px;border:1px solid #d4af37;border-radius:15px;background:rgba(9,27,42,.96);color:#fff;text-align:center;font:13px Arial,sans-serif;box-shadow:0 8px 28px #0007";
-const bandControlTitle=document.createElement("strong");bandControlTitle.textContent="🎺 GITA BAHARI · AUDIO INTERAKTIF";
-bandControlTitle.style.cssText="display:block;color:#f2cf72;margin-bottom:8px";
-const bandSongStatus=document.createElement("div");bandSongStatus.textContent="Dekati lapangan untuk berinteraksi";
-bandSongStatus.style.cssText="font-size:12px;margin-bottom:9px;color:#dceaf2";
-const bandButtons=document.createElement("div");bandButtons.style.cssText="display:flex;gap:8px;justify-content:center;flex-wrap:wrap";
-function bandButton(label,action){
- const button=document.createElement("button");button.type="button";button.textContent=label;
- button.style.cssText="border:0;border-radius:9px;padding:9px 13px;background:#d4af37;color:#102b43;font-weight:bold;cursor:pointer";
- button.addEventListener("click",action);bandButtons.append(button);
-}
-bandButton("▶ MAIN LAGU",startBandSong);
-bandButton("■ BERHENTI",stopBandSong);
-bandControl.append(bandControlTitle,bandSongStatus,bandButtons);document.body.append(bandControl);
 // Klik langsung anggota Gita Bahari untuk mendengar bunyi instrumennya.
 const bandRaycaster=new THREE.Raycaster();
 const bandPointer=new THREE.Vector2();
@@ -888,7 +873,6 @@ renderer.domElement.addEventListener("pointerup",event=>{
   const member=marchingBand.find(item=>item.group===object);
   if(member){
     playBandPart(member.instrument);
-    bandSongStatus.textContent="♫ Memainkan instrumen "+(member.memberName||member.instrument.toUpperCase());
   }
 });
 function updateMarchingBand(now){
@@ -976,8 +960,6 @@ function updateNearbyPlace(){
   const insideCeremonyField=
     player.position.x>=.25 && player.position.x<=13.75 &&
     player.position.z>=-10.8 && player.position.z<=20.8;
-  bandControl.style.display=insideCeremonyField?"block":"none";
-  if(insideCeremonyField) bandSongStatus.textContent="Kamu berada di lapangan upacara · Audio Gita Bahari";
   let bestNpc=3.8;
   for(const student of npcStudents){
     const distance=Math.hypot(player.position.x-student.npc.position.x,player.position.z-student.npc.position.z);
@@ -1036,10 +1018,7 @@ function updateNearbyPlace(){
     const play=document.createElement("button");play.type="button";play.textContent="▶ DENGARKAN";
     play.style.cssText="margin:8px 5px 0;padding:8px 14px;border:0;border-radius:8px;background:#e4bd58;color:#102b43;font-weight:bold";
     play.addEventListener("click",()=>playBandPart(nearbyBandMember.instrument));
-    const song=document.createElement("button");song.type="button";song.textContent="♫ MAIN LAGU";
-    song.style.cssText=play.style.cssText;
-    song.addEventListener("click",startBandSong);
-    interactionPanel.append(heading,detail,play,song);
+    interactionPanel.append(heading,detail,play);
   } else {
     infoOpen=false;
     interactionPanel.style.pointerEvents="none";
@@ -1373,7 +1352,6 @@ function beginCampusWalk(){
   player.visible=true;
   cameraYaw=0;cameraPitch=.22;cameraDistance=10;
   if(intro) intro.style.display="none";
-  if(bandControl) bandControl.style.display="block";
   const controls=document.querySelector(".mobile-controls");
   if(controls) controls.style.display=touchDevice?"flex":"none";
   if(innerWidth<=900 && document.documentElement.requestFullscreen){
