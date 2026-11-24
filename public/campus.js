@@ -475,9 +475,12 @@ function createBandMember(index,x,z,instrument){
   bandPart(body,new THREE.BoxGeometry(.5,.52,.5),0xd9a47b,0,1.92,0);
   bandPart(body,new THREE.BoxGeometry(.56,.16,.56),0x20252a,0,2.19,0);
   bandPart(body,new THREE.BoxGeometry(.3,.08,.08),bandGold,0,1.68,-.22);
+  const legs=[];
   for(const side of [-1,1]){
-    bandPart(body,new THREE.BoxGeometry(.28,.78,.3),bandUniform,side*.22,.42,0);
-    bandPart(body,new THREE.BoxGeometry(.34,.18,.48),0x20252a,side*.22,.03,-.04);
+    const leg=new THREE.Group();leg.position.set(side*.22,.82,0);body.add(leg);
+    bandPart(leg,new THREE.BoxGeometry(.28,.68,.3),bandUniform,0,-.28,0);
+    bandPart(leg,new THREE.BoxGeometry(.34,.18,.48),0x20252a,0,-.66,-.04);
+    legs.push(leg);
   }
   const arms=[];
   for(const side of [-1,1]){
@@ -515,6 +518,11 @@ function createBandMember(index,x,z,instrument){
       bar.position.y=.11+(n%2)*.012;
     }
     prop.position.set(0,1.18,-.5);
+  }else if(instrument==="conductor"){
+    prop=new THREE.Group();body.add(prop);
+    bandPart(prop,new THREE.CylinderGeometry(.025,.025,.82,8),bandWhite,0,0,0);
+    prop.rotation.z=-.45;
+    prop.position.set(.48,1.58,-.35);
   }else{
     prop=new THREE.Group();body.add(prop);
     bandPart(prop,new THREE.BoxGeometry(.12,.72,.12),bandGold,0,0,0);
@@ -525,14 +533,15 @@ function createBandMember(index,x,z,instrument){
   // Semua anggota menghadap ke arah depan lapangan.
   group.rotation.y=0;
   scene.add(group);
-  marchingBand.push({group,body,arms,prop,instrument,phase:index*.72,index});
+  marchingBand.push({group,body,arms,legs,prop,instrument,phase:index*.72,index});
 }
 [
   [3, -5, "snare"], [7, -5, "trumpet"], [11, -5, "trumpet"],
   [3, 1, "trumpet"], [7, 1, "bass"], [11, 1, "trumpet"],
   [3, 7, "snare"], [7, 7, "trumpet"], [11, 7, "snare"],
   [5, 13, "snare"], [9, 13, "trumpet"],
-  [4, 16, "glockenspiel"], [7, 16, "glockenspiel"], [10, 16, "glockenspiel"]
+  [4, 16, "glockenspiel"], [7, 16, "glockenspiel"], [10, 16, "glockenspiel"],
+  [7, 19, "conductor"]
 ].forEach(([x,z,instrument],i)=>createBandMember(i,x,z,instrument));
 function updateMarchingBand(now){
   const t=now*.001;
@@ -540,7 +549,18 @@ function updateMarchingBand(now){
     const beat=Math.sin(t*4.2+member.phase);
     member.body.position.y=Math.abs(beat)*.035;
     member.body.rotation.z=Math.sin(t*2.1+member.phase)*.025;
-    if(member.instrument==="snare"||member.instrument==="bass"){
+    // Gerakan kaki bergantian agar seluruh barisan tampak sedang berbaris di tempat.
+    if(member.legs){
+      member.legs[0].rotation.x=Math.sin(t*4.2+member.phase)*.42;
+      member.legs[1].rotation.x=-Math.sin(t*4.2+member.phase)*.42;
+    }
+    if(member.instrument==="conductor"){
+      member.arms[0].rotation.x=-.9+Math.sin(t*4.2)*.48;
+      member.arms[1].rotation.x=-.9+Math.cos(t*4.2)*.48;
+      member.arms[0].rotation.z=.25+Math.sin(t*4.2)*.16;
+      member.arms[1].rotation.z=-.25-Math.sin(t*4.2)*.16;
+      member.prop.rotation.z=-.45+Math.sin(t*4.2)*.32;
+    }else if(member.instrument==="snare"||member.instrument==="bass"){
       member.arms[0].rotation.x=-.35+Math.max(0,beat)*.42;
       member.arms[1].rotation.x=-.35+Math.max(0,-beat)*.42;
     }else if(member.instrument==="trumpet"){
