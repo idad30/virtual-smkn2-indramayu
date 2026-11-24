@@ -99,6 +99,7 @@ function studentCard(data) {
   instagram.style.cssText="color:#a9c2d2;font-size:12px";
   info.append(classBadge,identity,instagram);
   const uniformInfo=document.createElement("div");
+  uniformInfo.id="uniform-info";
   uniformInfo.textContent="Seragam hari ini: "+(uniformNames[activeUniform]||"PDH 1");
   uniformInfo.style.cssText="margin:0 0 12px;padding:10px;border:1px solid #d4af37;border-radius:8px;color:#f2cf72;font-weight:bold";
   const avatarTitle=document.createElement("b"); avatarTitle.textContent="PILIH KARAKTER";
@@ -1286,6 +1287,9 @@ const avatarOptions = {
 };
 let selectedAvatarId = "taruna";
 let activeUniform = "pdh1";
+let uniformSettingsUnsubscribe = null;
+let uniformRefreshTimer = null;
+let latestUniformSettings = {};
 let dataGenderIsFemale = false;
 const defaultUniformSchedule = {monday:"pdh1",tuesday:"pdh2",wednesday:"pramuka",thursday:"muslim",friday:"olahraga"};
 const uniformNames = {pdh1:"PDH 1",pdh2:"PDH 2",pramuka:"Pramuka",muslim:"Muslim",olahraga:"Olahraga"};
@@ -1293,12 +1297,40 @@ async function loadTodayUniform() {
   const weekday = new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",weekday:"long"}).format(new Date()).toLowerCase();
   try {
     const snap = await getDoc(doc(db,"settings","uniforms"));
-    const schedule = snap.exists() && snap.data().schedule ? snap.data().schedule : defaultUniformSchedule;
-    activeUniform = schedule[weekday] || defaultUniformSchedule[weekday] || "pdh1";
+    const data = snap.exists() ? snap.data() : {};
+    const schedule = data.schedule || defaultUniformSchedule;
+    activeUniform = data.mode === "manual"
+      ? (data.manualUniform || "pdh1")
+      : (schedule[weekday] || defaultUniformSchedule[weekday] || "pdh1");
   } catch(error) {
     console.warn("Jadwal seragam belum dapat dibaca:",error);
     activeUniform = defaultUniformSchedule[weekday] || "pdh1";
   }
+}
+function refreshActiveUniform() {
+  const weekday = new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",weekday:"long"}).format(new Date()).toLowerCase();
+  const data = latestUniformSettings || {};
+  const schedule = data.schedule || defaultUniformSchedule;
+  const nextUniform = data.mode === "manual"
+    ? (data.manualUniform || "pdh1")
+    : (schedule[weekday] || defaultUniformSchedule[weekday] || "pdh1");
+  if (nextUniform !== activeUniform) {
+    activeUniform = nextUniform;
+    buildAvatar(selectedAvatarId);
+  }
+  const uniformInfo = document.querySelector("#uniform-info");
+  if (uniformInfo) uniformInfo.textContent = "Seragam hari ini: " + (uniformNames[activeUniform] || "PDH 1");
+}
+function watchUniformSettings() {
+  if (uniformSettingsUnsubscribe) uniformSettingsUnsubscribe();
+  uniformSettingsUnsubscribe = onSnapshot(doc(db,"settings","uniforms"), snap => {
+    latestUniformSettings = snap.exists() ? snap.data() : {};
+    refreshActiveUniform();
+  }, error => console.warn("Gagal memantau pengaturan seragam:",error));
+  if (uniformRefreshTimer) clearInterval(uniformRefreshTimer);
+  // Periksa waktu WIB berkala agar jadwal otomatis berganti saat hari berubah,
+  // meskipun tidak ada perubahan dokumen Firestore.
+  uniformRefreshTimer = setInterval(refreshActiveUniform, 60000);
 }
 function part(parent,w,h,d,color,x,y,z) {
   const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));
@@ -1317,15 +1349,17 @@ function buildAvatar(id) {
     const child=avatar.children.pop();
     child.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});
   }
-  // Seragam utama dengan detail saku, kancing, kerah, lis bahu, dan ikat pinggang.
+  // Detail badan disesuaikan dengan warna masing-masing seragam.
   part(avatar,.82,.92,.42,cfg.shirt,0,1.35,0);
-  part(avatar,.18,.12,.035,0xe4bd58,0,1.78,-.225);
-  part(avatar,.13,.13,.035,0xe4bd58,-.25,1.48,-.225);
-  const trim=0xe4bd58, dark=0x102b43;
+  const trim = uniform==="muslim" ? 0xf7f5e9 : uniform==="pramuka" ? 0xead6ad : uniform==="olahraga" ? 0xffffff : 0xe4bd58;
+  const pocket = uniform==="muslim" ? 0xf7f5e9 : uniform==="pramuka" ? 0x9b6035 : uniform==="olahraga" ? 0x123e70 : 0x245b82;
+  const dark = uniform==="olahraga" ? 0x171b22 : uniform==="pramuka" ? 0x704322 : 0x102b43;
+  part(avatar,.18,.12,.035,trim,0,1.78,-.225);
+  part(avatar,.13,.13,.035,trim,-.25,1.48,-.225);
   part(avatar,.22,.09,.035,trim,-.25,1.77,-.235);
   part(avatar,.22,.09,.035,trim,.25,1.77,-.235);
-  part(avatar,.23,.2,.045,0x245b82,-.24,1.48,-.235);
-  part(avatar,.23,.2,.045,0x245b82,.24,1.48,-.235);
+  part(avatar,.23,.2,.045,pocket,-.24,1.48,-.235);
+  part(avatar,.23,.2,.045,pocket,.24,1.48,-.235);
   part(avatar,.25,.055,.025,trim,-.24,1.59,-.265);
   part(avatar,.25,.055,.025,trim,.24,1.59,-.265);
   for(let n=0;n<4;n++) part(avatar,.045,.045,.035,trim,.035,1.63-n*.17,-.24);
@@ -1390,6 +1424,50 @@ function buildAvatar(id) {
     part(avatar,.12,.28,.62,cfg.hair,-.28,2.38,0);
     part(avatar,.12,.28,.62,cfg.hair,.28,2.38,0);
   }
+
+  // Penutup kepala sesuai jenis seragam.
+  if(uniform==="pdh1"){
+    part(avatar,.78,.075,.76,0xf5f4ed,0,2.61,0);
+    part(avatar,.52,.2,.52,0xf5f4ed,0,2.72,.015);
+    part(avatar,.42,.045,.18,0xf5f4ed,0,2.61,-.34);
+    part(avatar,.12,.055,.035,0xd4af37,0,2.73,-.255);
+  }
+  if(uniform==="pdh2"){
+    part(avatar,.78,.075,.76,0x263746,0,2.61,0);
+    part(avatar,.52,.2,.52,0x263746,0,2.72,.015);
+    part(avatar,.42,.045,.18,0x263746,0,2.61,-.34);
+    part(avatar,.12,.055,.035,0xd4af37,0,2.73,-.255);
+  }
+  if(uniform==="pramuka"){
+    part(avatar,.78,.075,.76,0x8c542c,0,2.61,0);
+    part(avatar,.52,.2,.52,0x8c542c,0,2.72,.015);
+    part(avatar,.42,.045,.18,0x8c542c,0,2.61,-.34);
+    part(avatar,.13,.07,.035,0xd62d2d,0,2.73,-.255);
+  }
+  if(uniform==="muslim" && !dataGenderIsFemale){
+    part(avatar,.72,.12,.72,0xf7f5e9,0,2.61,0);
+    part(avatar,.58,.12,.58,0xf7f5e9,0,2.72,0);
+  }
+
+  // Rok abu-abu untuk Taruni pada PDH 2; Taruna tetap memakai celana.
+  if(uniform==="pdh2" && dataGenderIsFemale){
+    const skirt=new THREE.Mesh(
+      new THREE.CylinderGeometry(.48,.57,.62,12,1,false),
+      mat(0x777d85)
+    );
+    skirt.position.set(0,.62,0);
+    skirt.castShadow=true; skirt.receiveShadow=true; avatar.add(skirt);
+  }
+
+  // Sepatu formal hitam dan sol gelap, konsisten untuk semua seragam sekolah.
+  [-.22,.22].forEach(x=>{
+    const sole = uniform==="olahraga" ? 0xe8e8e8 : 0x101317;
+    const upper = uniform==="olahraga" ? 0x252a31 : 0x202328;
+    part(avatar,.35,.055,.52,sole,x,.035,-.08);
+    part(avatar,.35,.16,.48,upper,x,.12,-.08);
+    if(uniform==="olahraga") part(avatar,.22,.025,.035,0xffffff,x,.17,-.325);
+  });
+
   leftArm=new THREE.Group(); leftArm.position.set(-.52,1.75,0); avatar.add(leftArm);
   part(leftArm,.28,.78,.3,cfg.shirt,0,-.35,0); part(leftArm,.25,.22,.26,cfg.skin,0,-.82,0);
   rightArm=new THREE.Group(); rightArm.position.set(.52,1.75,0); avatar.add(rightArm);
@@ -1397,11 +1475,9 @@ function buildAvatar(id) {
   leftLeg=new THREE.Group(); leftLeg.position.set(-.22,.9,0); avatar.add(leftLeg);
   part(leftLeg,.32,.78,.34,cfg.pants,0,-.36,0);
   part(leftLeg,.34,.2,.5,0x20252a,0,-.82,-.07);
-  part(leftLeg,.34,.06,.36,trim,0,-.73,-.025);
   rightLeg=new THREE.Group(); rightLeg.position.set(.22,.9,0); avatar.add(rightLeg);
   part(rightLeg,.32,.78,.34,cfg.pants,0,-.36,0);
   part(rightLeg,.34,.2,.5,0x20252a,0,-.82,-.07);
-  part(rightLeg,.34,.06,.36,trim,0,-.73,-.025);
 }
 buildAvatar(selectedAvatarId);
 // Spawn di jalur utama yang kosong, bukan di dalam LAB TKJ.
@@ -1558,6 +1634,7 @@ async function start() {
     const data=await checkStudentAccess();
     dataGenderIsFemale=data.gender==="P";
     await loadTodayUniform();
+    watchUniformSettings();
     buildAvatar(selectedAvatarId);
     campusAccessReady=true;
     startWalkButton.disabled=false;
