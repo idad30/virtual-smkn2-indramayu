@@ -1286,6 +1286,7 @@ const avatarOptions = {
 };
 let selectedAvatarId = "taruna";
 let activeUniform = "pdh1";
+let uniformSettingsUnsubscribe = null;
 let dataGenderIsFemale = false;
 const defaultUniformSchedule = {monday:"pdh1",tuesday:"pdh2",wednesday:"pramuka",thursday:"muslim",friday:"olahraga"};
 const uniformNames = {pdh1:"PDH 1",pdh2:"PDH 2",pramuka:"Pramuka",muslim:"Muslim",olahraga:"Olahraga"};
@@ -1293,12 +1294,30 @@ async function loadTodayUniform() {
   const weekday = new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",weekday:"long"}).format(new Date()).toLowerCase();
   try {
     const snap = await getDoc(doc(db,"settings","uniforms"));
-    const schedule = snap.exists() && snap.data().schedule ? snap.data().schedule : defaultUniformSchedule;
-    activeUniform = schedule[weekday] || defaultUniformSchedule[weekday] || "pdh1";
+    const data = snap.exists() ? snap.data() : {};
+    const schedule = data.schedule || defaultUniformSchedule;
+    activeUniform = data.mode === "manual"
+      ? (data.manualUniform || "pdh1")
+      : (schedule[weekday] || defaultUniformSchedule[weekday] || "pdh1");
   } catch(error) {
     console.warn("Jadwal seragam belum dapat dibaca:",error);
     activeUniform = defaultUniformSchedule[weekday] || "pdh1";
   }
+}
+function watchUniformSettings() {
+  if (uniformSettingsUnsubscribe) uniformSettingsUnsubscribe();
+  uniformSettingsUnsubscribe = onSnapshot(doc(db,"settings","uniforms"), snap => {
+    const weekday = new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",weekday:"long"}).format(new Date()).toLowerCase();
+    const data = snap.exists() ? snap.data() : {};
+    const schedule = data.schedule || defaultUniformSchedule;
+    const nextUniform = data.mode === "manual"
+      ? (data.manualUniform || "pdh1")
+      : (schedule[weekday] || defaultUniformSchedule[weekday] || "pdh1");
+    if (nextUniform !== activeUniform) {
+      activeUniform = nextUniform;
+      buildAvatar(selectedAvatarId);
+    }
+  }, error => console.warn("Gagal memantau pengaturan seragam:",error));
 }
 function part(parent,w,h,d,color,x,y,z) {
   const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));
@@ -1558,6 +1577,7 @@ async function start() {
     const data=await checkStudentAccess();
     dataGenderIsFemale=data.gender==="P";
     await loadTodayUniform();
+    watchUniformSettings();
     buildAvatar(selectedAvatarId);
     campusAccessReady=true;
     startWalkButton.disabled=false;
