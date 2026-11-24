@@ -646,7 +646,7 @@ function startBandSong(){
   },beatMs);
 }
 const bandControl=document.createElement("section");
-bandControl.style.cssText="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;width:min(430px,calc(100vw - 28px));padding:12px;border:1px solid #d4af37;border-radius:15px;background:rgba(9,27,42,.96);color:#fff;text-align:center;font:13px Arial,sans-serif;box-shadow:0 8px 28px #0007";
+bandControl.style.cssText="display:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;width:min(430px,calc(100vw - 28px));padding:12px;border:1px solid #d4af37;border-radius:15px;background:rgba(9,27,42,.96);color:#fff;text-align:center;font:13px Arial,sans-serif;box-shadow:0 8px 28px #0007";
 const bandControlTitle=document.createElement("strong");bandControlTitle.textContent="🎺 GITA BAHARI · AUDIO INTERAKTIF";
 bandControlTitle.style.cssText="display:block;color:#f2cf72;margin-bottom:8px";
 const bandSongStatus=document.createElement("div");bandSongStatus.textContent="Dekati lapangan untuk berinteraksi";
@@ -1111,6 +1111,7 @@ async function start() {
     watchPromotion(auth.currentUser.uid);
     const intro=document.getElementById("drone-intro");
     document.getElementById("start-walk").addEventListener("click",async()=>{
+      bandControl.style.display="block";
       walkMode=true;moveVelocity.set(0,0,0);player.position.set(0,0,0);player.visible=true;intro.style.display="none";
       cameraYaw=0;cameraPitch=.22;cameraDistance=10;
       try { if(innerWidth<900 && screen.orientation?.lock) await screen.orientation.lock("landscape"); } catch(error) { console.info("Orientasi landscape dapat diaktifkan dari pengaturan HP."); }
