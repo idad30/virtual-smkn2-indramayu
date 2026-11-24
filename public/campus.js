@@ -577,7 +577,7 @@ function createBandMember(index,x,z,instrument){
       -8+row*3.2,
       role
     ]))
-.forEach(([x,z,instrument],i)=>createBandMember(i,x,z,instrument));
+].forEach(([x,z,instrument],i)=>createBandMember(i,x,z,instrument));
 function updateMarchingBand(now){
   const t=now*.001;
   for(const member of marchingBand){
