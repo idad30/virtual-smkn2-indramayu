@@ -594,9 +594,9 @@ gardenBed(16,-14,5,1.1);
 gardenBed(-2,24,5,1.1);
 gardenBed(16,24,5,1.1);
 // Jalur pedestrian abu-abu muda yang menghubungkan area lapangan.
-const pathMat=new THREE.MeshStandardMaterial({color:0xb9b9ae,roughness:1});
+const pedestrianPathMat=new THREE.MeshStandardMaterial({color:0xb9b9ae,roughness:1});
 function campusPath(x,z,w,d){
-  const path=new THREE.Mesh(new THREE.PlaneGeometry(w,d),pathMat);
+  const path=new THREE.Mesh(new THREE.PlaneGeometry(w,d),pedestrianPathMat);
   path.rotation.x=-Math.PI/2;path.position.set(x,.012,z);path.receiveShadow=true;scene.add(path);
 }
 campusPath(7,-13,2.8,7);
