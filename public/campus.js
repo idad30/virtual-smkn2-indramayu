@@ -761,9 +761,24 @@ function buildAvatar(id) {
     const child=avatar.children.pop();
     child.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});
   }
+  // Seragam utama dengan detail saku, kancing, kerah, lis bahu, dan ikat pinggang.
   part(avatar,.82,.92,.42,cfg.shirt,0,1.35,0);
   part(avatar,.18,.12,.035,0xe4bd58,0,1.78,-.225);
   part(avatar,.13,.13,.035,0xe4bd58,-.25,1.48,-.225);
+  const trim=0xe4bd58, dark=0x102b43;
+  part(avatar,.22,.09,.035,trim,-.25,1.77,-.235);
+  part(avatar,.22,.09,.035,trim,.25,1.77,-.235);
+  part(avatar,.23,.2,.045,0x245b82,-.24,1.48,-.235);
+  part(avatar,.23,.2,.045,0x245b82,.24,1.48,-.235);
+  part(avatar,.25,.055,.025,trim,-.24,1.59,-.265);
+  part(avatar,.25,.055,.025,trim,.24,1.59,-.265);
+  for(let n=0;n<4;n++) part(avatar,.045,.045,.035,trim,.035,1.63-n*.17,-.24);
+  part(avatar,.78,.11,.46,dark,0,.91,0);
+  part(avatar,.18,.12,.045,trim,0,.91,-.245);
+  // Kerah simetris dan panel depan seragam.
+  part(avatar,.2,.16,.08,0xf0f1e9,-.13,1.78,-.22);
+  part(avatar,.2,.16,.08,0xf0f1e9,.13,1.78,-.22);
+  part(avatar,.035,.68,.025,0x315b79,0,1.34,-.222);
   part(avatar,.58,.58,.58,cfg.skin,0,2.12,0);
   if(cfg.style==="hijab") {
     part(avatar,.68,.68,.65,0x172333,0,2.18,0);
@@ -777,14 +792,30 @@ function buildAvatar(id) {
   part(avatar,.12,.1,.04,0xffffff,.14,2.17,-.3);
   part(avatar,.045,.07,.025,0x202020,-.14,2.17,-.325);
   part(avatar,.045,.07,.025,0x202020,.14,2.17,-.325);
+  part(avatar,.22,.035,.025,cfg.hair,-.14,2.25,-.33);
+  part(avatar,.22,.035,.025,cfg.hair,.14,2.25,-.33);
+  part(avatar,.12,.025,.025,0x754b3a,0,2.02,-.32);
+  if(cfg.style==="hijab"){
+    part(avatar,.7,.18,.68,0x243b52,0,1.88,.015);
+    part(avatar,.12,.38,.16,0x243b52,-.25,1.95,-.22);
+    part(avatar,.12,.38,.16,0x243b52,.25,1.95,-.22);
+  } else {
+    part(avatar,.66,.12,.66,cfg.hair,0,2.52,.02);
+    part(avatar,.12,.28,.62,cfg.hair,-.28,2.38,0);
+    part(avatar,.12,.28,.62,cfg.hair,.28,2.38,0);
+  }
   leftArm=new THREE.Group(); leftArm.position.set(-.52,1.75,0); avatar.add(leftArm);
   part(leftArm,.28,.78,.3,cfg.shirt,0,-.35,0); part(leftArm,.25,.22,.26,cfg.skin,0,-.82,0);
   rightArm=new THREE.Group(); rightArm.position.set(.52,1.75,0); avatar.add(rightArm);
   part(rightArm,.28,.78,.3,cfg.shirt,0,-.35,0); part(rightArm,.25,.22,.26,cfg.skin,0,-.82,0);
   leftLeg=new THREE.Group(); leftLeg.position.set(-.22,.9,0); avatar.add(leftLeg);
-  part(leftLeg,.32,.78,.34,cfg.pants,0,-.36,0); part(leftLeg,.34,.2,.5,0x20252a,0,-.82,-.07);
+  part(leftLeg,.32,.78,.34,cfg.pants,0,-.36,0);
+  part(leftLeg,.34,.2,.5,0x20252a,0,-.82,-.07);
+  part(leftLeg,.34,.06,.36,trim,0,-.73,-.025);
   rightLeg=new THREE.Group(); rightLeg.position.set(.22,.9,0); avatar.add(rightLeg);
-  part(rightLeg,.32,.78,.34,cfg.pants,0,-.36,0); part(rightLeg,.34,.2,.5,0x20252a,0,-.82,-.07);
+  part(rightLeg,.32,.78,.34,cfg.pants,0,-.36,0);
+  part(rightLeg,.34,.2,.5,0x20252a,0,-.82,-.07);
+  part(rightLeg,.34,.06,.36,trim,0,-.73,-.025);
 }
 buildAvatar(selectedAvatarId);
 // Spawn di jalur utama yang kosong, bukan di dalam LAB TKJ.
