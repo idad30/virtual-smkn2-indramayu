@@ -6,6 +6,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isAdmin() {
+      return signedIn() && request.auth.uid == '7mQtL5NIu0RtN5UOWy8TLiWL5zP2';
+    }
+
     function validMajor(major) {
       return major in ['NKPI', 'APHPI', 'TKJ', 'RPL', 'TAB', 'KULINER', 'APAPL', 'TP'];
     }
@@ -38,7 +42,9 @@ service cloud.firestore {
     }
 
     match /players/{uid} {
-      allow read: if signedIn() && request.auth.uid == uid;
+      // Admin dapat melihat daftar pemain; pemain biasa hanya dapat membaca datanya sendiri.
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
 
       // Akun baru langsung aktif. Status dan jabatan awal ditetapkan oleh aturan.
       allow create: if signedIn()
@@ -67,11 +73,21 @@ service cloud.firestore {
         && request.resource.data.followDeclaration == true
         && request.resource.data.createdAt == request.time;
 
-      // Siswa hanya boleh mengubah pilihan avatar miliknya sendiri.
-      allow update: if signedIn() && request.auth.uid == uid
+      // Pemain hanya dapat mengubah avatar dan nama miliknya sendiri.
+      allow update: if (signedIn() && request.auth.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['avatarId','fullName'])
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['avatarId']) || request.resource.data.avatarId in ['taruna','taruni','sporty','formal'])
-        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['fullName']) || (request.resource.data.fullName is string && request.resource.data.fullName.size() >= 3 && request.resource.data.fullName.size() <= 70));
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['fullName']) || (request.resource.data.fullName is string && request.resource.data.fullName.size() >= 3 && request.resource.data.fullName.size() <= 70)))
+        // Admin boleh mengelola kelas, jabatan, dan status akun.
+        || (isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['grade','major','classNumber','position','status'])
+          && request.resource.data.grade in ['X','XI','XII']
+          && validMajor(request.resource.data.major)
+          && validClass(request.resource.data.major,request.resource.data.classNumber)
+          && request.resource.data.position is string
+          && request.resource.data.position.size() >= 1
+          && request.resource.data.position.size() <= 50
+          && request.resource.data.status in ['approved','suspended']);
       // Perubahan jabatan dan penghapusan akun melalui backend admin tepercaya.
       allow delete: if false;
     }
