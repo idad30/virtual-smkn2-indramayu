@@ -45,7 +45,9 @@ service cloud.firestore {
       allow get: if true;
       allow list: if false;
       allow create, update: if isAdmin()
-        && request.resource.data.keys().hasOnly(['schedule','updatedAt'])
+        && request.resource.data.keys().hasOnly(['schedule','mode','manualUniform','updatedAt'])
+        && request.resource.data.mode in ['automatic','manual']
+        && request.resource.data.manualUniform in ['pdh1','pdh2','pramuka','muslim','olahraga']
         && request.resource.data.schedule is map
         && request.resource.data.schedule.keys().hasOnly(['monday','tuesday','wednesday','thursday','friday'])
         && request.resource.data.schedule.monday in ['pdh1','pdh2','pramuka','muslim','olahraga']
