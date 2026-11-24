@@ -351,22 +351,54 @@ function building(name,x,z,w,d,color,info,height=3.2){
     campusLabel(name,x,z,"#ffffff");
     return;
   }
-  // Bangunan lain tetap memakai bentuk sederhana seperti sebelumnya.
-  block(x,0,z,w,height,d,color);
-  block(x,height,z,w+.45,.28,d+.45,0x34485a);
-  block(x,0.12,z+d/2+.035,Math.min(w*.42,3.2),.16,.12,0xe8e2d5);
-  const doorW=Math.min(1.8,w*.22), doorH=Math.min(2.45,height*.78);
-  block(x,0,z+d/2+.085,doorW,doorH,.12,0x684a32);
-  const windowW=Math.min(1.45,w*.18), windowH=Math.min(1.15,height*.34);
+  // Interior terbuka: lantai, dinding bersegmen dengan pintu depan, dan isi ruang.
+  const wall=.28, doorW=Math.min(1.9,w*.28), doorH=Math.min(2.5,height*.82);
+  block(x,-.08,z,w,.16,d,0xc9c5b9);
+  block(x-w/2+wall/2,height/2,z,wall,height,d,color);
+  block(x+w/2-wall/2,height/2,z,wall,height,d,color);
+  block(x,height/2,z-d/2+wall/2,w,height,wall,color);
+  const sideW=(w-doorW)/2;
+  block(x-w/2+sideW/2,height/2,z+d/2-wall/2,sideW,height,wall,color);
+  block(x+w/2-sideW/2,height/2,z+d/2-wall/2,sideW,height,wall,color);
+  block(x-doorW/2-.08,doorH/2,z+d/2,.16,doorH,.18,0x684a32);
+  block(x+doorW/2+.08,doorH/2,z+d/2,.16,doorH,.18,0x684a32);
+  block(x,height+.12,z,w+.35,.22,d+.35,0x34485a);
+  const windowW=Math.min(1.5,w*.2), windowH=Math.min(1.05,height*.34);
   const count=Math.max(1,Math.floor((w-doorW-1)/(windowW+.9)));
   for(let i=0;i<count;i++){
     const wx=x-(count-1)*(windowW+.9)/2+i*(windowW+.9);
     if(Math.abs(wx-x)<doorW*.8) continue;
-    const pane=new THREE.Mesh(new THREE.BoxGeometry(windowW,windowH,.09),glass);
-    pane.position.set(wx,Math.min(height*.62,2.15),z+d/2+.09);scene.add(pane);
-    block(wx,Math.min(height*.62,2.15)-windowH/2-.08,z+d/2+.12,windowW+.12,.12,.18,0xe8e2d5);
+    const pane=new THREE.Mesh(new THREE.BoxGeometry(windowW,windowH,.08),glass);
+    pane.position.set(wx,Math.min(height*.68,2.05),z+d/2+.09);scene.add(pane);
+    block(wx,Math.min(height*.68,2.05)-windowH/2-.08,z+d/2+.12,windowW+.12,.12,.16,0xe8e2d5);
   }
-  block(x,height+.34,z+d/2+.13,Math.min(w*.55,4.2),.48,.12,0x18364b);
+  block(x,height+.28,z+d/2+.13,Math.min(w*.55,4.2),.42,.12,0x18364b);
+  const isLab=/LAB|RPS|BRIDGE SIMULATOR|TEFA/i.test(name);
+  const isCanteen=/KANTIN|OUTLET/i.test(name);
+  const isHall=/AULA|MASJID|EKSKUL/i.test(name);
+  const deskColor=isCanteen?0x9a6940:0x987653;
+  if(isCanteen){
+    block(x,.48,z-d*.22,w*.72,.96,.85,0x9b7049);
+    for(let i=-1;i<=1;i++) block(x+i*w*.22,.42,z+d*.18,.72,.12,.72,0x5b6870);
+    for(let i=-1;i<=1;i++) block(x+i*w*.22,.42,z+d*.18+1,.12,.8,.12,0x5b6870);
+  } else if(isHall){
+    for(let row=0;row<2;row++) block(x,.12,z-d*.18+row*1.35,w*.62,.18,.12,0x987653);
+    if(name.includes("MASJID")) block(x,.18,z-d*.3,w*.28,.32,.2,0x2f8c78);
+  } else {
+    const cols=Math.max(1,Math.min(4,Math.floor((w-2)/2.5)));
+    const rows=Math.max(1,Math.min(4,Math.floor((d-2)/1.8)));
+    for(let row=0;row<rows;row++) for(let col=0;col<cols;col++){
+      const px=x+(col-(cols-1)/2)*Math.min(2.35,(w-2)/Math.max(1,cols-1));
+      const pz=z-d*.22+row*Math.min(1.65,(d-2)/Math.max(1,rows-1));
+      block(px,.82,pz,.95,.12,.52,deskColor);
+      block(px,.42,pz-.42,.12,.78,.12,0x59636a);
+      if(isLab){
+        block(px,.98,pz,.38,.34,.24,0x263b4b);
+        block(px,.98,pz-.14,.3,.2,.025,0x74c9d8);
+      }
+    }
+    block(x,.65,z-d/2+.55,Math.min(w*.7,4.5),.12,.48,0x526879);
+  }
   campusPlaces.push({name,x,z,w,d,info});
   campusLabel(name,x,z,"#ffffff");
 }
@@ -861,8 +893,8 @@ function blockedAt(x,z){
   return campusPlaces.some(place => {
     const withinX=Math.abs(x-place.x)<place.w/2+radius;
     const withinZ=Math.abs(z-place.z)<place.d/2+radius;
-    // Area dalam Gedung Utama boleh dilalui; dinding fisiknya membatasi sisi luar.
-    if(place.name==="GEDUNG UTAMA"){
+    // Interior semua gedung dapat dimasuki; dinding fisik dan bukaan pintu mengatur akses.
+    if(true){
       const insideX=Math.abs(x-place.x)<place.w/2-radius;
       const insideZ=Math.abs(z-place.z)<place.d/2-radius;
       if(insideX && insideZ) return false;
